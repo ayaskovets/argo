@@ -4,6 +4,7 @@
 
 #include <format>
 #include <unordered_map>
+#include <vector>
 
 namespace core::io {
 
@@ -14,7 +15,7 @@ constexpr short kEmptyEvents = 0;
 constexpr std::chrono::milliseconds kBlockingTimeout(-1);
 
 constexpr short to_native_events(poller::events_t events) noexcept {
-  short native_events = 0;
+  short native_events = kEmptyEvents;
   native_events |= (events & poller::event::kPollIn) ? POLLIN : 0;
   native_events |= (events & poller::event::kPollPri) ? POLLPRI : 0;
   native_events |= (events & poller::event::kPollOut) ? POLLOUT : 0;
@@ -25,7 +26,7 @@ constexpr short to_native_events(poller::events_t events) noexcept {
 }
 
 constexpr poller::events_t from_native_events(short native_events) noexcept {
-  poller::events_t events = 0;
+  poller::events_t events = kEmptyEvents;
   events |= (native_events & POLLIN) ? poller::event::kPollIn : 0;
   events |= (native_events & POLLPRI) ? poller::event::kPollPri : 0;
   events |= (native_events & POLLOUT) ? poller::event::kPollOut : 0;
@@ -74,12 +75,16 @@ bool poller::insert_or_assign(const io::fd& fd, events_t events) {
     return false;
   }
 
+  ::pollfd pollfd{
+      .fd = fd.get_native_handle(),
+      .events = to_native_events(events),
+      .revents = kEmptyEvents,
+  };
+
   if (fds.size() < fds.capacity()) [[likely]] {
-    fds.push_back(::pollfd{.fd = fd.get_native_handle(),
-                           .events = to_native_events(events)});
+    fds.push_back(std::move(pollfd));
   } else {
-    fds_to_insert.push_back(::pollfd{.fd = fd.get_native_handle(),
-                                     .events = to_native_events(events)});
+    fds_to_insert.push_back(std::move(pollfd));
   }
   return true;
 }

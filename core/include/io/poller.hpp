@@ -1,7 +1,6 @@
 #pragma once
 
 #include <functional>
-#include <vector>
 
 #include "io/fd.hpp"
 #include "utils/mixins.hpp"
