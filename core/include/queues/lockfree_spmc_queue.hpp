@@ -36,19 +36,18 @@ template <typename Value, std::unsigned_integral Index = std::size_t,
           Index Capacity = utils::kDynamicCapacity<Index>,
           typename Allocator = std::allocator<lockfree_spmc_queue_entry<Value>>>
 class lockfree_spmc_queue final : utils::non_copyable, utils::non_movable {
- private:
-  static_assert(std::is_nothrow_default_constructible_v<Value>);
-  static_assert(std::is_nothrow_destructible_v<Value>);
-  static_assert(std::is_nothrow_move_constructible_v<Value>);
-  static_assert(std::is_nothrow_move_assignable_v<Value>);
-  static_assert(
-      detail::lockfree_spmc_queue_entry<typename Allocator::value_type, Value>);
-
  public:
   using value_t = Value;
   using index_t = Index;
   using allocator_t = Allocator;
   using entry_t = typename Allocator::value_type;
+
+ private:
+  static_assert(std::is_nothrow_default_constructible_v<value_t>);
+  static_assert(std::is_nothrow_destructible_v<value_t>);
+  static_assert(std::is_nothrow_move_constructible_v<value_t>);
+  static_assert(std::is_nothrow_move_assignable_v<value_t>);
+  static_assert(detail::lockfree_spmc_queue_entry<entry_t, value_t>);
 
  public:
   constexpr explicit lockfree_spmc_queue(

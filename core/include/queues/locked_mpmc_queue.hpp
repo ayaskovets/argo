@@ -15,19 +15,17 @@ template <typename Value, std::unsigned_integral Index = std::size_t,
           Index Capacity = utils::kDynamicCapacity<Index>,
           typename Allocator = std::allocator<Value>>
 class locked_mpmc_queue final : utils::non_copyable, utils::non_movable {
- private:
-  static_assert(std::is_nothrow_destructible_v<typename Allocator::value_type>);
-  static_assert(
-      std::is_nothrow_move_constructible_v<typename Allocator::value_type>);
-  static_assert(
-      std::is_nothrow_move_assignable_v<typename Allocator::value_type>);
-  static_assert(std::is_same_v<Value, typename Allocator::value_type>);
-
  public:
   using value_t = Value;
   using index_t = Index;
   using allocator_t = Allocator;
   using entry_t = typename Allocator::value_type;
+
+ private:
+  static_assert(std::is_nothrow_destructible_v<entry_t>);
+  static_assert(std::is_nothrow_move_constructible_v<entry_t>);
+  static_assert(std::is_nothrow_move_assignable_v<entry_t>);
+  static_assert(std::is_same_v<value_t, entry_t>);
 
  public:
   constexpr explicit locked_mpmc_queue(

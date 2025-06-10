@@ -38,26 +38,20 @@ template <typename Value, std::unsigned_integral Index = std::size_t,
           typename Allocator =
               std::allocator<lockfree_mpmc_queue_entry<Value, Index>>>
 class lockfree_mpmc_queue final : utils::non_copyable, utils::non_movable {
- private:
-  static_assert(
-      std::is_trivially_destructible_v<typename Allocator::value_type>);
-  static_assert(std::is_nothrow_destructible_v<typename Allocator::value_type>);
-  static_assert(
-      std::is_trivially_copy_constructible_v<typename Allocator::value_type>);
-  static_assert(
-      std::is_nothrow_copy_constructible_v<typename Allocator::value_type>);
-  static_assert(
-      std::is_trivially_move_assignable_v<typename Allocator::value_type>);
-  static_assert(
-      std::is_nothrow_move_assignable_v<typename Allocator::value_type>);
-  static_assert(detail::lockfree_mpmc_queue_entry<
-                typename Allocator::value_type, Value, Index>);
-
  public:
   using value_t = Value;
   using index_t = Index;
   using allocator_t = Allocator;
   using entry_t = typename Allocator::value_type;
+
+ private:
+  static_assert(std::is_trivially_destructible_v<entry_t>);
+  static_assert(std::is_nothrow_destructible_v<entry_t>);
+  static_assert(std::is_trivially_copy_constructible_v<entry_t>);
+  static_assert(std::is_nothrow_copy_constructible_v<entry_t>);
+  static_assert(std::is_trivially_move_assignable_v<entry_t>);
+  static_assert(std::is_nothrow_move_assignable_v<entry_t>);
+  static_assert(detail::lockfree_mpmc_queue_entry<entry_t, value_t, index_t>);
 
  public:
   constexpr explicit lockfree_mpmc_queue(allocator_t allocator = allocator_t())
