@@ -5,7 +5,11 @@
 
 namespace core::io {
 
-class poller;
+// NOTE: this class is merely a copy-featured RAII wrapper around a file
+// descriptor. It is assumed that the programmer is responsible for the
+// parameter of the constructor representing an open file descriptor. The
+// constructor still verifies whether the value itself is in the range is a
+// valid file descriptor
 class fd {
  private:
   friend class poller;
@@ -17,14 +21,9 @@ class fd {
 
  protected:
   explicit fd(utils::uninitialized_t) noexcept;
+  static fd adopt(int fd);
 
  public:
-  // NOTE: this class is merely a copy-featured RAII wrapper around a file
-  // descriptor. It is assumed that the programmer is responsible for the
-  // parameter of the constructor representing an open file descriptor. The
-  // constructor still verifies whether the value itself is in the range is a
-  // valid file descriptor
-  explicit fd(int fd);
   fd(const fd& that);
   fd& operator=(const fd& that);
   fd(fd&& that) noexcept;

@@ -19,27 +19,31 @@ struct fd::impl final {
 };
 
 const fd& fd::kStdin() noexcept {
-  static const fd fd(STDIN_FILENO);
+  static const fd fd = fd::adopt(STDIN_FILENO);
   return fd;
 }
 
 const fd& fd::kStdout() noexcept {
-  static const fd fd(STDOUT_FILENO);
+  static const fd fd = fd::adopt(STDOUT_FILENO);
   return fd;
 }
 
 const fd& fd::kStderr() noexcept {
-  static const fd fd(STDERR_FILENO);
+  static const fd fd = fd::adopt(STDERR_FILENO);
   return fd;
 }
 
 fd::fd(utils::uninitialized_t) noexcept
     : pimpl_(impl{.native_handle = kInvalidFd}) {}
 
-fd::fd(int fd) : pimpl_(impl{.native_handle = fd}) {
-  if (pimpl_->native_handle < 0) [[unlikely]] {
+fd fd::adopt(int fd) {
+  if (fd < 0) [[unlikely]] {
     throw std::invalid_argument(std::format("invalid file descriptor: {}", fd));
   }
+
+  class fd adopter(utils::uninitialized_t{});
+  *adopter.pimpl_ = impl{.native_handle = fd};
+  return adopter;
 }
 
 fd::fd(const fd& that) {

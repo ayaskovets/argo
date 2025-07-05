@@ -90,7 +90,7 @@ base_socket::base_socket(utils::uninitialized_t) noexcept
 
 base_socket::base_socket(net::sockets::family family, net::sockets::type type,
                          net::sockets::protocol protocol)
-    : io::fd([family, type, protocol] {
+    : io::fd(io::fd::adopt([family, type, protocol] {
         const int fd = ::socket(to_native_family(family), to_native_type(type),
                                 to_native_protocol(protocol));
         if (fd == kSyscallError) [[unlikely]] {
@@ -98,7 +98,7 @@ base_socket::base_socket(net::sockets::family family, net::sockets::type type,
               std::format("socket() failed: {}", std::strerror(errno)));
         }
         return fd;
-      }()) {}
+      }())) {}
 
 void base_socket::set_nonblock(bool value) {
   int flags = ::fcntl(get_native_handle(), F_GETFL);
@@ -301,7 +301,7 @@ base_socket::accept_status base_socket::accept(base_socket &socket) const {
     throw std::runtime_error(
         std::format("accept failed: {}", std::strerror(errno)));
   }
-  static_cast<io::fd &>(socket) = io::fd(accepted);
+  static_cast<io::fd &>(socket) = io::fd::adopt(accepted);
   return base_socket::accept_status::kSuccess;
 }
 
