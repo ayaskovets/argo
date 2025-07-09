@@ -1,7 +1,6 @@
 #pragma once
 
 #include "utils/static_pimpl.hpp"
-#include "utils/tags.hpp"
 
 namespace core::io {
 
@@ -11,6 +10,9 @@ namespace core::io {
 // constructor still verifies whether the value itself is in the range is a
 // valid file descriptor
 class fd {
+ public:
+  class uninitialized_t final {};
+
  private:
   friend class poller;
 
@@ -20,7 +22,7 @@ class fd {
   static const fd& kStderr() noexcept;
 
  protected:
-  explicit fd(utils::uninitialized_t) noexcept;
+  explicit fd(uninitialized_t) noexcept;
   static fd adopt(int fd);
 
  public:

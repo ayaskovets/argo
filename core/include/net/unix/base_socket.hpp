@@ -7,7 +7,7 @@ namespace core::net::unix {
 
 class base_socket : public net::sockets::base_socket {
  protected:
-  base_socket(utils::uninitialized_t) noexcept;
+  base_socket(io::fd::uninitialized_t) noexcept;
   explicit base_socket(core::net::sockets::type type);
   ~base_socket() noexcept;
 

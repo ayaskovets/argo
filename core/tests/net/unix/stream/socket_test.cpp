@@ -69,7 +69,7 @@ TEST(net_unix_stream_socket, nonblocking_send_receive_error) {
 }
 
 TEST(net_unix_stream_socket, accept_error) {
-  core::net::unix::stream::socket peer(core::utils::uninitialized_t{});
+  core::net::unix::stream::socket peer(core::io::fd::uninitialized_t{});
   core::net::unix::stream::socket socket;
   socket.set_nonblock(true);
 
@@ -99,7 +99,7 @@ TEST(net_unix_stream_socket, blocking_echo_handshake) {
   core::net::unix::stream::socket client;
 
   std::thread server_thread([&server, &kBuffer] {
-    core::net::unix::stream::socket peer(core::utils::uninitialized_t{});
+    core::net::unix::stream::socket peer(core::io::fd::uninitialized_t{});
     EXPECT_EQ(server.accept(peer),
               core::net::unix::stream::socket::accept_status::kSuccess);
 
@@ -137,7 +137,7 @@ TEST(net_unix_stream_socket, nonblocking_echo_handshake) {
   EXPECT_EQ(client.connect(sockaddr),
             core::net::unix::stream::socket::connection_status::kSuccess);
 
-  core::net::unix::stream::socket peer(core::utils::uninitialized_t{});
+  core::net::unix::stream::socket peer(core::io::fd::uninitialized_t{});
   EXPECT_EQ(server.accept(peer),
             core::net::unix::stream::socket::accept_status::kSuccess);
 
@@ -161,7 +161,7 @@ TEST(net_unix_stream_socket, get_sockaddrs) {
   EXPECT_EQ(client.connect(sockaddr),
             core::net::unix::stream::socket::connection_status::kSuccess);
 
-  core::net::unix::stream::socket peer(core::utils::uninitialized_t{});
+  core::net::unix::stream::socket peer(core::io::fd::uninitialized_t{});
   EXPECT_EQ(server.accept(peer),
             core::net::unix::stream::socket::accept_status::kSuccess);
 

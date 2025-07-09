@@ -91,7 +91,7 @@ TEST(net_inet_tcp_socket, accept_error) {
   socket.set_reuseaddr(true);
   socket.set_reuseport(true);
 
-  core::net::inet::tcp::socket peer(core::utils::uninitialized_t{});
+  core::net::inet::tcp::socket peer(core::io::fd::uninitialized_t{});
   EXPECT_ANY_THROW(socket.accept(peer));
   socket.listen(1);
   EXPECT_EQ(socket.accept(peer),
@@ -158,7 +158,7 @@ TEST(net_inet_tcp_socket, nonblocking_echo_handshake) {
   EXPECT_EQ(client.connect(sockaddr),
             core::net::inet::tcp::socket::connection_status::kPending);
 
-  core::net::inet::tcp::socket peer(core::utils::uninitialized_t{});
+  core::net::inet::tcp::socket peer(core::io::fd::uninitialized_t{});
   while (server.accept(peer) !=
          core::net::inet::tcp::socket::accept_status::kSuccess);
 

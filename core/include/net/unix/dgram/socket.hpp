@@ -6,7 +6,7 @@ namespace core::net::unix::dgram {
 
 class socket final : public net::unix::base_socket {
  public:
-  socket(utils::uninitialized_t) noexcept;
+  socket(io::fd::uninitialized_t) noexcept;
   socket();
 };
 

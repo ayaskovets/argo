@@ -24,7 +24,7 @@ void BM_net_unix_stream_nonblock_handshake(benchmark::State& state) {
 
     while (client.connect(sockaddr) ==
            core::net::unix::stream::socket::connection_status::kRefused);
-    core::net::unix::stream::socket peer(core::utils::uninitialized_t{});
+    core::net::unix::stream::socket peer(core::io::fd::uninitialized_t{});
     while (server.accept(peer) !=
            core::net::unix::stream::socket::accept_status::kSuccess);
   }
@@ -47,7 +47,7 @@ void BM_net_unix_stream_throughput(benchmark::State& state) {
     socket.unlink_bind(sockaddr);
     socket.listen(1);
 
-    core::net::unix::stream::socket peer(core::utils::uninitialized_t{});
+    core::net::unix::stream::socket peer(core::io::fd::uninitialized_t{});
     while (socket.accept(peer) !=
            core::net::unix::stream::socket::accept_status::kSuccess);
 

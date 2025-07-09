@@ -13,7 +13,7 @@ namespace core::net::sockets {
 
 class base_socket : public io::fd {
  protected:
-  base_socket(utils::uninitialized_t) noexcept;
+  base_socket(io::fd::uninitialized_t) noexcept;
   base_socket(net::sockets::family family, net::sockets::type type,
               net::sockets::protocol protocol);
 
