@@ -47,7 +47,7 @@ class base_sockaddr {
 template <>
 struct std::formatter<core::net::sockets::base_sockaddr> {
   template <class FormatContext>
-  constexpr auto parse(FormatContext& ctx) const {
+  constexpr auto parse(FormatContext& ctx) const noexcept {
     return ctx.begin();
   }
 

@@ -17,7 +17,7 @@ enum class level : std::uint8_t {
 template <>
 struct std::formatter<core::logging::level> {
   template <class FormatContext>
-  constexpr auto parse(FormatContext& ctx) const {
+  constexpr auto parse(FormatContext& ctx) const noexcept {
     return ctx.begin();
   }
 

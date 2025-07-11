@@ -20,7 +20,7 @@ class sockaddr final : public net::sockets::base_sockaddr {
 template <>
 struct std::formatter<core::net::inet::sockaddr> {
   template <class FormatContext>
-  constexpr auto parse(FormatContext& ctx) const {
+  constexpr auto parse(FormatContext& ctx) const noexcept {
     return ctx.begin();
   }
 
