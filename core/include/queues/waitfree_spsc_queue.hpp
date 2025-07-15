@@ -32,7 +32,7 @@ class waitfree_spsc_queue_entry final {
 // efficient implementation of a ring buffer indexing, so the allocated buffer
 // is always equal to the provided capacity + 1
 template <typename Value, std::unsigned_integral Index = std::size_t,
-          Index Capacity = utils::kDynamicCapacity<Index>,
+          Index Capacity = utils::kRuntimeDefinedCapacity<Index>,
           typename Allocator = std::allocator<waitfree_spsc_queue_entry<Value>>>
 class waitfree_spsc_queue final : utils::non_copyable, utils::non_movable {
  public:
@@ -51,7 +51,8 @@ class waitfree_spsc_queue final : utils::non_copyable, utils::non_movable {
  public:
   constexpr explicit waitfree_spsc_queue(
       const allocator_t& allocator = allocator_t())
-    requires(Capacity != utils::kDynamicCapacity<index_t> && Capacity > 0)
+    requires(Capacity != utils::kRuntimeDefinedCapacity<index_t> &&
+             Capacity > 0)
       : allocator_(allocator) {
     if (!(ring_buffer_ = allocator_.allocate(*capacity_ + 1))) [[unlikely]] {
       throw std::runtime_error("failed to allocate memory");
@@ -60,7 +61,7 @@ class waitfree_spsc_queue final : utils::non_copyable, utils::non_movable {
 
   constexpr explicit waitfree_spsc_queue(
       index_t capacity, const allocator_t& allocator = allocator_t())
-    requires(Capacity == utils::kDynamicCapacity<index_t>)
+    requires(Capacity == utils::kRuntimeDefinedCapacity<index_t>)
       : allocator_(allocator), capacity_(capacity) {
     if (*capacity_ <= 0) [[unlikely]] {
       throw std::invalid_argument("capacity must be greater than zero");
@@ -150,7 +151,7 @@ class waitfree_spsc_queue final : utils::non_copyable, utils::non_movable {
 
   [[no_unique_address]] allocator_t allocator_;
   [[no_unique_address]] const utils::conditionally_runtime<
-      index_t, Capacity == utils::kDynamicCapacity<index_t>, Capacity>
+      index_t, Capacity == utils::kRuntimeDefinedCapacity<index_t>, Capacity>
       capacity_;
 };
 

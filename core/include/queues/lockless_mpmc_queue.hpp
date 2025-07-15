@@ -37,7 +37,7 @@ class lockless_spmc_queue_entry final {
 // non-existent because even handling 1B messages per second overflow would
 // happed once in 584 years (for Index = std::size_t)
 template <typename Value, std::unsigned_integral Index = std::size_t,
-          Index Capacity = utils::kDynamicCapacity<Index>,
+          Index Capacity = utils::kRuntimeDefinedCapacity<Index>,
           typename Allocator =
               std::allocator<lockless_spmc_queue_entry<Value, Index>>>
 class lockless_mpmc_queue final : utils::non_copyable, utils::non_movable {
@@ -57,7 +57,7 @@ class lockless_mpmc_queue final : utils::non_copyable, utils::non_movable {
  public:
   constexpr explicit lockless_mpmc_queue(
       const allocator_t& allocator = allocator_t())
-    requires(Capacity != utils::kDynamicCapacity<index_t> &&
+    requires(Capacity != utils::kRuntimeDefinedCapacity<index_t> &&
              utils::is_power_of_two(Capacity) && Capacity > 1)
       : allocator_(allocator) {
     if (!(ring_buffer_ = allocator_.allocate(Capacity))) [[unlikely]] {
@@ -71,7 +71,7 @@ class lockless_mpmc_queue final : utils::non_copyable, utils::non_movable {
 
   constexpr explicit lockless_mpmc_queue(
       index_t capacity, const allocator_t& allocator = allocator_t())
-    requires(Capacity == utils::kDynamicCapacity<index_t>)
+    requires(Capacity == utils::kRuntimeDefinedCapacity<index_t>)
       : allocator_(allocator), capacity_(capacity) {
     if (!utils::is_power_of_two(*capacity_) || *capacity_ <= 1) {
       throw std::invalid_argument(
@@ -187,7 +187,7 @@ class lockless_mpmc_queue final : utils::non_copyable, utils::non_movable {
 
   [[no_unique_address]] allocator_t allocator_;
   [[no_unique_address]] const utils::conditionally_runtime<
-      index_t, Capacity == utils::kDynamicCapacity<index_t>, Capacity>
+      index_t, Capacity == utils::kRuntimeDefinedCapacity<index_t>, Capacity>
       capacity_;
 };
 

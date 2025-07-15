@@ -26,7 +26,7 @@ void BM_queues_lockfree_mpsc_queue_nonblocking_throughput(
     constexpr bool& empty() { return empty_; }
   };
   using queue_t = core::queues::lockfree_mpsc_queue<
-      Value, std::size_t, core::utils::kDynamicCapacity<std::size_t>,
+      Value, std::size_t, core::utils::kRuntimeDefinedCapacity<std::size_t>,
       std::allocator<entry_t>>;
 
   std::atomic<std::size_t> try_push_times = 0;
@@ -149,7 +149,7 @@ void BM_queues_lockfree_mpsc_queue_blocking_throughput(
     constexpr bool& empty() { return empty_; }
   };
   using queue_t = core::queues::lockfree_mpsc_queue<
-      Value, std::size_t, core::utils::kDynamicCapacity<std::size_t>,
+      Value, std::size_t, core::utils::kRuntimeDefinedCapacity<std::size_t>,
       std::allocator<entry_t>>;
 
   for (const auto _ : state) {

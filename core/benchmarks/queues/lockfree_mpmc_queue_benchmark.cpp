@@ -18,7 +18,7 @@ void BM_queues_lockfree_mpmc_queue_nonblocking_throughput(
 
   using entry_t = core::queues::lockfree_mpmc_queue_entry<Value, std::size_t>;
   using queue_t = core::queues::lockfree_mpmc_queue<
-      Value, std::size_t, core::utils::kDynamicCapacity<std::size_t>,
+      Value, std::size_t, core::utils::kRuntimeDefinedCapacity<std::size_t>,
       std::allocator<entry_t>>;
 
   std::atomic<std::size_t> try_push_times = 0;
@@ -126,7 +126,7 @@ void BM_queues_lockfree_mpmc_queue_blocking_throughput(
 
   using entry_t = core::queues::lockfree_mpmc_queue_entry<Value, std::size_t>;
   using queue_t = core::queues::lockfree_mpmc_queue<
-      Value, std::size_t, core::utils::kDynamicCapacity<std::size_t>,
+      Value, std::size_t, core::utils::kRuntimeDefinedCapacity<std::size_t>,
       std::allocator<entry_t>>;
 
   for (const auto _ : state) {

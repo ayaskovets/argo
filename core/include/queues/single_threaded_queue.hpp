@@ -31,7 +31,7 @@ class single_threaded_queue_entry final {
 // NOTE: this queue is not thread safe and is expected to be used in only the
 // single-threaded context, otherwise this is the same as waitfree_spsc_queue
 template <typename Value, std::unsigned_integral Index = std::size_t,
-          Index Capacity = utils::kDynamicCapacity<Index>,
+          Index Capacity = utils::kRuntimeDefinedCapacity<Index>,
           typename Allocator =
               std::allocator<single_threaded_queue_entry<Value>>>
 class single_threaded_queue final : utils::non_copyable, utils::non_movable {
@@ -51,7 +51,8 @@ class single_threaded_queue final : utils::non_copyable, utils::non_movable {
  public:
   constexpr explicit single_threaded_queue(
       const allocator_t& allocator = allocator_t())
-    requires(Capacity != utils::kDynamicCapacity<index_t> && Capacity > 0)
+    requires(Capacity != utils::kRuntimeDefinedCapacity<index_t> &&
+             Capacity > 0)
       : allocator_(allocator) {
     if (!(ring_buffer_ = allocator_.allocate(*capacity_ + 1))) [[unlikely]] {
       throw std::runtime_error("failed to allocate memory");
@@ -60,7 +61,7 @@ class single_threaded_queue final : utils::non_copyable, utils::non_movable {
 
   constexpr explicit single_threaded_queue(
       index_t capacity, const allocator_t& allocator = allocator_t())
-    requires(Capacity == utils::kDynamicCapacity<index_t>)
+    requires(Capacity == utils::kRuntimeDefinedCapacity<index_t>)
       : allocator_(allocator), capacity_(capacity) {
     if (*capacity_ <= 0) [[unlikely]] {
       throw std::invalid_argument("capacity must be greater than zero");
@@ -114,7 +115,7 @@ class single_threaded_queue final : utils::non_copyable, utils::non_movable {
 
   [[no_unique_address]] allocator_t allocator_;
   [[no_unique_address]] const utils::conditionally_runtime<
-      index_t, Capacity == utils::kDynamicCapacity<index_t>, Capacity>
+      index_t, Capacity == utils::kRuntimeDefinedCapacity<index_t>, Capacity>
       capacity_;
 };
 

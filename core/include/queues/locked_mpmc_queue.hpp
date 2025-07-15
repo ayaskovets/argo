@@ -1,5 +1,6 @@
 #pragma once
 
+#include <atomic>
 #include <condition_variable>
 #include <deque>
 #include <mutex>
@@ -12,7 +13,7 @@
 namespace core::queues {
 
 template <typename Value, std::unsigned_integral Index = std::size_t,
-          Index Capacity = utils::kDynamicCapacity<Index>,
+          Index Capacity = utils::kRuntimeDefinedCapacity<Index>,
           typename Allocator = std::allocator<Value>>
 class locked_mpmc_queue final : utils::non_copyable, utils::non_movable {
  public:
@@ -30,12 +31,13 @@ class locked_mpmc_queue final : utils::non_copyable, utils::non_movable {
  public:
   constexpr explicit locked_mpmc_queue(
       const allocator_t& allocator = allocator_t()) noexcept
-    requires(Capacity != utils::kDynamicCapacity<index_t> && Capacity > 0)
+    requires(Capacity != utils::kRuntimeDefinedCapacity<index_t> &&
+             Capacity > 0)
       : queue_(allocator) {}
 
   constexpr explicit locked_mpmc_queue(
       index_t capacity, const allocator_t& allocator = allocator_t())
-    requires(Capacity == utils::kDynamicCapacity<index_t>)
+    requires(Capacity == utils::kRuntimeDefinedCapacity<index_t>)
       : queue_(allocator), capacity_(capacity) {
     if (*capacity_ <= 0) {
       throw std::invalid_argument("capacity must be greater than zero");
@@ -115,7 +117,7 @@ class locked_mpmc_queue final : utils::non_copyable, utils::non_movable {
   std::atomic<index_t> size_;
 
   [[no_unique_address]] const utils::conditionally_runtime<
-      index_t, Capacity == utils::kDynamicCapacity<index_t>, Capacity>
+      index_t, Capacity == utils::kRuntimeDefinedCapacity<index_t>, Capacity>
       capacity_;
 };
 
