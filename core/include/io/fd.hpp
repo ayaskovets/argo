@@ -46,7 +46,7 @@ class fd {
   void close();
 
  protected:
-  int get_native_handle() const noexcept;
+  int native_handle() const noexcept;
 
  private:
   struct impl;

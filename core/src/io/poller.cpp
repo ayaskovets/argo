@@ -59,7 +59,7 @@ poller::~poller() noexcept = default;
 bool poller::insert_or_assign(const io::fd& fd, events_t events) {
   auto& [fds, fds_index, fds_to_insert] = *pimpl_;
 
-  auto fds_it = fds_index.find(fd.get_native_handle());
+  auto fds_it = fds_index.find(fd.native_handle());
   if (fds_it != fds_index.end()) [[unlikely]] {
     fds.at(fds_it->second).events = to_native_events(events);
     return false;
@@ -68,7 +68,7 @@ bool poller::insert_or_assign(const io::fd& fd, events_t events) {
   auto fds_to_insert_it =
       std::find_if(fds_to_insert.begin(), fds_to_insert.end(),
                    [&fd](const ::pollfd& pollfd) {
-                     return pollfd.fd == fd.get_native_handle();
+                     return pollfd.fd == fd.native_handle();
                    });
   if (fds_to_insert_it != fds_to_insert.end()) [[unlikely]] {
     fds_to_insert_it->events = to_native_events(events);
@@ -76,7 +76,7 @@ bool poller::insert_or_assign(const io::fd& fd, events_t events) {
   }
 
   ::pollfd pollfd{
-      .fd = fd.get_native_handle(),
+      .fd = fd.native_handle(),
       .events = to_native_events(events),
       .revents = kEmptyEvents,
   };
@@ -92,7 +92,7 @@ bool poller::insert_or_assign(const io::fd& fd, events_t events) {
 bool poller::erase(const io::fd& fd) {
   auto& [fds, fds_index, fds_to_insert] = *pimpl_;
 
-  auto it = fds_index.find(fd.get_native_handle());
+  auto it = fds_index.find(fd.native_handle());
   if (it != fds_index.end()) [[likely]] {
     fds.at(it->second).fd = -fds.at(it->second).fd;
     return true;
@@ -101,7 +101,7 @@ bool poller::erase(const io::fd& fd) {
   auto fds_to_insert_it =
       std::find_if(fds_to_insert.begin(), fds_to_insert.end(),
                    [&fd](const ::pollfd& pollfd) {
-                     return pollfd.fd == fd.get_native_handle();
+                     return pollfd.fd == fd.native_handle();
                    });
   if (fds_to_insert_it != fds_to_insert.end()) [[unlikely]] {
     fds_to_insert_it->fd = -fds_to_insert_it->fd;

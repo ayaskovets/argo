@@ -123,6 +123,6 @@ void fd::close() {
   }
 }
 
-int fd::get_native_handle() const noexcept { return pimpl_->native_handle; }
+int fd::native_handle() const noexcept { return pimpl_->native_handle; }
 
 }  // namespace core::io
