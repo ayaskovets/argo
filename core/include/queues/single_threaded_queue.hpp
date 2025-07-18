@@ -105,6 +105,11 @@ class single_threaded_queue final : utils::non_copyable, utils::non_movable {
   }
 
  public:
+  constexpr bool empty() const noexcept { return push_to_ == pop_from_; }
+  constexpr index_t size() const noexcept {
+    return pop_from_ <= push_to_ ? push_to_ - pop_from_
+                                 : pop_from_ - push_to_ - 1;
+  }
   constexpr index_t capacity() const noexcept { return *capacity_; }
 
  private:
