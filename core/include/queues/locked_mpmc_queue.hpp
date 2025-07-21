@@ -4,7 +4,6 @@
 #include <condition_variable>
 #include <deque>
 #include <mutex>
-#include <type_traits>
 
 #include "utils/conditionally_runtime.hpp"
 #include "utils/constants.hpp"
@@ -12,6 +11,11 @@
 
 namespace core::queues {
 
+/**
+ * @brief Threadsafe queue for many producers and many consumers
+ *
+ * Implemented as a naively locked std::deque
+ */
 template <typename Value, std::unsigned_integral Index = std::size_t,
           Index Capacity = utils::kRuntimeDefinedCapacity<Index>,
           typename Allocator = std::allocator<Value>>
@@ -96,8 +100,8 @@ class locked_mpmc_queue final : utils::non_copyable, utils::non_movable {
     std::unique_lock<std::mutex> lock(mutex_);
     pop_available_cv_.wait(lock, [this] { return !queue_.empty(); });
 
-    // NOTE: correct iff noexcept(pop_front)
-    value_t front(std::move(queue_.front()));
+    value_t front(
+        std::move(queue_.front()));  ///< Correct iff noexcept(pop_front)
 
     queue_.pop_front();
     size_.fetch_sub(1, std::memory_order::relaxed);

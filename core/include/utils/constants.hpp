@@ -4,10 +4,14 @@
 
 namespace core::utils {
 
+/**
+ * @brief Poor man's std::hardware_destructive_interference_size
+ */
 constexpr const std::size_t kCacheLineSize = 64;
 
-// NOTE: a constant representing the same as std::dynamic_extent for a given
-// integral type
+/**
+ * @brief Constant semantically similar to std::dynamic_extent but with value 0
+ */
 template <std::unsigned_integral T>
 constexpr const T kRuntimeDefinedCapacity = 0;
 

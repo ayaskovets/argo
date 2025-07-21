@@ -16,7 +16,8 @@ void BM_queues_lockfree_mpmc_queue_nonblocking_throughput(
   const std::size_t consumers = state.range(3);
   const Value value{};
 
-  using entry_t = core::queues::lockfree_mpmc_queue_entry<Value, std::size_t>;
+  using entry_t =
+      core::queues::detail::lockfree_mpmc_queue_entry_impl<Value, std::size_t>;
   using queue_t = core::queues::lockfree_mpmc_queue<
       Value, std::size_t, core::utils::kRuntimeDefinedCapacity<std::size_t>,
       std::allocator<entry_t>>;
@@ -124,7 +125,8 @@ void BM_queues_lockfree_mpmc_queue_blocking_throughput(
   const std::size_t consumers = state.range(3);
   const Value value{};
 
-  using entry_t = core::queues::lockfree_mpmc_queue_entry<Value, std::size_t>;
+  using entry_t =
+      core::queues::detail::lockfree_mpmc_queue_entry_impl<Value, std::size_t>;
   using queue_t = core::queues::lockfree_mpmc_queue<
       Value, std::size_t, core::utils::kRuntimeDefinedCapacity<std::size_t>,
       std::allocator<entry_t>>;

@@ -1,8 +1,8 @@
 #pragma once
 
 #include <atomic>
-#include <optional>
-#include <type_traits>
+#include <memory>
+#include <stdexcept>
 
 #include "utils/conditionally_runtime.hpp"
 #include "utils/constants.hpp"
@@ -11,18 +11,25 @@
 
 namespace core::queues {
 
-namespace detail {
-
+/**
+ * @brief Queue entry requirements
+ *
+ * Requires empty() to reduce contention on the queue indices by increasing it
+ * on the queue elements
+ */
 template <typename T, typename Value>
 concept lockfree_mpsc_queue_entry = requires(T entry) {
   { entry.value() } -> std::same_as<Value&>;
   { entry.empty() } -> std::same_as<bool&>;
 };
 
-}  // namespace detail
+namespace detail {
 
+/**
+ * @brief Default queue entry only for internal usage
+ */
 template <typename Value>
-class lockfree_mpsc_queue_entry final {
+class lockfree_mpsc_queue_entry_impl final {
  private:
   Value value_;
   bool empty_;
@@ -32,9 +39,15 @@ class lockfree_mpsc_queue_entry final {
   constexpr bool& empty() { return empty_; }
 };
 
+}  // namespace detail
+
+/**
+ * @brief Threadsafe queue for many producers and 1 consumer
+ */
 template <typename Value, std::unsigned_integral Index = std::size_t,
           Index Capacity = utils::kRuntimeDefinedCapacity<Index>,
-          typename Allocator = std::allocator<lockfree_mpsc_queue_entry<Value>>>
+          typename Allocator =
+              std::allocator<detail::lockfree_mpsc_queue_entry_impl<Value>>>
 class lockfree_mpsc_queue final : utils::non_copyable, utils::non_movable {
  public:
   using value_t = Value;
@@ -47,7 +60,7 @@ class lockfree_mpsc_queue final : utils::non_copyable, utils::non_movable {
   static_assert(std::is_nothrow_destructible_v<value_t>);
   static_assert(std::is_nothrow_move_constructible_v<value_t>);
   static_assert(std::is_nothrow_move_assignable_v<value_t>);
-  static_assert(detail::lockfree_mpsc_queue_entry<entry_t, value_t>);
+  static_assert(lockfree_mpsc_queue_entry<entry_t, value_t>);
 
  public:
   constexpr explicit lockfree_mpsc_queue(
@@ -90,9 +103,10 @@ class lockfree_mpsc_queue final : utils::non_copyable, utils::non_movable {
 
  public:
   constexpr bool try_push(value_t value) noexcept {
-    const index_t size = size_.fetch_add(1, std::memory_order::relaxed);
-    if (size >= *capacity_) {
-      size_.fetch_sub(1, std::memory_order::relaxed);
+    const index_t available_to_pop =
+        available_to_pop_.fetch_add(1, std::memory_order::relaxed);
+    if (available_to_pop >= *capacity_) {
+      available_to_pop_.fetch_sub(1, std::memory_order::relaxed);
       return false;
     }
 
@@ -107,9 +121,11 @@ class lockfree_mpsc_queue final : utils::non_copyable, utils::non_movable {
   }
 
   constexpr void push(value_t value) noexcept {
-    const index_t size = size_.fetch_add(1, std::memory_order::relaxed);
-    if (size >= *capacity_) {
-      while (size_.load(std::memory_order::acquire) >= size + 1);
+    const index_t available_to_pop =
+        available_to_pop_.fetch_add(1, std::memory_order::relaxed);
+    if (available_to_pop >= *capacity_) {
+      while (available_to_pop_.load(std::memory_order::acquire) >=
+             available_to_pop + 1);
     }
 
     const index_t push_to = push_to_.fetch_add(1, std::memory_order::relaxed);
@@ -135,7 +151,7 @@ class lockfree_mpsc_queue final : utils::non_copyable, utils::non_movable {
     pop_from_ += 1;
     reinterpret_cast<std::atomic<bool>&>(entry.empty())
         .store(true, std::memory_order::release);
-    size_.fetch_sub(1, std::memory_order::relaxed);
+    available_to_pop_.fetch_sub(1, std::memory_order::relaxed);
     return true;
   }
 
@@ -150,7 +166,7 @@ class lockfree_mpsc_queue final : utils::non_copyable, utils::non_movable {
     pop_from_ += 1;
     reinterpret_cast<std::atomic<bool>&>(entry.empty())
         .store(true, std::memory_order::release);
-    size_.fetch_sub(1, std::memory_order::relaxed);
+    available_to_pop_.fetch_sub(1, std::memory_order::relaxed);
     return value;
   }
 
@@ -160,7 +176,7 @@ class lockfree_mpsc_queue final : utils::non_copyable, utils::non_movable {
  private:
   entry_t* ring_buffer_ = nullptr;
 
-  alignas(utils::kCacheLineSize) std::atomic<index_t> size_ = 0;
+  alignas(utils::kCacheLineSize) std::atomic<index_t> available_to_pop_ = 0;
   alignas(utils::kCacheLineSize) std::atomic<index_t> push_to_ = 0;
   alignas(utils::kCacheLineSize) index_t pop_from_ = 0;
 

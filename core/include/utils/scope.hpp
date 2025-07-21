@@ -7,6 +7,9 @@
 
 namespace core::utils {
 
+/**
+ * @brief Declarative way to do an noexcept operation when exiting a scope
+ */
 template <std::invocable T>
 class scope_exit final : utils::non_copyable, utils::non_movable {
  private:
@@ -18,7 +21,7 @@ class scope_exit final : utils::non_copyable, utils::non_movable {
   constexpr ~scope_exit() noexcept { finally_(); }
 
  private:
-  T finally_;
+  const T& finally_;
 };
 
 }  // namespace core::utils

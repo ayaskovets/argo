@@ -1,8 +1,8 @@
 #pragma once
 
 #include <atomic>
-#include <optional>
-#include <type_traits>
+#include <memory>
+#include <stdexcept>
 
 #include "utils/conditionally_runtime.hpp"
 #include "utils/constants.hpp"
@@ -10,17 +10,21 @@
 
 namespace core::queues {
 
-namespace detail {
-
+/**
+ * @brief Queue entry requirements
+ */
 template <typename T, typename Value>
 concept single_threaded_queue_entry = requires(T entry) {
   { entry.value() } -> std::same_as<Value&>;
 };
 
-}  // namespace detail
+namespace detail {
 
+/**
+ * @brief Default queue entry only for internal usage
+ */
 template <typename Value>
-class single_threaded_queue_entry final {
+class single_threaded_queue_entry_impl final {
  private:
   Value value_;
 
@@ -28,12 +32,20 @@ class single_threaded_queue_entry final {
   constexpr Value& value() { return value_; }
 };
 
-// NOTE: this queue is not thread safe and is expected to be used in only the
-// single-threaded context, otherwise this is the same as waitfree_spsc_queue
+}  // namespace detail
+
+/**
+ * @brief Ring buffer for a single-threaded usage. Not threadsafe
+ *
+ * Allocated buffer always contains one additional element to allow for an
+ * efficient implementation of a ring buffer indexing
+ *
+ * Implemented as a ring buffer
+ */
 template <typename Value, std::unsigned_integral Index = std::size_t,
           Index Capacity = utils::kRuntimeDefinedCapacity<Index>,
           typename Allocator =
-              std::allocator<single_threaded_queue_entry<Value>>>
+              std::allocator<detail::single_threaded_queue_entry_impl<Value>>>
 class single_threaded_queue final : utils::non_copyable, utils::non_movable {
  public:
   using value_t = Value;
@@ -46,7 +58,7 @@ class single_threaded_queue final : utils::non_copyable, utils::non_movable {
   static_assert(std::is_nothrow_destructible_v<value_t>);
   static_assert(std::is_nothrow_move_constructible_v<value_t>);
   static_assert(std::is_nothrow_move_assignable_v<value_t>);
-  static_assert(detail::single_threaded_queue_entry<entry_t, value_t>);
+  static_assert(single_threaded_queue_entry<entry_t, value_t>);
 
  public:
   constexpr explicit single_threaded_queue(

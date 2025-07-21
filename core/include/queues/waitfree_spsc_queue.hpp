@@ -1,8 +1,8 @@
 #pragma once
 
 #include <atomic>
-#include <optional>
-#include <type_traits>
+#include <memory>
+#include <stdexcept>
 
 #include "utils/conditionally_runtime.hpp"
 #include "utils/constants.hpp"
@@ -10,17 +10,21 @@
 
 namespace core::queues {
 
-namespace detail {
-
+/**
+ * @brief Default queue entry only for internal usage
+ */
 template <typename T, typename Value>
 concept waitfree_spsc_queue_entry = requires(T entry) {
   { entry.value() } -> std::same_as<Value&>;
 };
 
-}  // namespace detail
+namespace detail {
 
+/**
+ * @brief Default queue entry only for internal usage
+ */
 template <typename Value>
-class waitfree_spsc_queue_entry final {
+class waitfree_spsc_queue_entry_impl final {
  private:
   Value value_;
 
@@ -28,12 +32,20 @@ class waitfree_spsc_queue_entry final {
   constexpr Value& value() { return value_; }
 };
 
-// NOTE: this queue contains one additional fake element to allow for an
-// efficient implementation of a ring buffer indexing, so the allocated buffer
-// is always equal to the provided capacity + 1
+}  // namespace detail
+
+/**
+ * @brief Threadsafe queue for 1 producer and 1 consumer
+ *
+ * Allocated buffer always contains one additional element to allow for an
+ * efficient implementation of a ring buffer indexing
+ *
+ * Implemented as a ring buffer with cached pop and push indices
+ */
 template <typename Value, std::unsigned_integral Index = std::size_t,
           Index Capacity = utils::kRuntimeDefinedCapacity<Index>,
-          typename Allocator = std::allocator<waitfree_spsc_queue_entry<Value>>>
+          typename Allocator =
+              std::allocator<detail::waitfree_spsc_queue_entry_impl<Value>>>
 class waitfree_spsc_queue final : utils::non_copyable, utils::non_movable {
  public:
   using value_t = Value;
@@ -46,7 +58,7 @@ class waitfree_spsc_queue final : utils::non_copyable, utils::non_movable {
   static_assert(std::is_nothrow_destructible_v<value_t>);
   static_assert(std::is_nothrow_move_constructible_v<value_t>);
   static_assert(std::is_nothrow_move_assignable_v<value_t>);
-  static_assert(detail::waitfree_spsc_queue_entry<entry_t, value_t>);
+  static_assert(waitfree_spsc_queue_entry<entry_t, value_t>);
 
  public:
   constexpr explicit waitfree_spsc_queue(

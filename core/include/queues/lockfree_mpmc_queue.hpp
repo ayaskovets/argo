@@ -1,8 +1,8 @@
 #pragma once
 
 #include <atomic>
-#include <optional>
-#include <type_traits>
+#include <memory>
+#include <stdexcept>
 
 #include "utils/conditionally_runtime.hpp"
 #include "utils/constants.hpp"
@@ -11,8 +11,11 @@
 
 namespace core::queues {
 
-namespace detail {
-
+/**
+ * @brief Queue entry requirements
+ *
+ * Requires seqnum() to avoid the ABA problem
+ */
 template <typename T, typename Value, typename Index>
 concept lockfree_mpmc_queue_entry = requires(T entry) {
   requires std::atomic<T>::is_always_lock_free;
@@ -20,10 +23,13 @@ concept lockfree_mpmc_queue_entry = requires(T entry) {
   { entry.seqnum() } -> std::same_as<Index&>;
 };
 
-}  // namespace detail
+namespace detail {
 
+/**
+ * @brief Default queue entry only for internal usage
+ */
 template <typename Value, typename Index>
-class lockfree_mpmc_queue_entry final {
+class lockfree_mpmc_queue_entry_impl final {
  private:
   Value value_;
   Index seqnum_;
@@ -33,10 +39,18 @@ class lockfree_mpmc_queue_entry final {
   constexpr Index& seqnum() { return seqnum_; }
 };
 
+}  // namespace detail
+
+/**
+ * @brief Threadsafe queue for many producers and many consumers
+ *
+ * Implemented with 128-bit CAS. The last bit of seqnum indicates whether the
+ * element is occupied
+ */
 template <typename Value, std::unsigned_integral Index = std::size_t,
           Index Capacity = utils::kRuntimeDefinedCapacity<Index>,
-          typename Allocator =
-              std::allocator<lockfree_mpmc_queue_entry<Value, Index>>>
+          typename Allocator = std::allocator<
+              detail::lockfree_mpmc_queue_entry_impl<Value, Index>>>
 class lockfree_mpmc_queue final : utils::non_copyable, utils::non_movable {
  public:
   using value_t = Value;
@@ -51,7 +65,7 @@ class lockfree_mpmc_queue final : utils::non_copyable, utils::non_movable {
   static_assert(std::is_nothrow_copy_constructible_v<entry_t>);
   static_assert(std::is_trivially_move_assignable_v<entry_t>);
   static_assert(std::is_nothrow_move_assignable_v<entry_t>);
-  static_assert(detail::lockfree_mpmc_queue_entry<entry_t, value_t, index_t>);
+  static_assert(lockfree_mpmc_queue_entry<entry_t, value_t, index_t>);
 
  public:
   constexpr explicit lockfree_mpmc_queue(allocator_t allocator = allocator_t())
