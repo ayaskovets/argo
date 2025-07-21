@@ -8,21 +8,24 @@
 
 namespace core::io {
 
-// NOTE: poller does not own file descriptors and a close() or another operation
-// that invalidates the descriptor would be noticeable only after poll() on the
-// invalidated descriptor
+/**
+ * @brief File descriptor events poller
+ *
+ * Does not own file descriptors and a close() or another operation that
+ * invalidates the descriptor would be noticeable only after poll() on the
+ * invalidated descriptor
+ */
 class poller final : public utils::non_copyable {
  public:
   enum event : std::uint8_t {
     kPollIn = 1 << 0,
-    kPollPri = 1 << 1,
-    kPollOut = 1 << 2,
-    kPollErr = 1 << 3,
-    kPollHup = 1 << 4,
-    kPollNval = 1 << 5,
+    kPollOut = 1 << 1,
+    kPollErr = 1 << 2,
+    kPollHup = 1 << 3,
+    kPollNval = 1 << 4,
   };
   using events_t = std::uint8_t;
-  using callback_t = std::function<void(poller&, const io::fd&, events_t)>;
+  using callback_t = std::function<void(const io::fd&, events_t)>;
 
  public:
   explicit poller(callback_t callback) noexcept;
@@ -31,18 +34,33 @@ class poller final : public utils::non_copyable {
   ~poller() noexcept;
 
  public:
-  // NOTE: returns a boolean indicating whether the fd was inserted. Returns
-  // false case of an update. Safe to call from the callback
+  /**
+   * @brief Track events on the passed descriptor
+   *
+   * Returns true if the fd was inserted
+   *
+   * Safe to call from the callback
+   */
   bool insert_or_assign(const io::fd& fd, events_t events);
 
-  // NOTE: returns a boolean indicating whether the fd was erased. Safe to call
-  // from the callback
+  /**
+   * @brief Track events on the passed descriptor
+   *
+   * Returns true if the fd was erased
+   *
+   * Safe to call from the callback
+   */
   bool erase(const io::fd& fd);
 
  public:
-  // NOTE: poll() methods return the number of unhandled errors during the event
-  // handling. Any exceptions thrown in the callback function will be silently
-  // dropped and accounted in the return value
+  /**
+   * @brief Synchronously poll for the events on tracked file descriptors
+   *
+   * Return the number of unhandled errors during the event processing
+   *
+   * Any exceptions thrown from the callback function will be silently dropped
+   * and accounted in the return value
+   */
   std::size_t try_poll(std::chrono::milliseconds timeout);
   std::size_t poll();
 

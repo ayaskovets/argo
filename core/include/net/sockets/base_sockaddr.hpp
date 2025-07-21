@@ -9,20 +9,29 @@
 namespace core::net::sockets {
 
 class base_socket;
+
+/**
+ * @brief Sockaddr of any family
+ *
+ * @warning Allocates and deallocated memory that holds sockaddr of the provided
+ * family. It is the responsibility of the derived class to fill the memory as
+ * needed
+ */
 class base_sockaddr {
  private:
-  friend class base_socket;
+  friend class base_socket;  ///< Needed for base_socket to access the storage
 
  protected:
-  // NOTE: base_sockaddr always allocates enough memory to hold a sockaddr of
-  // the provided family. It is the responsibility of the derived class to fill
-  // the memory as needed
   explicit base_sockaddr(net::sockets::family family);
 
  protected:
-  // NOTE: get_storage() methods are expected to be used only in the subclasses
-  // to wrap access to the allocated storage or for two-step creation of a
-  // base_sockaddr object
+  /**
+   * @brief Type-erased sockaddr storage
+   *
+   * Allocated by the base_sockaddr. Expected to be used only in the subclasses
+   * for wrapping the access to allocated storage or for two-step creation
+   * of base_sockaddr object
+   */
   class storage;
   storage* get_storage() noexcept;
   const storage* get_storage() const noexcept;

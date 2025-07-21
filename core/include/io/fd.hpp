@@ -4,11 +4,13 @@
 
 namespace core::io {
 
-// NOTE: this class is merely a copy-featured RAII wrapper around a file
-// descriptor. It is assumed that the programmer is responsible for the
-// parameter of the constructor representing an open file descriptor. The
-// constructor still verifies whether the value itself is in the range is a
-// valid file descriptor
+/**
+ * @brief Copy-featured RAII wrapper for a file descriptor
+ *
+ * It is assumed that the programmer is responsible for the  parameter of the
+ * constructor representing an open file descriptor. The constructor still
+ * verifies whether the value itself is in the range is a valid file descriptor
+ */
 class fd {
  public:
   class uninitialized_t final {};
@@ -33,16 +35,25 @@ class fd {
   ~fd() noexcept;
 
  public:
-  // NOTE: file descriptor is only equal to itself i.e. operator== is the
-  // identity comparison
+  /**
+   * @brief Identity comparison
+   *
+   * File descriptor is only equal to itself i.e. operator== is the identity
+   * comparison
+   */
   bool operator==(const fd& that) const noexcept;
   bool operator!=(const fd& that) const noexcept;
 
  public:
-  // NOTE: this method explicitly throws an exception in case of any close()
-  // failure. This is done to leave RAII semantics for the type but to allow
-  // user code to receive the error if it needs to. Any subsequent call results
-  // in an exception
+  /**
+   * @brief Manually close a file descriptor
+   *
+   * This method explicitly throws an exception in case of any failure. This is
+   * done to keep RAII semantics for the type but to allow user code to receive
+   * the error if needed
+   *
+   * Any subsequent call results in an exception
+   */
   void close();
 
  protected:
