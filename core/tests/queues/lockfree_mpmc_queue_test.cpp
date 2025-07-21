@@ -219,7 +219,7 @@ TEST_P(queues_lockfree_mpmc_queue_workload, nonblocking) {
   };
 
   const auto consumer = [items_size, &latch, &queue, &popped_items,
-                         &popped_items_count]() {
+                         &popped_items_count] {
     latch.arrive_and_wait();
     while (true) {
       const std::size_t index = popped_items_count.fetch_add(1);
@@ -275,7 +275,7 @@ TEST_P(queues_lockfree_mpmc_queue_workload, blocking) {
   };
 
   const auto consumer = [items_size, &latch, &queue, &popped_items,
-                         &popped_items_count]() {
+                         &popped_items_count] {
     latch.arrive_and_wait();
     while (true) {
       const std::size_t index = popped_items_count.fetch_add(1);
