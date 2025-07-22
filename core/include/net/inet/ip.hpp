@@ -5,6 +5,9 @@
 
 namespace core::net::inet {
 
+/**
+ * @brief IPv4 address
+ */
 class ip final {
  public:
   static const ip& kLoopback() noexcept;

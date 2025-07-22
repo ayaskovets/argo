@@ -7,6 +7,9 @@
 
 namespace core::logging {
 
+/**
+ * @brief Log destination
+ */
 class writer final {
  public:
   static const writer& kStdout();

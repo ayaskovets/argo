@@ -10,6 +10,9 @@
 
 namespace core::net::sockets {
 
+/**
+ * @brief Socket base class
+ */
 class base_socket : public io::fd {
  protected:
   base_socket(io::fd::uninitialized_t) noexcept;

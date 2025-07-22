@@ -8,6 +8,9 @@
 
 namespace core::logging {
 
+/**
+ * @brief Logger with customizable string rendering and log destination
+ */
 class logger {
  public:
   static const logger& kColoredLeveledTimestampedStderr();

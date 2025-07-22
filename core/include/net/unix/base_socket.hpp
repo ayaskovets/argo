@@ -5,6 +5,9 @@
 
 namespace core::net::unix {
 
+/**
+ * @brief UNIX socket base class
+ */
 class base_socket : public net::sockets::base_socket {
  protected:
   base_socket(io::fd::uninitialized_t) noexcept;

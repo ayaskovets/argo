@@ -4,6 +4,9 @@
 
 namespace core::net::unix {
 
+/**
+ * @brief UNIX address
+ */
 class sockaddr final : public net::sockets::base_sockaddr {
  public:
   static const sockaddr& kInvalid() noexcept;

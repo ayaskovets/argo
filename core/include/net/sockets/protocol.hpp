@@ -5,6 +5,9 @@
 
 namespace core::net::sockets {
 
+/**
+ * @brief Specific protocol
+ */
 enum class protocol : std::uint8_t {
   kUnspecified,
   kTcp,

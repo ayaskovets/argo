@@ -5,6 +5,9 @@
 
 namespace core::net::sockets {
 
+/**
+ * @brief Address family
+ */
 enum class family : std::uint8_t {
   kUnspecified,
   kInet,

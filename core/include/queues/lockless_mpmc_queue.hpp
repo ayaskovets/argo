@@ -43,7 +43,7 @@ class lockless_spmc_queue_entry_impl final {
 /**
  * @brief Threadsafe queue for many producers and many consumers
  *
- * @warning This queue does not handle frequent rollover well, but using 64-bit
+ * @warning This queue does not handle integer overflow well, but using 64-bit
  * unsigned integers as indices makes the problem virtually nonexistent because
  * even handling 1B messages per second overflow would occur once every 584
  * years (for Index = std::size_t)

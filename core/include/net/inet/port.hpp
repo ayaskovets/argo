@@ -5,6 +5,9 @@
 
 namespace core::net::inet {
 
+/**
+ * @brief IP port
+ */
 class port final {
  public:
   struct network_byte_order_t final {};

@@ -5,6 +5,9 @@
 
 namespace core::net::sockets {
 
+/**
+ * @brief Protocol type
+ */
 enum class type : std::uint8_t {
   kStream,
   kDgram,

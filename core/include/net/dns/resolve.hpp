@@ -10,6 +10,13 @@
 
 namespace core::net::dns {
 
+/**
+ * @brief Resolve IPv4 or IPv6 address from a hostname
+ *
+ * Use family::kUnspecified to resolve all available addresses
+ *
+ * Use protocol::kUnspecified to resolve all available protocols
+ */
 std::vector<std::variant<net::inet::sockaddr, net::inet6::sockaddr>> resolve(
     std::string_view hostname, net::sockets::family family,
     net::sockets::protocol protocol);

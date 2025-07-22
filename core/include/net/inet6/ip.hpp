@@ -6,6 +6,9 @@
 
 namespace core::net::inet6 {
 
+/**
+ * @brief IPv6 address
+ */
 class ip final {
  public:
   static const ip& kLoopback() noexcept;

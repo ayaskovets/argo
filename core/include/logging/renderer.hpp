@@ -7,6 +7,10 @@
 
 namespace core::logging {
 
+/**
+ * @brief Log message decorator
+ *
+ */
 class renderer final {
  public:
   static const renderer& kNoop();

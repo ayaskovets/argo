@@ -4,6 +4,9 @@
 
 namespace core::net::unix::stream {
 
+/**
+ * @brief UNIX stream socket
+ */
 class socket final : public net::unix::base_socket {
  public:
   socket(io::fd::uninitialized_t) noexcept;

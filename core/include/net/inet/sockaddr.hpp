@@ -6,6 +6,9 @@
 
 namespace core::net::inet {
 
+/**
+ * @brief IPv4 address:port pair
+ */
 class sockaddr final : public net::sockets::base_sockaddr {
  public:
   sockaddr(net::inet::ip ip, net::inet::port port);
