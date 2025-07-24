@@ -101,6 +101,10 @@ class lockfree_mpmc_queue final : utils::non_copyable, utils::non_movable {
     }
   }
 
+  /**
+   * @warning Destructor is only safe when called while no other thread is doing
+   * operations on the queue
+   */
   constexpr ~lockfree_mpmc_queue() noexcept {
     value_t value;
     while (try_pop(value));

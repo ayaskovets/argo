@@ -48,6 +48,12 @@ class locked_mpmc_queue final : utils::non_copyable, utils::non_movable {
     }
   }
 
+  /**
+   * @warning Destructor is only safe when called while no other thread is doing
+   * operations on the queue
+   */
+  constexpr ~locked_mpmc_queue() noexcept = default;
+
  public:
   bool try_push(value_t value) {
     if (size_.load(std::memory_order::relaxed) >= *capacity_) {
