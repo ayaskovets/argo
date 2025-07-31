@@ -1,9 +1,9 @@
 #pragma once
 
 #include <atomic>
-#include <condition_variable>
-#include <deque>
+#include <memory>
 #include <mutex>
+#include <stdexcept>
 
 #include "utils/conditionally_runtime.hpp"
 #include "utils/constants.hpp"
@@ -12,13 +12,41 @@
 namespace core::queues {
 
 /**
- * @brief Threadsafe queue for many producers and many consumers
+ * @brief Queue entry requirements
+ */
+template <typename T, typename Value>
+concept single_threaded_queue_entry = requires(T entry) {
+  { entry.value() } -> std::same_as<Value&>;
+};
+
+namespace detail {
+
+/**
+ * @brief Default queue entry only for internal usage
+ */
+template <typename Value>
+class single_threaded_queue_entry_impl final {
+ private:
+  Value value_;
+
+ public:
+  constexpr Value& value() { return value_; }
+};
+
+}  // namespace detail
+
+/**
+ * @brief Ring buffer for a single-threaded usage. Not threadsafe
  *
- * Implemented as a naively locked std::deque
+ * Implemented as a ring buffer
+ *
+ * Allocated buffer always contains one additional element to allow for an
+ * efficient implementation of a ring buffer indexing
  */
 template <typename Value, std::unsigned_integral Index = std::size_t,
           Index Capacity = utils::kRuntimeDefinedCapacity<Index>,
-          typename Allocator = std::allocator<Value>>
+          typename Allocator =
+              std::allocator<detail::single_threaded_queue_entry_impl<Value>>>
 class locked_mpmc_queue final : utils::non_copyable, utils::non_movable {
  public:
   using value_t = Value;
@@ -27,35 +55,44 @@ class locked_mpmc_queue final : utils::non_copyable, utils::non_movable {
   using entry_t = typename Allocator::value_type;
 
  private:
-  static_assert(std::is_nothrow_destructible_v<entry_t>);
-  static_assert(std::is_nothrow_move_constructible_v<entry_t>);
-  static_assert(std::is_nothrow_move_assignable_v<entry_t>);
-  static_assert(std::is_same_v<value_t, entry_t>);
+  static_assert(std::is_nothrow_default_constructible_v<value_t>);
+  static_assert(std::is_nothrow_destructible_v<value_t>);
+  static_assert(std::is_nothrow_move_constructible_v<value_t>);
+  static_assert(std::is_nothrow_move_assignable_v<value_t>);
+  static_assert(single_threaded_queue_entry<entry_t, value_t>);
 
  public:
   constexpr explicit locked_mpmc_queue(
-      const allocator_t& allocator = allocator_t()) noexcept
+      const allocator_t& allocator = allocator_t())
     requires(Capacity != utils::kRuntimeDefinedCapacity<index_t> &&
              Capacity > 0)
-      : queue_(allocator) {}
+      : allocator_(allocator) {
+    if (!(ring_buffer_ = allocator_.allocate(*capacity_ + 1))) [[unlikely]] {
+      throw std::runtime_error("failed to allocate memory");
+    }
+  }
 
   constexpr explicit locked_mpmc_queue(
       index_t capacity, const allocator_t& allocator = allocator_t())
     requires(Capacity == utils::kRuntimeDefinedCapacity<index_t>)
-      : queue_(allocator), capacity_(capacity) {
-    if (*capacity_ <= 0) {
+      : allocator_(allocator), capacity_(capacity) {
+    if (*capacity_ <= 0) [[unlikely]] {
       throw std::invalid_argument("capacity must be greater than zero");
+    }
+
+    if (!(ring_buffer_ = allocator_.allocate(*capacity_ + 1))) [[unlikely]] {
+      throw std::runtime_error("failed to allocate memory");
     }
   }
 
-  /**
-   * @warning Destructor is only safe when called while no other thread is doing
-   * operations on the queue
-   */
-  constexpr ~locked_mpmc_queue() noexcept = default;
+  ~locked_mpmc_queue() noexcept {
+    value_t value;
+    while (try_pop(value));
+    allocator_.deallocate(ring_buffer_, *capacity_ + 1);
+  }
 
  public:
-  bool try_push(value_t value) {
+  bool try_push(value_t value) noexcept {
     if (size_.load(std::memory_order::relaxed) >= *capacity_) {
       return false;
     }
@@ -63,27 +100,35 @@ class locked_mpmc_queue final : utils::non_copyable, utils::non_movable {
     if (!lock.try_lock()) {
       return false;
     }
-    if (queue_.size() >= *capacity_) {
+    const index_t next_push_to = (push_to_ == *capacity_) ? 0 : push_to_ + 1;
+    if (next_push_to == pop_from_) {
       return false;
     }
 
-    queue_.push_back(std::move(value));
-    pop_available_cv_.notify_one();
+    std::construct_at(&ring_buffer_[push_to_].value(), std::move(value));
+
+    push_to_ = next_push_to;
     size_.fetch_add(1, std::memory_order::relaxed);
+    pop_available_cv_.notify_one();
     return true;
   }
 
   void push(value_t value) {
     std::unique_lock<std::mutex> lock(mutex_);
-    push_available_cv_.wait(lock,
-                            [this] { return queue_.size() < *capacity_; });
+    push_available_cv_.wait(lock, [this] {
+      const index_t next_push_to = (push_to_ == *capacity_) ? 0 : push_to_ + 1;
+      return next_push_to != pop_from_;
+    });
 
-    queue_.push_back(std::move(value));
+    std::construct_at(&ring_buffer_[push_to_].value(), std::move(value));
+
+    const index_t next_push_to = (push_to_ == *capacity_) ? 0 : push_to_ + 1;
+    push_to_ = next_push_to;
     size_.fetch_add(1, std::memory_order::relaxed);
     pop_available_cv_.notify_one();
   }
 
-  bool try_pop(value_t& value) {
+  bool try_pop(value_t& value) noexcept {
     if (size_.load(std::memory_order::relaxed) == 0) {
       return false;
     }
@@ -91,12 +136,15 @@ class locked_mpmc_queue final : utils::non_copyable, utils::non_movable {
     if (!lock.try_lock()) {
       return false;
     }
-    if (queue_.empty()) {
+    if (pop_from_ == push_to_) {
       return false;
     }
 
-    value = std::move(queue_.front());
-    queue_.pop_front();
+    value = std::move(ring_buffer_[pop_from_].value());
+    std::destroy_at(&ring_buffer_[pop_from_].value());
+
+    const index_t next_pop_from = (pop_from_ == *capacity_) ? 0 : pop_from_ + 1;
+    pop_from_ = next_pop_from;
     size_.fetch_sub(1, std::memory_order::relaxed);
     push_available_cv_.notify_one();
     return true;
@@ -104,15 +152,17 @@ class locked_mpmc_queue final : utils::non_copyable, utils::non_movable {
 
   value_t pop() {
     std::unique_lock<std::mutex> lock(mutex_);
-    pop_available_cv_.wait(lock, [this] { return !queue_.empty(); });
+    pop_available_cv_.wait(lock, [this] { return pop_from_ != push_to_; });
 
-    value_t front(
-        std::move(queue_.front()));  ///< Correct iff noexcept(pop_front)
+    value_t value(std::move(ring_buffer_[pop_from_].value()));
+    std::destroy_at(&ring_buffer_[pop_from_].value());
 
-    queue_.pop_front();
+    const index_t next_pop_from = (pop_from_ == *capacity_) ? 0 : pop_from_ + 1;
+    pop_from_ = next_pop_from;
+
     size_.fetch_sub(1, std::memory_order::relaxed);
     push_available_cv_.notify_one();
-    return front;
+    return value;
   }
 
  public:
@@ -123,9 +173,13 @@ class locked_mpmc_queue final : utils::non_copyable, utils::non_movable {
   std::condition_variable pop_available_cv_;
   std::condition_variable push_available_cv_;
 
-  std::deque<value_t, allocator_t> queue_;
-  std::atomic<index_t> size_;
+  entry_t* ring_buffer_ = nullptr;
 
+  index_t push_to_ = 0;
+  index_t pop_from_ = 0;
+  alignas(utils::kCacheLineSize) std::atomic<index_t> size_;
+
+  [[no_unique_address]] allocator_t allocator_;
   [[no_unique_address]] const utils::conditionally_runtime<
       index_t, Capacity == utils::kRuntimeDefinedCapacity<index_t>, Capacity>
       capacity_;

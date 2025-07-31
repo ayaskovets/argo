@@ -16,7 +16,13 @@ void BM_queues_locked_mpmc_queue_nonblocking_throughput(
   const std::size_t consumers = state.range(3);
   const Value value{};
 
-  using entry_t = Value;
+  class entry_t final {
+   private:
+    Value value_;
+
+   public:
+    constexpr Value& value() { return value_; };
+  };
   using queue_t = core::queues::locked_mpmc_queue<
       Value, std::size_t, core::utils::kRuntimeDefinedCapacity<std::size_t>,
       std::allocator<entry_t>>;
@@ -101,30 +107,30 @@ void BM_queues_locked_mpmc_queue_nonblocking_throughput(
                static_cast<double>(state.iterations())));
 }
 BENCHMARK_TEMPLATE(BM_queues_locked_mpmc_queue_nonblocking_throughput, int)
-    ->Args({1024 /* capacity */, 1048576 /* items*/, 1 /* producers*/,
+    ->Args({1023 /* capacity */, 1048576 /* items*/, 1 /* producers*/,
             1 /* consumers*/})
-    ->Args({1024 /* capacity */, 1048576 /* items*/, 2 /* producers*/,
+    ->Args({1023 /* capacity */, 1048576 /* items*/, 2 /* producers*/,
             2 /* consumers*/})
-    ->Args({1024 /* capacity */, 1048576 /* items*/, 1 /* producers*/,
+    ->Args({1023 /* capacity */, 1048576 /* items*/, 1 /* producers*/,
             4 /* consumers*/})
-    ->Args({1024 /* capacity */, 1048576 /* items*/, 4 /* producers*/,
+    ->Args({1023 /* capacity */, 1048576 /* items*/, 4 /* producers*/,
             1 /* consumers*/})
-    ->Args({1024 /* capacity */, 1048576 /* items*/, 4 /* producers*/,
+    ->Args({1023 /* capacity */, 1048576 /* items*/, 4 /* producers*/,
             4 /* consumers*/})
     ->MeasureProcessCPUTime()
     ->UseRealTime()
     ->Unit(benchmark::kMillisecond);
 BENCHMARK_TEMPLATE(BM_queues_locked_mpmc_queue_nonblocking_throughput,
                    std::shared_ptr<int>)
-    ->Args({1024 /* capacity */, 1048576 /* items*/, 1 /* producers*/,
+    ->Args({1023 /* capacity */, 1048576 /* items*/, 1 /* producers*/,
             1 /* consumers*/})
-    ->Args({1024 /* capacity */, 1048576 /* items*/, 2 /* producers*/,
+    ->Args({1023 /* capacity */, 1048576 /* items*/, 2 /* producers*/,
             2 /* consumers*/})
-    ->Args({1024 /* capacity */, 1048576 /* items*/, 1 /* producers*/,
+    ->Args({1023 /* capacity */, 1048576 /* items*/, 1 /* producers*/,
             4 /* consumers*/})
-    ->Args({1024 /* capacity */, 1048576 /* items*/, 4 /* producers*/,
+    ->Args({1023 /* capacity */, 1048576 /* items*/, 4 /* producers*/,
             1 /* consumers*/})
-    ->Args({1024 /* capacity */, 1048576 /* items*/, 4 /* producers*/,
+    ->Args({1023 /* capacity */, 1048576 /* items*/, 4 /* producers*/,
             4 /* consumers*/})
     ->MeasureProcessCPUTime()
     ->UseRealTime()
@@ -138,7 +144,13 @@ void BM_queues_locked_mpmc_queue_blocking_throughput(benchmark::State& state) {
   const std::size_t consumers = state.range(3);
   const Value value{};
 
-  using entry_t = Value;
+  class entry_t final {
+   private:
+    Value value_;
+
+   public:
+    constexpr Value& value() { return value_; };
+  };
   using queue_t = core::queues::locked_mpmc_queue<
       Value, std::size_t, core::utils::kRuntimeDefinedCapacity<std::size_t>,
       std::allocator<entry_t>>;
@@ -206,30 +218,30 @@ void BM_queues_locked_mpmc_queue_blocking_throughput(benchmark::State& state) {
   }
 }
 BENCHMARK_TEMPLATE(BM_queues_locked_mpmc_queue_blocking_throughput, int)
-    ->Args({1024 /* capacity */, 1048576 /* items*/, 1 /* producers*/,
+    ->Args({1023 /* capacity */, 1048576 /* items*/, 1 /* producers*/,
             1 /* consumers*/})
-    ->Args({1024 /* capacity */, 1048576 /* items*/, 2 /* producers*/,
+    ->Args({1023 /* capacity */, 1048576 /* items*/, 2 /* producers*/,
             2 /* consumers*/})
-    ->Args({1024 /* capacity */, 1048576 /* items*/, 1 /* producers*/,
+    ->Args({1023 /* capacity */, 1048576 /* items*/, 1 /* producers*/,
             4 /* consumers*/})
-    ->Args({1024 /* capacity */, 1048576 /* items*/, 4 /* producers*/,
+    ->Args({1023 /* capacity */, 1048576 /* items*/, 4 /* producers*/,
             1 /* consumers*/})
-    ->Args({1024 /* capacity */, 1048576 /* items*/, 4 /* producers*/,
+    ->Args({1023 /* capacity */, 1048576 /* items*/, 4 /* producers*/,
             4 /* consumers*/})
     ->MeasureProcessCPUTime()
     ->UseRealTime()
     ->Unit(benchmark::kMillisecond);
 BENCHMARK_TEMPLATE(BM_queues_locked_mpmc_queue_blocking_throughput,
                    std::shared_ptr<int>)
-    ->Args({1024 /* capacity */, 1048576 /* items*/, 1 /* producers*/,
+    ->Args({1023 /* capacity */, 1048576 /* items*/, 1 /* producers*/,
             1 /* consumers*/})
-    ->Args({1024 /* capacity */, 1048576 /* items*/, 2 /* producers*/,
+    ->Args({1023 /* capacity */, 1048576 /* items*/, 2 /* producers*/,
             2 /* consumers*/})
-    ->Args({1024 /* capacity */, 1048576 /* items*/, 1 /* producers*/,
+    ->Args({1023 /* capacity */, 1048576 /* items*/, 1 /* producers*/,
             4 /* consumers*/})
-    ->Args({1024 /* capacity */, 1048576 /* items*/, 4 /* producers*/,
+    ->Args({1023 /* capacity */, 1048576 /* items*/, 4 /* producers*/,
             1 /* consumers*/})
-    ->Args({1024 /* capacity */, 1048576 /* items*/, 4 /* producers*/,
+    ->Args({1023 /* capacity */, 1048576 /* items*/, 4 /* producers*/,
             4 /* consumers*/})
     ->MeasureProcessCPUTime()
     ->UseRealTime()

@@ -10,11 +10,11 @@ namespace tests::queues {
 
 TEST(queues_locked_mpmc_queue, size) {
   static_assert(sizeof(core::queues::locked_mpmc_queue<int, std::size_t, 10>) ==
-                216);
+                256);
   static_assert(
-      alignof(core::queues::locked_mpmc_queue<int, std::size_t, 10>) == 8);
-  static_assert(sizeof(core::queues::locked_mpmc_queue<int>) == 224);
-  static_assert(alignof(core::queues::locked_mpmc_queue<int>) == 8);
+      alignof(core::queues::locked_mpmc_queue<int, std::size_t, 10>) == 64);
+  static_assert(sizeof(core::queues::locked_mpmc_queue<int>) == 256);
+  static_assert(alignof(core::queues::locked_mpmc_queue<int>) == 64);
 }
 
 TEST(queues_locked_mpmc_queue, capacity) {
@@ -201,7 +201,13 @@ class allocator : public std::allocator<T> {
 TEST(queues_locked_mpmc_queue, allocator) {
   using value_t = double;
   using index_t = std::size_t;
-  using entry_t = value_t;
+  class alignas(core::utils::kCacheLineSize) entry_t final {
+   private:
+    value_t value_;
+
+   public:
+    constexpr value_t& value() { return value_; }
+  };
 
   EXPECT_TRUE(
       queues_locked_mpmc_queue_allocator::allocator<entry_t>::is_clean());
