@@ -70,9 +70,41 @@ TEST(queues_single_threaded_queue, nonblocking_smoke) {
   EXPECT_EQ(queue.size(), 0);
 }
 
-TEST(queues_single_threaded_queue, blocking_smoke) { GTEST_SKIP(); }
+TEST(queues_single_threaded_queue, blocking_smoke) {
+  core::queues::single_threaded_queue<int> queue(2);
+  EXPECT_TRUE(queue.empty());
+  EXPECT_EQ(queue.size(), 0);
+  EXPECT_NO_THROW(queue.push(1));
+  EXPECT_FALSE(queue.empty());
+  EXPECT_EQ(queue.size(), 1);
+  EXPECT_NO_THROW(queue.push(2));
+  EXPECT_FALSE(queue.empty());
+  EXPECT_EQ(queue.size(), 2);
+  EXPECT_ANY_THROW(queue.push(3));
+  EXPECT_EQ(queue.pop(), 1);
+  EXPECT_FALSE(queue.empty());
+  EXPECT_EQ(queue.size(), 1);
+  EXPECT_EQ(queue.pop(), 2);
+  EXPECT_TRUE(queue.empty());
+  EXPECT_EQ(queue.size(), 0);
+  EXPECT_ANY_THROW(queue.pop());
+}
 
-TEST(queues_single_threaded_queue, smoke) { GTEST_SKIP(); }
+TEST(queues_single_threaded_queue, smoke) {
+  int value;
+  core::queues::single_threaded_queue<int> queue(2);
+
+  EXPECT_FALSE(queue.try_pop(value));
+  queue.push(1);
+  queue.push(2);
+  EXPECT_FALSE(queue.try_push(3));
+  EXPECT_EQ(queue.pop(), 1);
+  queue.push(4);
+  EXPECT_FALSE(queue.try_push(5));
+  EXPECT_EQ(queue.pop(), 2);
+  EXPECT_EQ(queue.pop(), 4);
+  EXPECT_FALSE(queue.try_pop(value));
+}
 
 TEST(queues_single_threaded_queue, blocking_push) { GTEST_SKIP(); }
 

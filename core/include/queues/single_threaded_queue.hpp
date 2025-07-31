@@ -37,10 +37,10 @@ class single_threaded_queue_entry_impl final {
 /**
  * @brief Ring buffer for a single-threaded usage. Not threadsafe
  *
+ * Implemented as a ring buffer
+ *
  * Allocated buffer always contains one additional element to allow for an
  * efficient implementation of a ring buffer indexing
- *
- * Implemented as a ring buffer
  */
 template <typename Value, std::unsigned_integral Index = std::size_t,
           Index Capacity = utils::kRuntimeDefinedCapacity<Index>,
@@ -103,6 +103,12 @@ class single_threaded_queue final : utils::non_copyable, utils::non_movable {
     return true;
   }
 
+  constexpr void push(value_t value) {
+    if (!try_push(std::move(value))) {
+      throw std::runtime_error("queue is full");
+    }
+  }
+
   constexpr bool try_pop(value_t& value) noexcept {
     if (pop_from_ == push_to_) {
       return false;
@@ -114,6 +120,14 @@ class single_threaded_queue final : utils::non_copyable, utils::non_movable {
     const index_t next_pop_from = (pop_from_ == *capacity_) ? 0 : pop_from_ + 1;
     pop_from_ = next_pop_from;
     return true;
+  }
+
+  constexpr value_t pop() {
+    value_t value;
+    if (!try_pop(value)) {
+      throw std::runtime_error("queue is empty");
+    }
+    return value;
   }
 
  public:
