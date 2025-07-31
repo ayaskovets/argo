@@ -38,9 +38,6 @@ class single_threaded_queue_entry_impl final {
  * @brief Ring buffer for a single-threaded usage. Not threadsafe
  *
  * Implemented as a ring buffer
- *
- * Allocated buffer always contains one additional element to allow for an
- * efficient implementation of a ring buffer indexing
  */
 template <typename Value, std::unsigned_integral Index = std::size_t,
           Index Capacity = utils::kRuntimeDefinedCapacity<Index>,
@@ -66,7 +63,7 @@ class single_threaded_queue final : utils::non_copyable, utils::non_movable {
     requires(Capacity != utils::kRuntimeDefinedCapacity<index_t> &&
              Capacity > 0)
       : allocator_(allocator) {
-    if (!(ring_buffer_ = allocator_.allocate(*capacity_ + 1))) [[unlikely]] {
+    if (!(ring_buffer_ = allocator_.allocate(*capacity_))) [[unlikely]] {
       throw std::runtime_error("failed to allocate memory");
     }
   }
@@ -79,7 +76,7 @@ class single_threaded_queue final : utils::non_copyable, utils::non_movable {
       throw std::invalid_argument("capacity must be greater than zero");
     }
 
-    if (!(ring_buffer_ = allocator_.allocate(*capacity_ + 1))) [[unlikely]] {
+    if (!(ring_buffer_ = allocator_.allocate(*capacity_))) [[unlikely]] {
       throw std::runtime_error("failed to allocate memory");
     }
   }
@@ -87,19 +84,21 @@ class single_threaded_queue final : utils::non_copyable, utils::non_movable {
   constexpr ~single_threaded_queue() noexcept {
     value_t value;
     while (try_pop(value));
-    allocator_.deallocate(ring_buffer_, *capacity_ + 1);
+    allocator_.deallocate(ring_buffer_, *capacity_);
   }
 
  public:
   constexpr bool try_push(value_t value) noexcept {
-    const index_t next_push_to = (push_to_ == *capacity_) ? 0 : push_to_ + 1;
-    if (next_push_to == pop_from_) {
+    if (size_ == *capacity_) {
       return false;
     }
 
     std::construct_at(&ring_buffer_[push_to_].value(), std::move(value));
 
+    const index_t next_push_to =
+        (push_to_ == *capacity_ - 1) ? 0 : push_to_ + 1;
     push_to_ = next_push_to;
+    size_ += 1;
     return true;
   }
 
@@ -110,15 +109,17 @@ class single_threaded_queue final : utils::non_copyable, utils::non_movable {
   }
 
   constexpr bool try_pop(value_t& value) noexcept {
-    if (pop_from_ == push_to_) {
+    if (size_ == 0) {
       return false;
     }
 
     value = std::move(ring_buffer_[pop_from_].value());
     std::destroy_at(&ring_buffer_[pop_from_].value());
 
-    const index_t next_pop_from = (pop_from_ == *capacity_) ? 0 : pop_from_ + 1;
+    const index_t next_pop_from =
+        (pop_from_ == *capacity_ - 1) ? 0 : pop_from_ + 1;
     pop_from_ = next_pop_from;
+    size_ -= 1;
     return true;
   }
 
@@ -131,11 +132,8 @@ class single_threaded_queue final : utils::non_copyable, utils::non_movable {
   }
 
  public:
-  constexpr bool empty() const noexcept { return push_to_ == pop_from_; }
-  constexpr index_t size() const noexcept {
-    return pop_from_ <= push_to_ ? push_to_ - pop_from_
-                                 : pop_from_ - push_to_ - 1;
-  }
+  constexpr bool empty() const noexcept { return size_ == 0; }
+  constexpr index_t size() const noexcept { return size_; }
   constexpr index_t capacity() const noexcept { return *capacity_; }
 
  private:
@@ -143,6 +141,7 @@ class single_threaded_queue final : utils::non_copyable, utils::non_movable {
 
   index_t push_to_ = 0;
   index_t pop_from_ = 0;
+  index_t size_ = 0;
 
   [[no_unique_address]] allocator_t allocator_;
   [[no_unique_address]] const utils::conditionally_runtime<

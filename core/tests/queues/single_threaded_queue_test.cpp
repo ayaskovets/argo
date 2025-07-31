@@ -10,10 +10,10 @@ namespace tests::queues {
 
 TEST(queues_single_threaded_queue, size) {
   static_assert(
-      sizeof(core::queues::single_threaded_queue<int, std::size_t, 10>) == 24);
+      sizeof(core::queues::single_threaded_queue<int, std::size_t, 10>) == 32);
   static_assert(
       alignof(core::queues::single_threaded_queue<int, std::size_t, 10>) == 8);
-  static_assert(sizeof(core::queues::single_threaded_queue<int>) == 32);
+  static_assert(sizeof(core::queues::single_threaded_queue<int>) == 40);
   static_assert(alignof(core::queues::single_threaded_queue<int>) == 8);
 }
 
