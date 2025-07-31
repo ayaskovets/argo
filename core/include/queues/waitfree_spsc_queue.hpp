@@ -37,10 +37,10 @@ class waitfree_spsc_queue_entry_impl final {
 /**
  * @brief Threadsafe queue for 1 producer and 1 consumer
  *
+ * Implemented as a ring buffer with cached pop and push indices
+ *
  * Allocated buffer always contains one additional element to allow for an
  * efficient implementation of a ring buffer indexing
- *
- * Implemented as a ring buffer with cached pop and push indices
  */
 template <typename Value, std::unsigned_integral Index = std::size_t,
           Index Capacity = utils::kRuntimeDefinedCapacity<Index>,
