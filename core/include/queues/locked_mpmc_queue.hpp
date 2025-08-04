@@ -15,7 +15,7 @@ namespace core::queues {
  * @brief Queue entry requirements
  */
 template <typename T, typename Value>
-concept single_threaded_queue_entry = requires(T entry) {
+concept locked_mpmc_queue_entry = requires(T entry) {
   { entry.value() } -> std::same_as<Value&>;
 };
 
@@ -25,7 +25,7 @@ namespace detail {
  * @brief Default queue entry only for internal usage
  */
 template <typename Value>
-class single_threaded_queue_entry_impl final {
+class locked_mpmc_queue_entry_impl final {
  private:
   Value value_;
 
@@ -46,7 +46,7 @@ class single_threaded_queue_entry_impl final {
 template <typename Value, std::unsigned_integral Index = std::size_t,
           Index Capacity = utils::kRuntimeDefinedCapacity<Index>,
           typename Allocator =
-              std::allocator<detail::single_threaded_queue_entry_impl<Value>>>
+              std::allocator<detail::locked_mpmc_queue_entry_impl<Value>>>
 class locked_mpmc_queue final : utils::non_copyable, utils::non_movable {
  public:
   using value_t = Value;
@@ -59,7 +59,7 @@ class locked_mpmc_queue final : utils::non_copyable, utils::non_movable {
   static_assert(std::is_nothrow_destructible_v<value_t>);
   static_assert(std::is_nothrow_move_constructible_v<value_t>);
   static_assert(std::is_nothrow_move_assignable_v<value_t>);
-  static_assert(single_threaded_queue_entry<entry_t, value_t>);
+  static_assert(locked_mpmc_queue_entry<entry_t, value_t>);
 
  public:
   constexpr explicit locked_mpmc_queue(
