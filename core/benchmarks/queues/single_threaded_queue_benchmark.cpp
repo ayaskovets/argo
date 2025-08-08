@@ -11,13 +11,9 @@ void BM_queues_single_threaded_queue_nonblocking_throughput(
   const std::size_t items = state.range(1);
   const Value value{};
 
-  class entry_t final {
-   private:
-    Value value_;
-
-   public:
-    constexpr Value& value() { return value_; };
-  };
+  using entry_t =
+      core::queues::detail::single_threaded_queue_entry_impl<Value,
+                                                             alignof(Value)>;
   using queue_t = core::queues::single_threaded_queue<
       Value, std::size_t, core::utils::kRuntimeDefinedCapacity<std::size_t>,
       std::allocator<entry_t>>;

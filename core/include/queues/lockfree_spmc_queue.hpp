@@ -20,7 +20,7 @@ namespace core::queues {
 template <typename T, typename Value>
 concept lockfree_spmc_queue_entry = requires(T entry) {
   { entry.value() } -> std::same_as<Value&>;
-  { entry.empty() } -> std::same_as<bool&>;
+  { entry.empty() } -> std::same_as<std::atomic<bool>&>;
 };
 
 namespace detail {
@@ -28,15 +28,16 @@ namespace detail {
 /**
  * @brief Default queue entry only for internal usage
  */
-template <typename Value>
-class lockfree_spmc_queue_entry_impl final {
+template <typename Value,
+          std::size_t Alignment = alignof(std::pair<Value, bool>)>
+class alignas(Alignment) lockfree_spmc_queue_entry_impl final {
  private:
   Value value_;
-  bool empty_;
+  std::atomic<bool> empty_;
 
  public:
   constexpr Value& value() { return value_; }
-  constexpr bool& empty() { return empty_; }
+  constexpr std::atomic<bool>& empty() { return empty_; }
 };
 
 }  // namespace detail
@@ -101,37 +102,33 @@ class lockfree_spmc_queue final : utils::non_copyable, utils::non_movable {
    * operations on the queue
    */
   constexpr ~lockfree_spmc_queue() noexcept {
-    while (try_pop());
+    clear();
     allocator_.deallocate(ring_buffer_, *capacity_);
   }
 
  public:
   constexpr bool try_push(value_t value) noexcept {
     entry_t& entry = ring_buffer_[push_to_ & (*capacity_ - 1)];
-    if (!reinterpret_cast<std::atomic<bool>&>(entry.empty())
-             .load(std::memory_order::acquire)) {
+    if (!entry.empty().load(std::memory_order::acquire)) {
       return false;
     }
 
     std::construct_at(&entry.value(), std::move(value));
 
     push_to_ += 1;
-    reinterpret_cast<std::atomic<bool>&>(entry.empty())
-        .store(false, std::memory_order::release);
+    entry.empty().store(false, std::memory_order::release);
     available_to_push_.fetch_sub(1, std::memory_order::relaxed);
     return true;
   }
 
   constexpr void push(value_t value) noexcept {
     entry_t& entry = ring_buffer_[push_to_ & (*capacity_ - 1)];
-    reinterpret_cast<std::atomic<bool>&>(entry.empty())
-        .wait(false, std::memory_order::acquire);
+    entry.empty().wait(false, std::memory_order::acquire);
 
     std::construct_at(&entry.value(), std::move(value));
 
     push_to_ += 1;
-    reinterpret_cast<std::atomic<bool>&>(entry.empty())
-        .store(false, std::memory_order::release);
+    entry.empty().store(false, std::memory_order::release);
     available_to_push_.fetch_sub(1, std::memory_order::relaxed);
   }
 
@@ -149,28 +146,8 @@ class lockfree_spmc_queue final : utils::non_copyable, utils::non_movable {
     value = std::move(entry.value());
     std::destroy_at(&entry.value());
 
-    reinterpret_cast<std::atomic<bool>&>(entry.empty())
-        .store(true, std::memory_order::release);
-    reinterpret_cast<std::atomic<bool>&>(entry.empty()).notify_one();
-    return true;
-  }
-
-  constexpr bool try_pop() noexcept {
-    const index_t available_to_push =
-        available_to_push_.fetch_add(1, std::memory_order::relaxed);
-    if (available_to_push >= *capacity_) {
-      available_to_push_.fetch_sub(1, std::memory_order::relaxed);
-      return false;
-    }
-
-    const index_t pop_from = pop_from_.fetch_add(1, std::memory_order::relaxed);
-    entry_t& entry = ring_buffer_[pop_from & (*capacity_ - 1)];
-
-    std::destroy_at(&entry.value());
-
-    reinterpret_cast<std::atomic<bool>&>(entry.empty())
-        .store(true, std::memory_order::release);
-    reinterpret_cast<std::atomic<bool>&>(entry.empty()).notify_one();
+    entry.empty().store(true, std::memory_order::release);
+    entry.empty().notify_one();
     return true;
   }
 
@@ -188,9 +165,8 @@ class lockfree_spmc_queue final : utils::non_copyable, utils::non_movable {
     value_t value(std::move(entry.value()));
     std::destroy_at(&entry.value());
 
-    reinterpret_cast<std::atomic<bool>&>(entry.empty())
-        .store(true, std::memory_order::release);
-    reinterpret_cast<std::atomic<bool>&>(entry.empty()).notify_one();
+    entry.empty().store(true, std::memory_order::release);
+    entry.empty().notify_one();
     return value;
   }
 
@@ -208,6 +184,31 @@ class lockfree_spmc_queue final : utils::non_copyable, utils::non_movable {
   [[no_unique_address]] const utils::conditionally_runtime<
       index_t, Capacity == utils::kRuntimeDefinedCapacity<index_t>, Capacity>
       capacity_;
+
+ private:
+  /**
+   * @brief Preserves queue invariants. Assumes that no other thread is doing
+   * any operations on the queue
+   */
+  constexpr void clear() noexcept {
+    while (true) {
+      const index_t available_to_push =
+          available_to_push_.fetch_add(1, std::memory_order::relaxed);
+      if (available_to_push >= *capacity_) {
+        available_to_push_.fetch_sub(1, std::memory_order::relaxed);
+        break;
+      }
+
+      const index_t pop_from =
+          pop_from_.fetch_add(1, std::memory_order::relaxed);
+      entry_t& entry = ring_buffer_[pop_from & (*capacity_ - 1)];
+
+      std::destroy_at(&entry.value());
+
+      entry.empty().store(true, std::memory_order::release);
+      entry.empty().notify_one();
+    }
+  }
 };
 
 }  // namespace core::queues

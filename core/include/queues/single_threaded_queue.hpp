@@ -23,8 +23,8 @@ namespace detail {
 /**
  * @brief Default queue entry only for internal usage
  */
-template <typename Value>
-class single_threaded_queue_entry_impl final {
+template <typename Value, std::size_t Alignment = alignof(Value)>
+class alignas(Alignment) single_threaded_queue_entry_impl final {
  private:
   Value value_;
 
@@ -85,7 +85,7 @@ class single_threaded_queue final : utils::non_copyable, utils::non_movable {
    * operations on the queue
    */
   constexpr ~single_threaded_queue() noexcept {
-    while (try_pop());
+    clear();
     allocator_.deallocate(ring_buffer_, *capacity_);
   }
 
@@ -116,20 +116,6 @@ class single_threaded_queue final : utils::non_copyable, utils::non_movable {
     }
 
     value = std::move(ring_buffer_[pop_from_].value());
-    std::destroy_at(&ring_buffer_[pop_from_].value());
-
-    const index_t next_pop_from =
-        (pop_from_ == *capacity_ - 1) ? 0 : pop_from_ + 1;
-    pop_from_ = next_pop_from;
-    size_ -= 1;
-    return true;
-  }
-
-  constexpr bool try_pop() noexcept {
-    if (size_ == 0) {
-      return false;
-    }
-
     std::destroy_at(&ring_buffer_[pop_from_].value());
 
     const index_t next_pop_from =
@@ -170,6 +156,25 @@ class single_threaded_queue final : utils::non_copyable, utils::non_movable {
   [[no_unique_address]] const utils::conditionally_runtime<
       index_t, Capacity == utils::kRuntimeDefinedCapacity<index_t>, Capacity>
       capacity_;
+
+ private:
+  /**
+   * @brief Preserves queue invariants
+   */
+  constexpr void clear() noexcept {
+    while (true) {
+      if (size_ == 0) {
+        break;
+      }
+
+      std::destroy_at(&ring_buffer_[pop_from_].value());
+
+      const index_t next_pop_from =
+          (pop_from_ == *capacity_ - 1) ? 0 : pop_from_ + 1;
+      pop_from_ = next_pop_from;
+      size_ -= 1;
+    }
+  }
 };
 
 }  // namespace core::queues

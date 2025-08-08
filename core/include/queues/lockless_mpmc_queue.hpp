@@ -19,7 +19,7 @@ namespace core::queues {
 template <typename T, typename Value, typename Index>
 concept lockless_spmc_queue_entry = requires(T entry) {
   { entry.value() } -> std::same_as<Value&>;
-  { entry.seqnum() } -> std::same_as<Index&>;
+  { entry.seqnum() } -> std::same_as<std::atomic<Index>&>;
 };
 
 namespace detail {
@@ -27,15 +27,16 @@ namespace detail {
 /**
  * @brief Default queue entry only for internal usage
  */
-template <typename Value, typename Index>
-class lockless_spmc_queue_entry_impl final {
+template <typename Value, std::unsigned_integral Index = std::size_t,
+          std::size_t Alignment = alignof(std::pair<Value, Index>)>
+class alignas(Alignment) lockless_spmc_queue_entry_impl final {
  private:
   Value value_;
-  Index seqnum_;
+  std::atomic<Index> seqnum_;
 
  public:
   constexpr Value& value() { return value_; }
-  constexpr Index& seqnum() { return seqnum_; }
+  constexpr std::atomic<Index>& seqnum() { return seqnum_; }
 };
 
 }  // namespace detail
@@ -107,25 +108,7 @@ class lockless_mpmc_queue final : utils::non_copyable, utils::non_movable {
    * operations on the queue
    */
   constexpr ~lockless_mpmc_queue() noexcept {
-    while (true) {
-      index_t pop_from = pop_from_.load(std::memory_order::relaxed);
-      entry_t& entry = ring_buffer_[pop_from & (*capacity_ - 1)];
-
-      if (pop_from + 1 !=
-          reinterpret_cast<std::atomic<index_t>&>(entry.seqnum())
-              .load(std::memory_order::acquire)) {
-        break;
-      }
-      if (!pop_from_.compare_exchange_strong(pop_from, pop_from + 1,
-                                             std::memory_order::relaxed)) {
-        break;
-      }
-
-      std::destroy_at(&entry.value());
-
-      reinterpret_cast<std::atomic<index_t>&>(entry.seqnum())
-          .store(pop_from + *capacity_, std::memory_order::release);
-    }
+    clear();
     allocator_.deallocate(ring_buffer_, *capacity_);
   }
 
@@ -134,8 +117,7 @@ class lockless_mpmc_queue final : utils::non_copyable, utils::non_movable {
     index_t push_to = push_to_.load(std::memory_order::relaxed);
     entry_t& entry = ring_buffer_[push_to & (*capacity_ - 1)];
 
-    if (push_to != reinterpret_cast<std::atomic<index_t>&>(entry.seqnum())
-                       .load(std::memory_order::acquire)) {
+    if (push_to != entry.seqnum().load(std::memory_order::acquire)) {
       return false;
     }
     if (!push_to_.compare_exchange_strong(push_to, push_to + 1,
@@ -145,8 +127,7 @@ class lockless_mpmc_queue final : utils::non_copyable, utils::non_movable {
 
     std::construct_at(&entry.value(), std::move(value));
 
-    reinterpret_cast<std::atomic<index_t>&>(entry.seqnum())
-        .store(push_to + 1, std::memory_order::release);
+    entry.seqnum().store(push_to + 1, std::memory_order::release);
     return true;
   }
 
@@ -154,16 +135,14 @@ class lockless_mpmc_queue final : utils::non_copyable, utils::non_movable {
     do {
       index_t push_to = push_to_.load(std::memory_order::relaxed);
       entry_t& entry = ring_buffer_[push_to & (*capacity_ - 1)];
-      if (push_to != reinterpret_cast<std::atomic<index_t>&>(entry.seqnum())
-                         .load(std::memory_order::acquire)) {
+      if (push_to != entry.seqnum().load(std::memory_order::acquire)) {
         continue;
       }
 
       if (push_to_.compare_exchange_weak(push_to, push_to + 1,
                                          std::memory_order::relaxed)) {
         std::construct_at(&entry.value(), std::move(value));
-        reinterpret_cast<std::atomic<index_t>&>(entry.seqnum())
-            .store(push_to + 1, std::memory_order::release);
+        entry.seqnum().store(push_to + 1, std::memory_order::release);
         break;
       }
     } while (true);
@@ -173,8 +152,7 @@ class lockless_mpmc_queue final : utils::non_copyable, utils::non_movable {
     index_t pop_from = pop_from_.load(std::memory_order::relaxed);
     entry_t& entry = ring_buffer_[pop_from & (*capacity_ - 1)];
 
-    if (pop_from + 1 != reinterpret_cast<std::atomic<index_t>&>(entry.seqnum())
-                            .load(std::memory_order::acquire)) {
+    if (pop_from + 1 != entry.seqnum().load(std::memory_order::acquire)) {
       return false;
     }
     if (!pop_from_.compare_exchange_strong(pop_from, pop_from + 1,
@@ -185,8 +163,7 @@ class lockless_mpmc_queue final : utils::non_copyable, utils::non_movable {
     value = std::move(entry.value());
     std::destroy_at(&entry.value());
 
-    reinterpret_cast<std::atomic<index_t>&>(entry.seqnum())
-        .store(pop_from + *capacity_, std::memory_order::release);
+    entry.seqnum().store(pop_from + *capacity_, std::memory_order::release);
     return true;
   }
 
@@ -194,9 +171,7 @@ class lockless_mpmc_queue final : utils::non_copyable, utils::non_movable {
     do {
       index_t pop_from = pop_from_.load(std::memory_order::relaxed);
       entry_t& entry = ring_buffer_[pop_from & (*capacity_ - 1)];
-      if (pop_from + 1 !=
-          reinterpret_cast<std::atomic<index_t>&>(entry.seqnum())
-              .load(std::memory_order::acquire)) {
+      if (pop_from + 1 != entry.seqnum().load(std::memory_order::acquire)) {
         continue;
       }
 
@@ -205,8 +180,7 @@ class lockless_mpmc_queue final : utils::non_copyable, utils::non_movable {
         value_t value(std::move(entry.value()));
         std::destroy_at(&entry.value());
 
-        reinterpret_cast<std::atomic<index_t>&>(entry.seqnum())
-            .store(pop_from + *capacity_, std::memory_order::release);
+        entry.seqnum().store(pop_from + *capacity_, std::memory_order::release);
         return value;
       }
     } while (true);
@@ -225,6 +199,30 @@ class lockless_mpmc_queue final : utils::non_copyable, utils::non_movable {
   [[no_unique_address]] const utils::conditionally_runtime<
       index_t, Capacity == utils::kRuntimeDefinedCapacity<index_t>, Capacity>
       capacity_;
+
+ private:
+  /**
+   * @brief Preserves queue invariants. Assumes that no other thread is doing
+   * any operations on the queue
+   */
+  constexpr void clear() noexcept {
+    while (true) {
+      index_t pop_from = pop_from_.load(std::memory_order::relaxed);
+      entry_t& entry = ring_buffer_[pop_from & (*capacity_ - 1)];
+
+      if (pop_from + 1 != entry.seqnum().load(std::memory_order::acquire)) {
+        break;
+      }
+      if (!pop_from_.compare_exchange_strong(pop_from, pop_from + 1,
+                                             std::memory_order::relaxed)) {
+        break;
+      }
+
+      std::destroy_at(&entry.value());
+
+      entry.seqnum().store(pop_from + *capacity_, std::memory_order::release);
+    }
+  }
 };
 
 }  // namespace core::queues

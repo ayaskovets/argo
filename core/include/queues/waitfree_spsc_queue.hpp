@@ -23,8 +23,8 @@ namespace detail {
 /**
  * @brief Default queue entry only for internal usage
  */
-template <typename Value>
-class waitfree_spsc_queue_entry_impl final {
+template <typename Value, std::size_t Alignment = alignof(Value)>
+class alignas(Alignment) waitfree_spsc_queue_entry_impl final {
  private:
   Value value_;
 
@@ -88,7 +88,7 @@ class waitfree_spsc_queue final : utils::non_copyable, utils::non_movable {
    * operations on the queue
    */
   constexpr ~waitfree_spsc_queue() noexcept {
-    while (try_pop());
+    clear();
     allocator_.deallocate(ring_buffer_, *capacity_ + 1);
   }
 
@@ -138,21 +138,6 @@ class waitfree_spsc_queue final : utils::non_copyable, utils::non_movable {
     return true;
   }
 
-  constexpr bool try_pop() noexcept {
-    const index_t pop_from = pop_from_.load(std::memory_order::relaxed);
-    if (pop_from == cached_push_to_ &&
-        (pop_from ==
-         (cached_push_to_ = push_to_.load(std::memory_order::acquire)))) {
-      return false;
-    }
-
-    std::destroy_at(&ring_buffer_[pop_from].value());
-
-    const index_t next_pop_from = (pop_from == *capacity_) ? 0 : pop_from + 1;
-    pop_from_.store(next_pop_from, std::memory_order::release);
-    return true;
-  }
-
   constexpr value_t pop() noexcept {
     const index_t pop_from = pop_from_.load(std::memory_order::relaxed);
     while (pop_from == cached_push_to_ &&
@@ -182,6 +167,27 @@ class waitfree_spsc_queue final : utils::non_copyable, utils::non_movable {
   [[no_unique_address]] const utils::conditionally_runtime<
       index_t, Capacity == utils::kRuntimeDefinedCapacity<index_t>, Capacity>
       capacity_;
+
+ private:
+  /**
+   * @brief Preserves queue invariants. Assumes that no other thread is doing
+   * any operations on the queue
+   */
+  constexpr void clear() noexcept {
+    while (true) {
+      const index_t pop_from = pop_from_.load(std::memory_order::relaxed);
+      if (pop_from == cached_push_to_ &&
+          (pop_from ==
+           (cached_push_to_ = push_to_.load(std::memory_order::acquire)))) {
+        break;
+      }
+
+      std::destroy_at(&ring_buffer_[pop_from].value());
+
+      const index_t next_pop_from = (pop_from == *capacity_) ? 0 : pop_from + 1;
+      pop_from_.store(next_pop_from, std::memory_order::release);
+    }
+  }
 };
 
 }  // namespace core::queues

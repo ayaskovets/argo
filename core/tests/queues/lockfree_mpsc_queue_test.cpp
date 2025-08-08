@@ -6,6 +6,8 @@
 #include <numeric>
 #include <thread>
 
+#include "utils/leak_detector_allocator.hpp"
+
 namespace tests::queues {
 
 TEST(queues_lockfree_mpsc_queue, size) {
@@ -121,6 +123,7 @@ TEST(queues_lockfree_mpsc_queue, queue_destructor) {
     queue.push(value);
     EXPECT_EQ(value.use_count(), 2);
     queue.push(value);
+    EXPECT_EQ(value.use_count(), 3);
   }
   EXPECT_EQ(value.use_count(), 1);
 }
@@ -154,72 +157,29 @@ TEST(queues_lockfree_mpsc_queue, non_copyable_item_type) {
   queue.try_pop(value);
 }
 
-namespace queues_lockfree_mpsc_queue_allocator {
-
-template <typename T>
-class allocator : public std::allocator<T> {
- public:
-  using std::allocator<T>::allocator;
-
- public:
-  constexpr T* allocate(std::size_t n) {
-    T* ptr = std::allocator<T>::allocate(n);
-    allocations_[ptr] += n;
-    return ptr;
-  }
-
-  constexpr void deallocate(T* ptr, std::size_t n) {
-    if ((allocations_.at(ptr) -= n) == 0) {
-      allocations_.erase(ptr);
-    }
-    std::allocator<T>::deallocate(ptr, n);
-  }
-
- public:
-  template <class U>
-  struct rebind {
-    typedef allocator<U> other;
-  };
-
- public:
-  static constexpr bool is_clean() { return allocations_.empty(); }
-
- private:
-  static inline std::unordered_map<void*, std::size_t> allocations_;
-};
-
-}  // namespace queues_lockfree_mpsc_queue_allocator
-
 TEST(queues_lockfree_mpsc_queue, allocator) {
   using value_t = double;
   using index_t = std::size_t;
-  class alignas(core::utils::kCacheLineSize) entry_t final {
-   private:
-    value_t value_;
-    bool empty_;
+  using entry_t = core::queues::detail::lockfree_mpsc_queue_entry_impl<
+      value_t, core::utils::kCacheLineSize>;
+  core::utils::leak_detector_allocator<entry_t> allocator;
 
-   public:
-    constexpr value_t& value() { return value_; }
-    constexpr bool& empty() { return empty_; }
-  };
-
-  EXPECT_TRUE(
-      queues_lockfree_mpsc_queue_allocator::allocator<entry_t>::is_clean());
+  EXPECT_TRUE(allocator.is_clean());
   {
-    core::queues::lockfree_mpsc_queue<
-        value_t, index_t, 2,
-        queues_lockfree_mpsc_queue_allocator::allocator<entry_t>>
-        queue;
+    core::queues::lockfree_mpsc_queue<value_t, index_t, 2, decltype(allocator)>
+        queue(allocator);
 
+    EXPECT_FALSE(allocator.is_clean());
     queue.push(1.1);
+    EXPECT_FALSE(allocator.is_clean());
     queue.push(2.2);
+    EXPECT_FALSE(allocator.is_clean());
     EXPECT_EQ(queue.pop(), 1.1);
+    EXPECT_FALSE(allocator.is_clean());
     EXPECT_EQ(queue.pop(), 2.2);
-    EXPECT_FALSE(
-        queues_lockfree_mpsc_queue_allocator::allocator<entry_t>::is_clean());
+    EXPECT_FALSE(allocator.is_clean());
   }
-  EXPECT_TRUE(
-      queues_lockfree_mpsc_queue_allocator::allocator<entry_t>::is_clean());
+  EXPECT_TRUE(allocator.is_clean());
 }
 
 class queues_lockfree_mpsc_queue_workload

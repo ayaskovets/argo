@@ -24,8 +24,8 @@ namespace detail {
 /**
  * @brief Default queue entry only for internal usage
  */
-template <typename Value>
-class locked_mpmc_queue_entry_impl final {
+template <typename Value, std::size_t Alignment = alignof(Value)>
+class alignas(Alignment) locked_mpmc_queue_entry_impl final {
  private:
   Value value_;
 
@@ -89,7 +89,7 @@ class locked_mpmc_queue final : utils::non_copyable, utils::non_movable {
    * operations on the queue
    */
   ~locked_mpmc_queue() noexcept {
-    while (try_pop());
+    clear();
     allocator_.deallocate(ring_buffer_, *capacity_ + 1);
   }
 
@@ -152,27 +152,6 @@ class locked_mpmc_queue final : utils::non_copyable, utils::non_movable {
     return true;
   }
 
-  bool try_pop() noexcept {
-    if (size_.load(std::memory_order::relaxed) == 0) {
-      return false;
-    }
-    std::unique_lock<std::mutex> lock(mutex_, std::defer_lock_t{});
-    if (!lock.try_lock()) {
-      return false;
-    }
-    if (pop_from_ == push_to_) {
-      return false;
-    }
-
-    std::destroy_at(&ring_buffer_[pop_from_].value());
-
-    const index_t next_pop_from = (pop_from_ == *capacity_) ? 0 : pop_from_ + 1;
-    pop_from_ = next_pop_from;
-    size_.fetch_sub(1, std::memory_order::relaxed);
-    push_available_cv_.notify_one();
-    return true;
-  }
-
   value_t pop() {
     std::unique_lock<std::mutex> lock(mutex_);
     pop_available_cv_.wait(lock, [this] { return pop_from_ != push_to_; });
@@ -206,6 +185,28 @@ class locked_mpmc_queue final : utils::non_copyable, utils::non_movable {
   [[no_unique_address]] const utils::conditionally_runtime<
       index_t, Capacity == utils::kRuntimeDefinedCapacity<index_t>, Capacity>
       capacity_;
+
+ private:
+  /**
+   * @brief Preserves queue invariants. Assumes that no other thread is doing
+   * any operations on the queue
+   */
+  void clear() noexcept {
+    std::unique_lock<std::mutex> lock(mutex_);
+    while (true) {
+      if (pop_from_ == push_to_) {
+        break;
+      }
+
+      std::destroy_at(&ring_buffer_[pop_from_].value());
+
+      const index_t next_pop_from =
+          (pop_from_ == *capacity_) ? 0 : pop_from_ + 1;
+      pop_from_ = next_pop_from;
+    }
+    size_.store(0, std::memory_order::relaxed);
+    push_available_cv_.notify_one();
+  }
 };
 
 }  // namespace core::queues

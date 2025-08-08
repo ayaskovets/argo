@@ -16,15 +16,8 @@ void BM_queues_lockless_mpmc_queue_nonblocking_throughput(
   const std::size_t consumers = state.range(3);
   const Value value{};
 
-  class alignas(core::utils::kCacheLineSize) entry_t final {
-   private:
-    Value value_;
-    std::size_t seqnum_;
-
-   public:
-    constexpr Value& value() { return value_; }
-    constexpr std::size_t& seqnum() { return seqnum_; }
-  };
+  using entry_t = core::queues::detail::lockless_spmc_queue_entry_impl<
+      Value, std::size_t, core::utils::kCacheLineSize>;
   using queue_t = core::queues::lockless_mpmc_queue<
       Value, std::size_t, core::utils::kRuntimeDefinedCapacity<std::size_t>,
       std::allocator<entry_t>>;
@@ -147,15 +140,8 @@ void BM_queues_lockless_mpmc_queue_blocking_throughput(
   const std::size_t consumers = state.range(3);
   const Value value{};
 
-  class alignas(core::utils::kCacheLineSize) entry_t final {
-   private:
-    Value value_;
-    std::size_t seqnum_;
-
-   public:
-    constexpr Value& value() { return value_; }
-    constexpr std::size_t& seqnum() { return seqnum_; }
-  };
+  using entry_t = core::queues::detail::lockless_spmc_queue_entry_impl<
+      Value, std::size_t, core::utils::kCacheLineSize>;
   using queue_t = core::queues::lockless_mpmc_queue<
       Value, std::size_t, core::utils::kRuntimeDefinedCapacity<std::size_t>,
       std::allocator<entry_t>>;

@@ -31,10 +31,11 @@ target_sources(${TARGET}
     queues/lockfree_spmc_queue_test.cpp
     queues/lockless_mpmc_queue_test.cpp
     queues/waitfree_spsc_queue_test.cpp
-    queues/single_threaded_queue.cpp
+    queues/single_threaded_queue_test.cpp
     utils/conditionally_runtime_test.cpp
     utils/predicates_test.cpp
     utils/static_pimpl_test.cpp
+    utils/leak_detector_allocator_test.cpp
 )
 target_compile_features(${TARGET}
     PRIVATE cxx_std_20

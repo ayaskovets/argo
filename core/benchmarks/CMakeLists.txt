@@ -22,6 +22,7 @@ target_sources(${TARGET}
     queues/lockfree_mpsc_queue_benchmark.cpp
     queues/lockfree_spmc_queue_benchmark.cpp
     queues/lockless_mpmc_queue_benchmark.cpp
+    queues/single_threaded_queue_benchmark.cpp
     queues/waitfree_spsc_queue_benchmark.cpp
     main.cpp
 )
