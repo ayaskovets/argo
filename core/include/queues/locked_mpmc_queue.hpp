@@ -55,7 +55,6 @@ class locked_mpmc_queue final : utils::non_copyable, utils::non_movable {
   using entry_t = typename Allocator::value_type;
 
  private:
-  static_assert(std::is_nothrow_default_constructible_v<value_t>);
   static_assert(std::is_nothrow_destructible_v<value_t>);
   static_assert(std::is_nothrow_move_constructible_v<value_t>);
   static_assert(std::is_nothrow_move_assignable_v<value_t>);
@@ -85,9 +84,12 @@ class locked_mpmc_queue final : utils::non_copyable, utils::non_movable {
     }
   }
 
+  /**
+   * @warning Destructor is only safe when called while no other thread is doing
+   * operations on the queue
+   */
   ~locked_mpmc_queue() noexcept {
-    value_t value;
-    while (try_pop(value));
+    while (try_pop());
     allocator_.deallocate(ring_buffer_, *capacity_ + 1);
   }
 
@@ -141,6 +143,27 @@ class locked_mpmc_queue final : utils::non_copyable, utils::non_movable {
     }
 
     value = std::move(ring_buffer_[pop_from_].value());
+    std::destroy_at(&ring_buffer_[pop_from_].value());
+
+    const index_t next_pop_from = (pop_from_ == *capacity_) ? 0 : pop_from_ + 1;
+    pop_from_ = next_pop_from;
+    size_.fetch_sub(1, std::memory_order::relaxed);
+    push_available_cv_.notify_one();
+    return true;
+  }
+
+  bool try_pop() noexcept {
+    if (size_.load(std::memory_order::relaxed) == 0) {
+      return false;
+    }
+    std::unique_lock<std::mutex> lock(mutex_, std::defer_lock_t{});
+    if (!lock.try_lock()) {
+      return false;
+    }
+    if (pop_from_ == push_to_) {
+      return false;
+    }
+
     std::destroy_at(&ring_buffer_[pop_from_].value());
 
     const index_t next_pop_from = (pop_from_ == *capacity_) ? 0 : pop_from_ + 1;

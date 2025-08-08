@@ -64,7 +64,6 @@ class lockless_mpmc_queue final : utils::non_copyable, utils::non_movable {
   using entry_t = typename Allocator::value_type;
 
  private:
-  static_assert(std::is_nothrow_default_constructible_v<value_t>);
   static_assert(std::is_nothrow_destructible_v<value_t>);
   static_assert(std::is_nothrow_move_constructible_v<value_t>);
   static_assert(std::is_nothrow_move_assignable_v<value_t>);
@@ -108,8 +107,25 @@ class lockless_mpmc_queue final : utils::non_copyable, utils::non_movable {
    * operations on the queue
    */
   constexpr ~lockless_mpmc_queue() noexcept {
-    value_t value;
-    while (try_pop(value));
+    while (true) {
+      index_t pop_from = pop_from_.load(std::memory_order::relaxed);
+      entry_t& entry = ring_buffer_[pop_from & (*capacity_ - 1)];
+
+      if (pop_from + 1 !=
+          reinterpret_cast<std::atomic<index_t>&>(entry.seqnum())
+              .load(std::memory_order::acquire)) {
+        break;
+      }
+      if (!pop_from_.compare_exchange_strong(pop_from, pop_from + 1,
+                                             std::memory_order::relaxed)) {
+        break;
+      }
+
+      std::destroy_at(&entry.value());
+
+      reinterpret_cast<std::atomic<index_t>&>(entry.seqnum())
+          .store(pop_from + *capacity_, std::memory_order::release);
+    }
     allocator_.deallocate(ring_buffer_, *capacity_);
   }
 

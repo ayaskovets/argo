@@ -56,7 +56,6 @@ class lockfree_mpsc_queue final : utils::non_copyable, utils::non_movable {
   using entry_t = typename Allocator::value_type;
 
  private:
-  static_assert(std::is_nothrow_default_constructible_v<value_t>);
   static_assert(std::is_nothrow_destructible_v<value_t>);
   static_assert(std::is_nothrow_move_constructible_v<value_t>);
   static_assert(std::is_nothrow_move_assignable_v<value_t>);
@@ -100,8 +99,7 @@ class lockfree_mpsc_queue final : utils::non_copyable, utils::non_movable {
    * operations on the queue
    */
   constexpr ~lockfree_mpsc_queue() noexcept {
-    value_t value;
-    while (try_pop(value));
+    while (try_pop());
     allocator_.deallocate(ring_buffer_, *capacity_);
   }
 
@@ -150,6 +148,22 @@ class lockfree_mpsc_queue final : utils::non_copyable, utils::non_movable {
     }
 
     value = std::move(entry.value());
+    std::destroy_at(&entry.value());
+
+    pop_from_ += 1;
+    reinterpret_cast<std::atomic<bool>&>(entry.empty())
+        .store(true, std::memory_order::release);
+    available_to_pop_.fetch_sub(1, std::memory_order::relaxed);
+    return true;
+  }
+
+  constexpr bool try_pop() noexcept {
+    entry_t& entry = ring_buffer_[pop_from_ & (*capacity_ - 1)];
+    if (reinterpret_cast<std::atomic<bool>&>(entry.empty())
+            .load(std::memory_order::acquire)) {
+      return false;
+    }
+
     std::destroy_at(&entry.value());
 
     pop_from_ += 1;

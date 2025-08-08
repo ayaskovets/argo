@@ -54,7 +54,6 @@ class waitfree_spsc_queue final : utils::non_copyable, utils::non_movable {
   using entry_t = typename Allocator::value_type;
 
  private:
-  static_assert(std::is_nothrow_default_constructible_v<value_t>);
   static_assert(std::is_nothrow_destructible_v<value_t>);
   static_assert(std::is_nothrow_move_constructible_v<value_t>);
   static_assert(std::is_nothrow_move_assignable_v<value_t>);
@@ -89,8 +88,7 @@ class waitfree_spsc_queue final : utils::non_copyable, utils::non_movable {
    * operations on the queue
    */
   constexpr ~waitfree_spsc_queue() noexcept {
-    value_t value;
-    while (try_pop(value));
+    while (try_pop());
     allocator_.deallocate(ring_buffer_, *capacity_ + 1);
   }
 
@@ -133,6 +131,21 @@ class waitfree_spsc_queue final : utils::non_copyable, utils::non_movable {
     }
 
     value = std::move(ring_buffer_[pop_from].value());
+    std::destroy_at(&ring_buffer_[pop_from].value());
+
+    const index_t next_pop_from = (pop_from == *capacity_) ? 0 : pop_from + 1;
+    pop_from_.store(next_pop_from, std::memory_order::release);
+    return true;
+  }
+
+  constexpr bool try_pop() noexcept {
+    const index_t pop_from = pop_from_.load(std::memory_order::relaxed);
+    if (pop_from == cached_push_to_ &&
+        (pop_from ==
+         (cached_push_to_ = push_to_.load(std::memory_order::acquire)))) {
+      return false;
+    }
+
     std::destroy_at(&ring_buffer_[pop_from].value());
 
     const index_t next_pop_from = (pop_from == *capacity_) ? 0 : pop_from + 1;

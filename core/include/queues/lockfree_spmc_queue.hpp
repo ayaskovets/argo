@@ -56,7 +56,6 @@ class lockfree_spmc_queue final : utils::non_copyable, utils::non_movable {
   using entry_t = typename Allocator::value_type;
 
  private:
-  static_assert(std::is_nothrow_default_constructible_v<value_t>);
   static_assert(std::is_nothrow_destructible_v<value_t>);
   static_assert(std::is_nothrow_move_constructible_v<value_t>);
   static_assert(std::is_nothrow_move_assignable_v<value_t>);
@@ -102,8 +101,7 @@ class lockfree_spmc_queue final : utils::non_copyable, utils::non_movable {
    * operations on the queue
    */
   constexpr ~lockfree_spmc_queue() noexcept {
-    value_t value;
-    while (try_pop(value));
+    while (try_pop());
     allocator_.deallocate(ring_buffer_, *capacity_);
   }
 
@@ -149,6 +147,25 @@ class lockfree_spmc_queue final : utils::non_copyable, utils::non_movable {
     entry_t& entry = ring_buffer_[pop_from & (*capacity_ - 1)];
 
     value = std::move(entry.value());
+    std::destroy_at(&entry.value());
+
+    reinterpret_cast<std::atomic<bool>&>(entry.empty())
+        .store(true, std::memory_order::release);
+    reinterpret_cast<std::atomic<bool>&>(entry.empty()).notify_one();
+    return true;
+  }
+
+  constexpr bool try_pop() noexcept {
+    const index_t available_to_push =
+        available_to_push_.fetch_add(1, std::memory_order::relaxed);
+    if (available_to_push >= *capacity_) {
+      available_to_push_.fetch_sub(1, std::memory_order::relaxed);
+      return false;
+    }
+
+    const index_t pop_from = pop_from_.fetch_add(1, std::memory_order::relaxed);
+    entry_t& entry = ring_buffer_[pop_from & (*capacity_ - 1)];
+
     std::destroy_at(&entry.value());
 
     reinterpret_cast<std::atomic<bool>&>(entry.empty())

@@ -51,7 +51,6 @@ class single_threaded_queue final : utils::non_copyable, utils::non_movable {
   using entry_t = typename Allocator::value_type;
 
  private:
-  static_assert(std::is_nothrow_default_constructible_v<value_t>);
   static_assert(std::is_nothrow_destructible_v<value_t>);
   static_assert(std::is_nothrow_move_constructible_v<value_t>);
   static_assert(std::is_nothrow_move_assignable_v<value_t>);
@@ -81,9 +80,12 @@ class single_threaded_queue final : utils::non_copyable, utils::non_movable {
     }
   }
 
+  /**
+   * @warning Destructor is only safe when called while no other thread is doing
+   * operations on the queue
+   */
   constexpr ~single_threaded_queue() noexcept {
-    value_t value;
-    while (try_pop(value));
+    while (try_pop());
     allocator_.deallocate(ring_buffer_, *capacity_);
   }
 
@@ -123,11 +125,32 @@ class single_threaded_queue final : utils::non_copyable, utils::non_movable {
     return true;
   }
 
+  constexpr bool try_pop() noexcept {
+    if (size_ == 0) {
+      return false;
+    }
+
+    std::destroy_at(&ring_buffer_[pop_from_].value());
+
+    const index_t next_pop_from =
+        (pop_from_ == *capacity_ - 1) ? 0 : pop_from_ + 1;
+    pop_from_ = next_pop_from;
+    size_ -= 1;
+    return true;
+  }
+
   constexpr value_t pop() {
-    value_t value;
-    if (!try_pop(value)) {
+    if (size_ == 0) {
       throw std::runtime_error("queue is empty");
     }
+
+    value_t value(std::move(ring_buffer_[pop_from_].value()));
+    std::destroy_at(&ring_buffer_[pop_from_].value());
+
+    const index_t next_pop_from =
+        (pop_from_ == *capacity_ - 1) ? 0 : pop_from_ + 1;
+    pop_from_ = next_pop_from;
+    size_ -= 1;
     return value;
   }
 

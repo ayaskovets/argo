@@ -106,8 +106,7 @@ class lockfree_mpmc_queue final : utils::non_copyable, utils::non_movable {
    * operations on the queue
    */
   constexpr ~lockfree_mpmc_queue() noexcept {
-    value_t value;
-    while (try_pop(value));
+    while (try_pop());
     allocator_.deallocate(ring_buffer_, *capacity_);
   }
 
@@ -177,10 +176,68 @@ class lockfree_mpmc_queue final : utils::non_copyable, utils::non_movable {
     return false;
   }
 
+  constexpr bool try_pop() noexcept {
+    index_t pop_from = pop_from_.load(std::memory_order::relaxed);
+    entry_t entry = reinterpret_cast<std::atomic<entry_t>&>(
+                        ring_buffer_[pop_from & (*capacity_ - 1)])
+                        .load(std::memory_order::acquire);
+
+    if (entry.seqnum() == ((pop_from << 1) | 1)) {
+      entry_t desired;
+      std::memset(&desired, 0, sizeof(entry_t));
+      std::construct_at(&desired.value(), value_t{});
+      desired.seqnum() = ((pop_from + *capacity_) << 1);
+
+      if (reinterpret_cast<std::atomic<entry_t>&>(
+              ring_buffer_[pop_from & (*capacity_ - 1)])
+              .compare_exchange_strong(entry, desired,
+                                       std::memory_order::release,
+                                       std::memory_order::acquire)) {
+        std::destroy_at(&entry.value());
+        pop_from_.compare_exchange_strong(pop_from, pop_from + 1,
+                                          std::memory_order::release,
+                                          std::memory_order::acquire);
+        return true;
+      }
+    } else if ((entry.seqnum() | 1) == (((pop_from + *capacity_) << 1) | 1)) {
+      pop_from_.compare_exchange_strong(pop_from, pop_from + 1,
+                                        std::memory_order::release,
+                                        std::memory_order::acquire);
+    }
+    return false;
+  }
+
   constexpr value_t pop() noexcept {
-    value_t value;
-    while (!try_pop(value));
-    return value;
+    while (true) {
+      index_t pop_from = pop_from_.load(std::memory_order::relaxed);
+      entry_t entry = reinterpret_cast<std::atomic<entry_t>&>(
+                          ring_buffer_[pop_from & (*capacity_ - 1)])
+                          .load(std::memory_order::acquire);
+
+      if (entry.seqnum() == ((pop_from << 1) | 1)) {
+        entry_t desired;
+        std::memset(&desired, 0, sizeof(entry_t));
+        std::construct_at(&desired.value(), value_t{});
+        desired.seqnum() = ((pop_from + *capacity_) << 1);
+
+        if (reinterpret_cast<std::atomic<entry_t>&>(
+                ring_buffer_[pop_from & (*capacity_ - 1)])
+                .compare_exchange_strong(entry, desired,
+                                         std::memory_order::release,
+                                         std::memory_order::acquire)) {
+          value_t value(std::move(entry.value()));
+          std::destroy_at(&entry.value());
+          pop_from_.compare_exchange_strong(pop_from, pop_from + 1,
+                                            std::memory_order::release,
+                                            std::memory_order::acquire);
+          return value;
+        }
+      } else if ((entry.seqnum() | 1) == (((pop_from + *capacity_) << 1) | 1)) {
+        pop_from_.compare_exchange_strong(pop_from, pop_from + 1,
+                                          std::memory_order::release,
+                                          std::memory_order::acquire);
+      }
+    }
   }
 
  public:
