@@ -75,21 +75,19 @@ std::variant<net::inet::sockaddr, net::inet6::sockaddr> to_sockaddr(
 std::vector<std::variant<net::inet::sockaddr, net::inet6::sockaddr>> resolve(
     std::string_view hostname, net::sockets::family family,
     net::sockets::protocol protocol) {
-  ::addrinfo *results = nullptr;
-  const utils::scope_exit _([results]() noexcept {
-    if (results) {
-      ::freeaddrinfo(results);
-    }
-  });
+  std::unique_ptr<::addrinfo, decltype(&::freeaddrinfo)> results_raii(
+      nullptr, ::freeaddrinfo);
 
   const ::addrinfo hints{
       .ai_family = to_native_family(family),
       .ai_socktype = to_native_type(protocol),
   };
 
+  ::addrinfo *results = nullptr;
   switch (const int error =
               ::getaddrinfo(hostname.data(), nullptr, &hints, &results)) {
     case 0:
+      results_raii.reset(results);
       break;
     [[unlikely]] case EAI_SYSTEM:
       throw std::runtime_error(
