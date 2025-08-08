@@ -21,7 +21,7 @@ concept lockfree_mpmc_queue_entry = requires(T entry) {
   requires std::atomic<T>::is_always_lock_free;
   { entry.value() } -> std::same_as<Value&>;
   { entry.seqnum() } -> std::same_as<Index&>;
-};
+} && std::unsigned_integral<Index>;
 
 namespace detail {
 

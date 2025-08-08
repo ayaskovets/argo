@@ -35,12 +35,12 @@ class port final {
 
 template <>
 struct std::formatter<core::net::inet::port> {
-  template <class FormatContext>
+  template <typename FormatContext>
   constexpr auto parse(FormatContext& ctx) const noexcept {
     return ctx.begin();
   }
 
-  template <class FormatContext>
+  template <typename FormatContext>
   constexpr auto format(const core::net::inet::port& port,
                         FormatContext& ctx) const {
     return std::format_to(ctx.out(), "{}", port.to_string());

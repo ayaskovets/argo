@@ -52,7 +52,7 @@ poller& poller::operator=(poller&& that) noexcept {
   return *this;
 }
 
-poller::~poller() noexcept = default;
+poller::~poller() noexcept {}
 
 bool poller::insert_or_assign(const io::fd& fd, events_t events) {
   auto& [fds, fds_index, fds_to_insert] = *pimpl_;

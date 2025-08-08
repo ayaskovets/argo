@@ -25,7 +25,7 @@ class leak_detector_allocator : public std::allocator<T> {
   }
 
  public:
-  template <class U>
+  template <typename U>
   struct rebind {
     typedef leak_detector_allocator<U> other;
   };

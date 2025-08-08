@@ -16,7 +16,7 @@ class ip final {
   static const ip& kAny() noexcept;
 
  public:
-  struct network_byte_order_t final {};
+  class network_byte_order_t final {};
 
  public:
   ip(std::span<const std::byte, 16> bytes, network_byte_order_t) noexcept;
@@ -41,12 +41,12 @@ class ip final {
 
 template <>
 struct std::formatter<core::net::inet6::ip> {
-  template <class FormatContext>
+  template <typename FormatContext>
   constexpr auto parse(FormatContext& ctx) const noexcept {
     return ctx.begin();
   }
 
-  template <class FormatContext>
+  template <typename FormatContext>
   constexpr auto format(const core::net::inet6::ip& ip,
                         FormatContext& ctx) const {
     return std::format_to(ctx.out(), "{}", ip.to_string());

@@ -16,12 +16,12 @@ enum class level : std::uint8_t {
 
 template <>
 struct std::formatter<core::logging::level> {
-  template <class FormatContext>
+  template <typename FormatContext>
   constexpr auto parse(FormatContext& ctx) const noexcept {
     return ctx.begin();
   }
 
-  template <class FormatContext>
+  template <typename FormatContext>
   constexpr auto format(const core::logging::level& level,
                         FormatContext& ctx) const {
     switch (level) {

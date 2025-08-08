@@ -23,12 +23,12 @@ class sockaddr final : public net::sockets::base_sockaddr {
 
 template <>
 struct std::formatter<core::net::unix::sockaddr> {
-  template <class FormatContext>
+  template <typename FormatContext>
   constexpr auto parse(FormatContext& ctx) const noexcept {
     return ctx.begin();
   }
 
-  template <class FormatContext>
+  template <typename FormatContext>
   constexpr auto format(const core::net::unix::sockaddr& sockaddr,
                         FormatContext& ctx) const {
     return std::format_to(ctx.out(), "{}", sockaddr.to_string());

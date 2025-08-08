@@ -20,7 +20,7 @@ template <typename T, typename Value, typename Index>
 concept lockless_spmc_queue_entry = requires(T entry) {
   { entry.value() } -> std::same_as<Value&>;
   { entry.seqnum() } -> std::same_as<std::atomic<Index>&>;
-};
+} && std::unsigned_integral<Index>;
 
 namespace detail {
 

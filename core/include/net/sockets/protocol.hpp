@@ -18,12 +18,12 @@ enum class protocol : std::uint8_t {
 
 template <>
 struct std::formatter<core::net::sockets::protocol> {
-  template <class FormatContext>
+  template <typename FormatContext>
   constexpr auto parse(FormatContext& ctx) const noexcept {
     return ctx.begin();
   }
 
-  template <class FormatContext>
+  template <typename FormatContext>
   constexpr auto format(const core::net::sockets::protocol& protocol,
                         FormatContext& ctx) const {
     switch (protocol) {
