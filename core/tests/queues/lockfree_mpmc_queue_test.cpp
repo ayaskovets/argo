@@ -118,7 +118,7 @@ TEST(queues_lockfree_mpmc_queue, allocator) {
   using index_t = std::size_t;
   using entry_t =
       core::queues::detail::lockfree_mpmc_queue_entry_impl<value_t, index_t>;
-  core::utils::leak_detector_allocator<entry_t> allocator;
+  core::utils::leak_detector_allocator<std::atomic<entry_t>> allocator;
 
   EXPECT_TRUE(allocator.is_clean());
   {
