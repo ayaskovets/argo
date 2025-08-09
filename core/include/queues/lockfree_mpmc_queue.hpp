@@ -108,9 +108,11 @@ class lockfree_mpmc_queue final : utils::non_copyable, utils::non_movable {
   /**
    * @warning Destructor is only safe when called while no other thread is doing
    * operations on the queue
+   *
+   * is_trivially_destructible_v allows not to call std::destroy_at on queue
+   * elements
    */
   constexpr ~lockfree_mpmc_queue() noexcept {
-    clear();
     allocator_.deallocate(reinterpret_cast<entry_t*>(ring_buffer_), *capacity_);
   }
 
@@ -217,41 +219,6 @@ class lockfree_mpmc_queue final : utils::non_copyable, utils::non_movable {
   [[no_unique_address]] const utils::conditionally_runtime<
       index_t, Capacity == utils::kRuntimeDefinedCapacity<index_t>, Capacity>
       capacity_;
-
- private:
-  /**
-   * @brief Preserves queue invariants. Assumes that no other thread is doing
-   * any operations on the queue
-   */
-  constexpr void clear() noexcept {
-    while (true) {
-      index_t pop_from = pop_from_.load(std::memory_order::relaxed);
-      entry_t entry = ring_buffer_[pop_from & (*capacity_ - 1)].load(
-          std::memory_order::acquire);
-
-      if (entry.seqnum() == ((pop_from << 1) | 1)) {
-        entry_t desired;
-        std::memset(&desired, 0, sizeof(entry_t));
-        std::construct_at(&desired.value(), value_t{});
-        desired.seqnum() = ((pop_from + *capacity_) << 1);
-
-        if (ring_buffer_[pop_from & (*capacity_ - 1)].compare_exchange_strong(
-                entry, desired, std::memory_order::release,
-                std::memory_order::acquire)) {
-          std::destroy_at(&entry.value());
-          pop_from_.compare_exchange_strong(pop_from, pop_from + 1,
-                                            std::memory_order::release,
-                                            std::memory_order::acquire);
-          continue;
-        }
-      } else if ((entry.seqnum() | 1) == (((pop_from + *capacity_) << 1) | 1)) {
-        pop_from_.compare_exchange_strong(pop_from, pop_from + 1,
-                                          std::memory_order::release,
-                                          std::memory_order::acquire);
-      }
-      break;
-    }
-  }
 };
 
 }  // namespace core::queues
