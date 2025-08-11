@@ -160,7 +160,7 @@ TEST(queues_lockless_mpmc_queue, non_copyable_item_type) {
 TEST(queues_lockless_mpmc_queue, allocator) {
   using value_t = double;
   using index_t = std::size_t;
-  using entry_t = core::queues::detail::lockless_spmc_queue_entry_impl<
+  using entry_t = core::queues::detail::lockless_mpmc_queue_entry_impl<
       value_t, index_t, core::utils::kCacheLineSize>;
   core::utils::leak_detector_allocator<entry_t> allocator;
 

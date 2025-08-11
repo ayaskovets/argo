@@ -17,7 +17,7 @@ namespace core::queues {
  * Requires seqnum() to reduce the ABA problem
  */
 template <typename T, typename Value, typename Index>
-concept lockless_spmc_queue_entry = requires(T entry) {
+concept lockless_mpmc_queue_entry = requires(T entry) {
   { entry.value() } -> std::same_as<Value&>;
   { entry.seqnum() } -> std::same_as<std::atomic<Index>&>;
 } && std::unsigned_integral<Index>;
@@ -29,7 +29,7 @@ namespace detail {
  */
 template <typename Value, std::unsigned_integral Index = std::size_t,
           std::size_t Alignment = alignof(std::pair<Value, Index>)>
-class alignas(Alignment) lockless_spmc_queue_entry_impl final {
+class alignas(Alignment) lockless_mpmc_queue_entry_impl final {
  private:
   Value value_;
   std::atomic<Index> seqnum_;
@@ -56,7 +56,7 @@ class alignas(Alignment) lockless_spmc_queue_entry_impl final {
 template <typename Value, std::unsigned_integral Index = std::size_t,
           Index Capacity = utils::kRuntimeDefinedCapacity<Index>,
           typename Allocator = std::allocator<
-              detail::lockless_spmc_queue_entry_impl<Value, Index>>>
+              detail::lockless_mpmc_queue_entry_impl<Value, Index>>>
 class lockless_mpmc_queue final : utils::non_copyable, utils::non_movable {
  public:
   using value_t = Value;
@@ -68,7 +68,7 @@ class lockless_mpmc_queue final : utils::non_copyable, utils::non_movable {
   static_assert(std::is_nothrow_destructible_v<value_t>);
   static_assert(std::is_nothrow_move_constructible_v<value_t>);
   static_assert(std::is_nothrow_move_assignable_v<value_t>);
-  static_assert(lockless_spmc_queue_entry<entry_t, value_t, index_t>);
+  static_assert(lockless_mpmc_queue_entry<entry_t, value_t, index_t>);
 
  public:
   constexpr explicit lockless_mpmc_queue(
