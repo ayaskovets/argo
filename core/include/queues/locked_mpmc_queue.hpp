@@ -65,7 +65,7 @@ class locked_mpmc_queue final : utils::non_copyable, utils::non_movable {
       const allocator_t& allocator = allocator_t())
     requires(Capacity != utils::kRuntimeDefinedCapacity<index_t> &&
              Capacity > 0)
-      : allocator_(allocator) {
+      : size_(0), allocator_(allocator) {
     if (!(ring_buffer_ = allocator_.allocate(*capacity_ + 1))) [[unlikely]] {
       throw std::runtime_error("failed to allocate memory");
     }
@@ -74,7 +74,7 @@ class locked_mpmc_queue final : utils::non_copyable, utils::non_movable {
   constexpr explicit locked_mpmc_queue(
       index_t capacity, const allocator_t& allocator = allocator_t())
     requires(Capacity == utils::kRuntimeDefinedCapacity<index_t>)
-      : allocator_(allocator), capacity_(capacity) {
+      : size_(0), allocator_(allocator), capacity_(capacity) {
     if (*capacity_ <= 0) [[unlikely]] {
       throw std::invalid_argument("capacity must be greater than zero");
     }
