@@ -42,8 +42,7 @@ struct poller::impl final {
   std::vector<::pollfd> fds_to_insert;
 };
 
-poller::poller(callback_t callback) noexcept
-    : callback_(std::move(callback)) {};
+poller::poller(callback_t callback) noexcept : callback_(std::move(callback)) {}
 
 poller::poller(poller&& that) noexcept : pimpl_(std::move(that.pimpl_)) {}
 
@@ -142,11 +141,15 @@ std::size_t poller::try_poll(std::chrono::milliseconds timeout) {
       continue;
     }
 
-    try {
-      callback_(*std::launder(reinterpret_cast<const io::fd*>(&fds.at(i).fd)),
-                from_native_events(fds.at(i).revents));
-    } catch (...) {
+    if (!callback_) [[unlikely]] {
       unhandled += 1;
+    } else {
+      try {
+        callback_(*std::launder(reinterpret_cast<const io::fd*>(&fds.at(i).fd)),
+                  from_native_events(fds.at(i).revents));
+      } catch (...) {
+        unhandled += 1;
+      }
     }
     affected -= 1;
   }
