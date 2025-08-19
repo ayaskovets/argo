@@ -16,7 +16,7 @@ class fd {
   class uninitialized_t final {};
 
  private:
-  friend class poller;
+  friend class poller;  ///< Needed by poller to access native_handle()
 
  public:
   static const fd& kStdin() noexcept;
