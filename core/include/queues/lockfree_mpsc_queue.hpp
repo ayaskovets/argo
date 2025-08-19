@@ -169,6 +169,9 @@ class lockfree_mpsc_queue final : utils::non_copyable, utils::non_movable {
 
  public:
   constexpr index_t capacity() const noexcept { return *capacity_; }
+  constexpr index_t size_approx() const noexcept {
+    return available_to_pop_.load(std::memory_order::relaxed);
+  }
 
  private:
   entry_t* ring_buffer_ = nullptr;

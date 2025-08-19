@@ -69,16 +69,27 @@ TEST(queues_waitfree_spsc_queue, smoke) {
   int value;
   core::queues::waitfree_spsc_queue<int> queue(2);
 
+  EXPECT_EQ(queue.size_approx(), 0);
   EXPECT_FALSE(queue.try_pop(value));
+  EXPECT_EQ(queue.size_approx(), 0);
   queue.push(1);
+  EXPECT_EQ(queue.size_approx(), 1);
   queue.push(2);
+  EXPECT_EQ(queue.size_approx(), 2);
   EXPECT_FALSE(queue.try_push(3));
+  EXPECT_EQ(queue.size_approx(), 2);
   EXPECT_EQ(queue.pop(), 1);
+  EXPECT_EQ(queue.size_approx(), 1);
   queue.push(4);
+  EXPECT_EQ(queue.size_approx(), 2);
   EXPECT_FALSE(queue.try_push(5));
+  EXPECT_EQ(queue.size_approx(), 2);
   EXPECT_EQ(queue.pop(), 2);
+  EXPECT_EQ(queue.size_approx(), 1);
   EXPECT_EQ(queue.pop(), 4);
+  EXPECT_EQ(queue.size_approx(), 0);
   EXPECT_FALSE(queue.try_pop(value));
+  EXPECT_EQ(queue.size_approx(), 0);
 }
 
 TEST(queues_waitfree_spsc_queue, blocking_push) {

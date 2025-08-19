@@ -172,6 +172,9 @@ class lockfree_spmc_queue final : utils::non_copyable, utils::non_movable {
 
  public:
   constexpr index_t capacity() const noexcept { return *capacity_; }
+  constexpr index_t size_approx() const noexcept {
+    return *capacity_ - available_to_push_.load(std::memory_order::relaxed);
+  }
 
  private:
   entry_t* ring_buffer_ = nullptr;

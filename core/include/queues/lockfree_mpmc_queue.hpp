@@ -189,6 +189,13 @@ class lockfree_mpmc_queue final : utils::non_copyable, utils::non_movable {
 
  public:
   constexpr index_t capacity() const noexcept { return *capacity_; }
+  constexpr index_t size_approx() const noexcept {
+    const index_t push_to = push_to_.load(std::memory_order::relaxed);
+    const index_t pop_from = pop_from_.load(std::memory_order::relaxed);
+
+    return push_to >= pop_from ? push_to - pop_from
+                               : *capacity_ - pop_from - push_to + 1;
+  }
 
  private:
   atomic_entry_t* ring_buffer_ = nullptr;
