@@ -31,7 +31,7 @@ base_socket::~base_socket() noexcept {
   }
 }
 
-void base_socket::unlink_close() {
+void base_socket::unlink_and_close() {
   static const base_socket kUninitialized(io::fd::uninitialized_t{});
   if (*this == kUninitialized) {
     return;

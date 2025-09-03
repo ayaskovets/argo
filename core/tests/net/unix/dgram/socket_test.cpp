@@ -24,7 +24,7 @@ TEST(net_unix_dgram_socket, unlink_bind) {
             core::net::unix::dgram::socket::bind_status::kSuccess);
 }
 
-TEST(net_unix_dgram_socket, unlink_close) {
+TEST(net_unix_dgram_socket, unlink_and_close) {
   const core::net::unix::sockaddr sockaddr(
       core::net::unix::sockaddr("net_unix_dgram_socket_close_unlink"));
 
@@ -36,7 +36,7 @@ TEST(net_unix_dgram_socket, unlink_close) {
   EXPECT_EQ(other.bind(sockaddr),
             core::net::unix::dgram::socket::bind_status::kInUse);
 
-  socket.unlink_close();
+  socket.unlink_and_close();
   EXPECT_EQ(other.bind(sockaddr),
             core::net::unix::dgram::socket::bind_status::kSuccess);
 }

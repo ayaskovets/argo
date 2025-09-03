@@ -15,7 +15,7 @@ class base_socket : public net::sockets::base_socket {
   ~base_socket() noexcept;
 
  public:
-  void unlink_close();
+  void unlink_and_close();
 
  public:
   net::sockets::base_socket::bind_status unlink_bind(
