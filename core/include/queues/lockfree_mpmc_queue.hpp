@@ -24,6 +24,16 @@ concept lockfree_mpmc_queue_entry = requires(T entry) {
 
   requires noexcept(entry.value());
   requires noexcept(entry.seqnum());
+
+  requires std::atomic<T>::is_always_lock_free;
+
+  requires std::is_nothrow_default_constructible_v<T>;
+  requires std::is_trivially_destructible_v<T>;
+  requires std::is_nothrow_destructible_v<T>;
+  requires std::is_trivially_copy_constructible_v<T>;
+  requires std::is_nothrow_copy_constructible_v<T>;
+  requires std::is_trivially_move_assignable_v<T>;
+  requires std::is_nothrow_move_assignable_v<T>;
 } && std::unsigned_integral<Index>;
 
 namespace detail {
@@ -60,7 +70,6 @@ template <typename Value, std::unsigned_integral Index = std::size_t,
 class lockfree_mpmc_queue final : utils::non_copyable, utils::non_movable {
  private:
   using atomic_entry_t = typename Allocator::value_type;
-  static_assert(atomic_entry_t::is_always_lock_free);
 
  public:
   using value_t = Value;
@@ -69,13 +78,6 @@ class lockfree_mpmc_queue final : utils::non_copyable, utils::non_movable {
   using entry_t = typename atomic_entry_t::value_type;
 
  private:
-  static_assert(std::is_nothrow_default_constructible_v<entry_t>);
-  static_assert(std::is_trivially_destructible_v<entry_t>);
-  static_assert(std::is_nothrow_destructible_v<entry_t>);
-  static_assert(std::is_trivially_copy_constructible_v<entry_t>);
-  static_assert(std::is_nothrow_copy_constructible_v<entry_t>);
-  static_assert(std::is_trivially_move_assignable_v<entry_t>);
-  static_assert(std::is_nothrow_move_assignable_v<entry_t>);
   static_assert(lockfree_mpmc_queue_entry<entry_t, value_t, index_t>);
 
  public:

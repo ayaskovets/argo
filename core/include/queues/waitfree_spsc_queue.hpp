@@ -18,6 +18,10 @@ concept waitfree_spsc_queue_entry = requires(T entry) {
   { entry.value() } -> std::same_as<Value&>;
 
   requires noexcept(entry.value());
+
+  requires std::is_nothrow_destructible_v<Value>;
+  requires std::is_nothrow_move_constructible_v<Value>;
+  requires std::is_nothrow_move_assignable_v<Value>;
 };
 
 namespace detail {
@@ -56,9 +60,6 @@ class waitfree_spsc_queue final : utils::non_copyable, utils::non_movable {
   using entry_t = typename Allocator::value_type;
 
  private:
-  static_assert(std::is_nothrow_destructible_v<value_t>);
-  static_assert(std::is_nothrow_move_constructible_v<value_t>);
-  static_assert(std::is_nothrow_move_assignable_v<value_t>);
   static_assert(waitfree_spsc_queue_entry<entry_t, value_t>);
 
  public:
