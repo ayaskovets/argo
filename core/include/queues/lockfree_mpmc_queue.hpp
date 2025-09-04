@@ -21,6 +21,9 @@ concept lockfree_mpmc_queue_entry = requires(T entry) {
   requires std::atomic<T>::is_always_lock_free;
   { entry.value() } -> std::same_as<Value&>;
   { entry.seqnum() } -> std::same_as<Index&>;
+
+  requires noexcept(entry.value());
+  requires noexcept(entry.seqnum());
 } && std::unsigned_integral<Index>;
 
 namespace detail {
@@ -32,8 +35,8 @@ template <typename Value, std::unsigned_integral Index = std::size_t,
           std::size_t Alignment = alignof(std::pair<Value, Index>)>
 class alignas(Alignment) lockfree_mpmc_queue_entry_impl final {
  public:
-  constexpr Value& value() { return value_; }
-  constexpr Index& seqnum() { return seqnum_; }
+  constexpr Value& value() noexcept { return value_; }
+  constexpr Index& seqnum() noexcept { return seqnum_; }
 
  private:
   Value value_;

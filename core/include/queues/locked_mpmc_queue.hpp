@@ -17,6 +17,8 @@ namespace core::queues {
 template <typename T, typename Value>
 concept locked_mpmc_queue_entry = requires(T entry) {
   { entry.value() } -> std::same_as<Value&>;
+
+  requires noexcept(entry.value());
 };
 
 namespace detail {
@@ -27,7 +29,7 @@ namespace detail {
 template <typename Value, std::size_t Alignment = alignof(Value)>
 class alignas(Alignment) locked_mpmc_queue_entry_impl final {
  public:
-  constexpr Value& value() { return value_; }
+  constexpr Value& value() noexcept { return value_; }
 
  private:
   Value value_;

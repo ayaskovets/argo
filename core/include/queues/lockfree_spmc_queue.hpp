@@ -21,6 +21,9 @@ template <typename T, typename Value>
 concept lockfree_spmc_queue_entry = requires(T entry) {
   { entry.value() } -> std::same_as<Value&>;
   { entry.empty() } -> std::same_as<std::atomic<bool>&>;
+
+  requires noexcept(entry.value());
+  requires noexcept(entry.empty());
 };
 
 namespace detail {
@@ -32,8 +35,8 @@ template <typename Value,
           std::size_t Alignment = alignof(std::pair<Value, bool>)>
 class alignas(Alignment) lockfree_spmc_queue_entry_impl final {
  public:
-  constexpr Value& value() { return value_; }
-  constexpr std::atomic<bool>& empty() { return empty_; }
+  constexpr Value& value() noexcept { return value_; }
+  constexpr std::atomic<bool>& empty() noexcept { return empty_; }
 
  private:
   Value value_;
