@@ -31,13 +31,13 @@ namespace detail {
 template <typename Value,
           std::size_t Alignment = alignof(std::pair<Value, bool>)>
 class alignas(Alignment) lockfree_spmc_queue_entry_impl final {
- private:
-  Value value_;
-  std::atomic<bool> empty_;
-
  public:
   constexpr Value& value() { return value_; }
   constexpr std::atomic<bool>& empty() { return empty_; }
+
+ private:
+  Value value_;
+  std::atomic<bool> empty_;
 };
 
 }  // namespace detail

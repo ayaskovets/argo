@@ -26,11 +26,11 @@ namespace detail {
  */
 template <typename Value, std::size_t Alignment = alignof(Value)>
 class alignas(Alignment) locked_mpmc_queue_entry_impl final {
- private:
-  Value value_;
-
  public:
   constexpr Value& value() { return value_; }
+
+ private:
+  Value value_;
 };
 
 }  // namespace detail

@@ -31,13 +31,13 @@ namespace detail {
 template <typename Value, std::unsigned_integral Index = std::size_t,
           std::size_t Alignment = alignof(std::pair<Value, Index>)>
 class alignas(Alignment) lockfree_mpmc_queue_entry_impl final {
- private:
-  Value value_;
-  Index seqnum_;
-
  public:
   constexpr Value& value() { return value_; }
   constexpr Index& seqnum() { return seqnum_; }
+
+ private:
+  Value value_;
+  Index seqnum_;
 };
 
 }  // namespace detail
