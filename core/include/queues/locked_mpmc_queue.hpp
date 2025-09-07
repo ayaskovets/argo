@@ -97,7 +97,10 @@ class locked_mpmc_queue final : utils::non_copyable, utils::non_movable {
   }
 
  public:
-  bool try_push(value_t value) noexcept {
+  template <typename... Args>
+  bool try_emplace(Args&&... args) noexcept
+    requires(std::is_nothrow_constructible_v<Value, Args...>)
+  {
     if (size_.load(std::memory_order::relaxed) >= *capacity_) {
       return false;
     }
@@ -110,7 +113,8 @@ class locked_mpmc_queue final : utils::non_copyable, utils::non_movable {
       return false;
     }
 
-    std::construct_at(&ring_buffer_[push_to_].value(), std::move(value));
+    std::construct_at(&ring_buffer_[push_to_].value(),
+                      std::forward<Args>(args)...);
 
     push_to_ = next_push_to;
     size_.fetch_add(1, std::memory_order::relaxed);
@@ -118,20 +122,30 @@ class locked_mpmc_queue final : utils::non_copyable, utils::non_movable {
     return true;
   }
 
-  void push(value_t value) {
+  constexpr bool try_push(value_t value) noexcept {
+    return try_emplace(std::move(value));
+  }
+
+  template <typename... Args>
+  void emplace(Args&&... args)
+    requires(std::is_nothrow_constructible_v<Value, Args...>)
+  {
     std::unique_lock<std::mutex> lock(mutex_);
     push_available_cv_.wait(lock, [this] {
       const index_t next_push_to = (push_to_ == *capacity_) ? 0 : push_to_ + 1;
       return next_push_to != pop_from_;
     });
 
-    std::construct_at(&ring_buffer_[push_to_].value(), std::move(value));
+    std::construct_at(&ring_buffer_[push_to_].value(),
+                      std::forward<Args>(args)...);
 
     const index_t next_push_to = (push_to_ == *capacity_) ? 0 : push_to_ + 1;
     push_to_ = next_push_to;
     size_.fetch_add(1, std::memory_order::relaxed);
     pop_available_cv_.notify_one();
   }
+
+  constexpr void push(value_t value) { emplace(std::move(value)); }
 
   bool try_pop(value_t& value) noexcept {
     if (size_.load(std::memory_order::relaxed) == 0) {

@@ -93,12 +93,16 @@ class single_threaded_queue final : utils::non_copyable, utils::non_movable {
   }
 
  public:
-  constexpr bool try_push(value_t value) noexcept {
+  template <typename... Args>
+  constexpr bool try_emplace(Args&&... args) noexcept
+    requires(std::is_nothrow_constructible_v<Value, Args...>)
+  {
     if (size_ == *capacity_) {
       return false;
     }
 
-    std::construct_at(&ring_buffer_[push_to_].value(), std::move(value));
+    std::construct_at(&ring_buffer_[push_to_].value(),
+                      std::forward<Args>(args)...);
 
     const index_t next_push_to =
         (push_to_ == *capacity_ - 1) ? 0 : push_to_ + 1;
@@ -107,11 +111,20 @@ class single_threaded_queue final : utils::non_copyable, utils::non_movable {
     return true;
   }
 
-  constexpr void push(value_t value) {
-    if (!try_push(std::move(value))) {
+  constexpr bool try_push(value_t value) noexcept {
+    return try_emplace(std::move(value));
+  }
+
+  template <typename... Args>
+  constexpr void emplace(Args&&... args)
+    requires(std::is_nothrow_constructible_v<Value, Args...>)
+  {
+    if (!try_emplace(std::forward<Args>(args)...)) {
       throw std::runtime_error("queue is full");
     }
   }
+
+  constexpr void push(value_t value) { emplace(std::move(value)); }
 
   constexpr bool try_pop(value_t& value) noexcept {
     if (size_ == 0) {

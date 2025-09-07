@@ -109,7 +109,10 @@ class lockfree_mpsc_queue final : utils::non_copyable, utils::non_movable {
   }
 
  public:
-  constexpr bool try_push(value_t value) noexcept {
+  template <typename... Args>
+  constexpr bool try_emplace(Args&&... args) noexcept
+    requires(std::is_nothrow_constructible_v<Value, Args...>)
+  {
     const index_t available_to_pop =
         available_to_pop_.fetch_add(1, std::memory_order::relaxed);
     if (available_to_pop >= *capacity_) {
@@ -120,13 +123,20 @@ class lockfree_mpsc_queue final : utils::non_copyable, utils::non_movable {
     const index_t push_to = push_to_.fetch_add(1, std::memory_order::relaxed);
     entry_t& entry = ring_buffer_[push_to & (*capacity_ - 1)];
 
-    std::construct_at(&entry.value(), std::move(value));
+    std::construct_at(&entry.value(), std::forward<Args>(args)...);
     entry.empty().store(false, std::memory_order::release);
     entry.empty().notify_one();
     return true;
   }
 
-  constexpr void push(value_t value) noexcept {
+  constexpr bool try_push(value_t value) noexcept {
+    return try_emplace(std::move(value));
+  }
+
+  template <typename... Args>
+  constexpr void emplace(Args&&... args) noexcept
+    requires(std::is_nothrow_constructible_v<Value, Args...>)
+  {
     const index_t available_to_pop =
         available_to_pop_.fetch_add(1, std::memory_order::relaxed);
     if (available_to_pop >= *capacity_) {
@@ -137,11 +147,13 @@ class lockfree_mpsc_queue final : utils::non_copyable, utils::non_movable {
     const index_t push_to = push_to_.fetch_add(1, std::memory_order::relaxed);
     entry_t& entry = ring_buffer_[push_to & (*capacity_ - 1)];
 
-    std::construct_at(&entry.value(), std::move(value));
+    std::construct_at(&entry.value(), std::forward<Args>(args)...);
     entry.empty().store(false, std::memory_order::release);
     entry.empty().notify_one();
     return;
   }
+
+  constexpr void push(value_t value) noexcept { emplace(std::move(value)); }
 
   constexpr bool try_pop(value_t& value) noexcept {
     entry_t& entry = ring_buffer_[pop_from_ & (*capacity_ - 1)];

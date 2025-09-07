@@ -111,13 +111,16 @@ class lockfree_spmc_queue final : utils::non_copyable, utils::non_movable {
   }
 
  public:
-  constexpr bool try_push(value_t value) noexcept {
+  template <typename... Args>
+  constexpr bool try_emplace(Args&&... args) noexcept
+    requires(std::is_nothrow_constructible_v<Value, Args...>)
+  {
     entry_t& entry = ring_buffer_[push_to_ & (*capacity_ - 1)];
     if (!entry.empty().load(std::memory_order::acquire)) {
       return false;
     }
 
-    std::construct_at(&entry.value(), std::move(value));
+    std::construct_at(&entry.value(), std::forward<Args>(args)...);
 
     push_to_ += 1;
     entry.empty().store(false, std::memory_order::release);
@@ -125,16 +128,25 @@ class lockfree_spmc_queue final : utils::non_copyable, utils::non_movable {
     return true;
   }
 
-  constexpr void push(value_t value) noexcept {
+  constexpr bool try_push(value_t value) noexcept {
+    return try_emplace(std::move(value));
+  }
+
+  template <typename... Args>
+  constexpr void emplace(Args&&... args) noexcept
+    requires(std::is_nothrow_constructible_v<Value, Args...>)
+  {
     entry_t& entry = ring_buffer_[push_to_ & (*capacity_ - 1)];
     entry.empty().wait(false, std::memory_order::acquire);
 
-    std::construct_at(&entry.value(), std::move(value));
+    std::construct_at(&entry.value(), std::forward<Args>(args)...);
 
     push_to_ += 1;
     entry.empty().store(false, std::memory_order::release);
     available_to_push_.fetch_sub(1, std::memory_order::relaxed);
   }
+
+  constexpr void push(value_t value) noexcept { emplace(std::move(value)); }
 
   constexpr bool try_pop(value_t& value) noexcept {
     const index_t available_to_push =

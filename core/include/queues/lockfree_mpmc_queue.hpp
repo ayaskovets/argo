@@ -130,14 +130,17 @@ class lockfree_mpmc_queue final : utils::non_copyable, utils::non_movable {
   }
 
  public:
-  constexpr bool try_push(value_t value) noexcept {
+  template <typename... Args>
+  constexpr bool try_emplace(Args&&... args) noexcept
+    requires(std::is_nothrow_constructible_v<Value, Args...>)
+  {
     index_t push_to = push_to_.load(std::memory_order::relaxed);
     entry_t entry = ring_buffer_[push_to & (*capacity_ - 1)].load(
         std::memory_order::acquire);
 
     if (entry.seqnum() == (push_to << 1)) {
       entry_t desired{};
-      std::construct_at(&desired.value(), std::move(value));
+      std::construct_at(&desired.value(), std::forward<Args>(args)...);
       desired.seqnum() = ((push_to << 1) | 1);
 
       if (ring_buffer_[push_to & (*capacity_ - 1)].compare_exchange_strong(
@@ -157,7 +160,18 @@ class lockfree_mpmc_queue final : utils::non_copyable, utils::non_movable {
     return false;
   }
 
-  constexpr void push(value_t value) noexcept { while (!try_push(value)); }
+  constexpr bool try_push(value_t value) noexcept {
+    return try_emplace(std::move(value));
+  }
+
+  template <typename... Args>
+  constexpr void emplace(Args&&... args) noexcept
+    requires(std::is_nothrow_constructible_v<Value, Args...>)
+  {
+    while (!try_emplace(std::forward<Args>(args)...));
+  }
+
+  constexpr void push(value_t value) noexcept { emplace(std::move(value)); }
 
   constexpr bool try_pop(value_t& value) noexcept {
     index_t pop_from = pop_from_.load(std::memory_order::relaxed);

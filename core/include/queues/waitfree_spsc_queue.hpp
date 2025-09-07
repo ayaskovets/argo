@@ -96,7 +96,10 @@ class waitfree_spsc_queue final : utils::non_copyable, utils::non_movable {
   }
 
  public:
-  constexpr bool try_push(value_t value) noexcept {
+  template <typename... Args>
+  constexpr bool try_emplace(Args&&... args) noexcept
+    requires(std::is_nothrow_constructible_v<Value, Args...>)
+  {
     const index_t push_to = push_to_.load(std::memory_order::relaxed);
     const index_t next_push_to = (push_to == *capacity_) ? 0 : push_to + 1;
 
@@ -106,13 +109,21 @@ class waitfree_spsc_queue final : utils::non_copyable, utils::non_movable {
       return false;
     }
 
-    std::construct_at(&ring_buffer_[push_to].value(), std::move(value));
+    std::construct_at(&ring_buffer_[push_to].value(),
+                      std::forward<Args>(args)...);
 
     push_to_.store(next_push_to, std::memory_order::release);
     return true;
   }
 
-  constexpr void push(value_t value) noexcept {
+  constexpr bool try_push(value_t value) noexcept {
+    return try_emplace(std::move(value));
+  }
+
+  template <typename... Args>
+  constexpr void emplace(Args&&... args) noexcept
+    requires(std::is_nothrow_constructible_v<Value, Args...>)
+  {
     const index_t push_to = push_to_.load(std::memory_order::relaxed);
     const index_t next_push_to = (push_to == *capacity_) ? 0 : push_to + 1;
 
@@ -120,10 +131,13 @@ class waitfree_spsc_queue final : utils::non_copyable, utils::non_movable {
            (next_push_to ==
             (cached_pop_from_ = pop_from_.load(std::memory_order::acquire))));
 
-    std::construct_at(&ring_buffer_[push_to].value(), std::move(value));
+    std::construct_at(&ring_buffer_[push_to].value(),
+                      std::forward<Args>(args)...);
 
     push_to_.store(next_push_to, std::memory_order::release);
   }
+
+  constexpr void push(value_t value) noexcept { emplace(std::move(value)); }
 
   constexpr bool try_pop(value_t& value) noexcept {
     const index_t pop_from = pop_from_.load(std::memory_order::relaxed);

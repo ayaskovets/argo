@@ -99,9 +99,9 @@ TEST(queues_single_threaded_queue, smoke) {
   EXPECT_FALSE(queue.try_pop(value));
   queue.push(1);
   queue.push(2);
-  EXPECT_FALSE(queue.try_push(3));
+  EXPECT_FALSE(queue.try_emplace(3));
   EXPECT_EQ(queue.pop(), 1);
-  queue.push(4);
+  queue.emplace(4);
   EXPECT_FALSE(queue.try_push(5));
   EXPECT_EQ(queue.pop(), 2);
   EXPECT_EQ(queue.pop(), 4);
