@@ -187,6 +187,7 @@ TEST(queues_locked_mpmc_queue, allocator) {
     core::queues::locked_mpmc_queue<value_t, std::size_t, 2,
                                     decltype(allocator)>
         queue(allocator);
+    EXPECT_EQ(queue.get_allocator(), allocator);
 
     EXPECT_FALSE(allocator.is_clean());
     queue.push(1.1);

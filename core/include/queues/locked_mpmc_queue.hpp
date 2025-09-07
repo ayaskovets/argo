@@ -176,6 +176,9 @@ class locked_mpmc_queue final : utils::non_copyable, utils::non_movable {
     return size_.load(std::memory_order::relaxed);
   }
 
+ public:
+  const allocator_t& get_allocator() const noexcept { return allocator_; }
+
  private:
   mutable std::mutex mutex_;
   std::condition_variable pop_available_cv_;

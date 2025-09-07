@@ -180,6 +180,9 @@ class lockfree_spmc_queue final : utils::non_copyable, utils::non_movable {
     return *capacity_ - available_to_push_.load(std::memory_order::relaxed);
   }
 
+ public:
+  const allocator_t& get_allocator() const noexcept { return allocator_; }
+
  private:
   entry_t* ring_buffer_ = nullptr;
 

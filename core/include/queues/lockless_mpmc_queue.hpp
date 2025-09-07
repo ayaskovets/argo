@@ -200,6 +200,9 @@ class lockless_mpmc_queue final : utils::non_copyable, utils::non_movable {
                                : *capacity_ - pop_from - push_to + 1;
   }
 
+ public:
+  const allocator_t& get_allocator() const noexcept { return allocator_; }
+
  private:
   entry_t* ring_buffer_ = nullptr;
 

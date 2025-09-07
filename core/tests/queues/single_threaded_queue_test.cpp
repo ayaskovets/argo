@@ -186,6 +186,7 @@ TEST(queues_single_threaded_queue, allocator) {
     core::queues::single_threaded_queue<value_t, index_t, 2,
                                         decltype(allocator)>
         queue(allocator);
+    EXPECT_EQ(queue.get_allocator(), allocator);
     value_t value;
 
     EXPECT_FALSE(allocator.is_clean());

@@ -179,6 +179,7 @@ TEST(queues_lockfree_mpsc_queue, allocator) {
   {
     core::queues::lockfree_mpsc_queue<value_t, index_t, 2, decltype(allocator)>
         queue(allocator);
+    EXPECT_EQ(queue.get_allocator(), allocator);
 
     EXPECT_FALSE(allocator.is_clean());
     queue.push(1.1);
