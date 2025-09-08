@@ -127,7 +127,7 @@ class locked_mpmc_queue final : utils::non_copyable, utils::non_movable {
   }
 
   template <typename... Args>
-  void emplace(Args&&... args)
+  void emplace(Args&&... args) noexcept
     requires(std::is_nothrow_constructible_v<Value, Args...>)
   {
     std::unique_lock<std::mutex> lock(mutex_);
@@ -145,7 +145,7 @@ class locked_mpmc_queue final : utils::non_copyable, utils::non_movable {
     pop_available_cv_.notify_one();
   }
 
-  constexpr void push(value_t value) { emplace(std::move(value)); }
+  constexpr void push(value_t value) noexcept { emplace(std::move(value)); }
 
   bool try_pop(value_t& value) noexcept {
     if (size_.load(std::memory_order::relaxed) == 0) {
@@ -169,7 +169,7 @@ class locked_mpmc_queue final : utils::non_copyable, utils::non_movable {
     return true;
   }
 
-  value_t pop() {
+  value_t pop() noexcept {
     std::unique_lock<std::mutex> lock(mutex_);
     pop_available_cv_.wait(lock, [this] { return pop_from_ != push_to_; });
 
