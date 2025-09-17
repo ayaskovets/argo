@@ -30,8 +30,7 @@ class logger {
                                       Args&&... args) const {
     if (level_ <= level) [[likely]] {
       writer_(level,
-              renderer_(level, fmt.get(),
-                        std::make_format_args(std::forward<Args>(args)...)));
+              renderer_(level, fmt.get(), std::make_format_args(args...)));
     }
   }
 

@@ -27,7 +27,7 @@ target_sources(${TARGET}
     src/net/unix/stream/socket.cpp
 )
 target_compile_features(${TARGET}
-    PRIVATE cxx_std_20
+    PRIVATE cxx_std_23
 )
 target_include_directories(${TARGET}
     PUBLIC include

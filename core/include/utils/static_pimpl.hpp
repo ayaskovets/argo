@@ -2,6 +2,8 @@
 
 #include <cstddef>
 #include <memory>
+#include <new>
+#include <utility>
 
 namespace core::utils {
 

@@ -38,7 +38,7 @@ target_sources(${TARGET}
     utils/leak_detector_allocator_test.cpp
 )
 target_compile_features(${TARGET}
-    PRIVATE cxx_std_20
+    PRIVATE cxx_std_23
 )
 target_link_libraries(${TARGET}
     PRIVATE core GTest::gtest_main

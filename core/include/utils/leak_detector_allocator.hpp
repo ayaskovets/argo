@@ -17,6 +17,10 @@ class leak_detector_allocator : public std::allocator<T> {
     return ptr;
   }
 
+  constexpr std::allocation_result<T*> allocate_at_least(std::size_t n) {
+    return std::allocation_result<T*>{.ptr = allocate(n), .count = n};
+  }
+
   constexpr void deallocate(T* ptr, std::size_t n) {
     if ((allocations_.at(ptr) -= n) == 0) {
       allocations_.erase(ptr);

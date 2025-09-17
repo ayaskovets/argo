@@ -5,6 +5,7 @@
 namespace benchmarks::logging {
 
 void BM_logging_default(benchmark::State& state) {
+  (void)std::format("{}", 42);
   for (const auto _ : state) {
     benchmark::DoNotOptimize((core::logging::info("{}\n", 42), 42));
   }

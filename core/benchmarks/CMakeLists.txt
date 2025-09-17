@@ -27,7 +27,7 @@ target_sources(${TARGET}
     main.cpp
 )
 target_compile_features(${TARGET}
-    PRIVATE cxx_std_20
+    PRIVATE cxx_std_23
 )
 target_link_libraries(${TARGET}
     PRIVATE core benchmark::benchmark
