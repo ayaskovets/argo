@@ -98,7 +98,7 @@ TEST(net_unix_stream_socket, blocking_echo_handshake) {
 
   core::net::unix::stream::socket client;
 
-  std::thread server_thread([&server, &kBuffer] {
+  std::jthread server_thread([&server, &kBuffer] {
     core::net::unix::stream::socket peer(core::io::fd::uninitialized_t{});
     EXPECT_EQ(server.accept(peer),
               core::net::unix::stream::socket::accept_status::kSuccess);
@@ -116,7 +116,6 @@ TEST(net_unix_stream_socket, blocking_echo_handshake) {
   EXPECT_EQ(client.send(kBuffer), kBuffer.size());
   EXPECT_EQ(client.receive(buffer), kBuffer.size());
   EXPECT_EQ(buffer, kBuffer);
-  server_thread.join();
 }
 
 TEST(net_unix_stream_socket, nonblocking_echo_handshake) {

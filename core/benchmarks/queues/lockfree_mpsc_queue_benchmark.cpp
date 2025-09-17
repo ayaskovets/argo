@@ -31,7 +31,7 @@ void BM_queues_lockfree_mpsc_queue_nonblocking_throughput(
     queue_t queue(capacity);
 
     std::latch latch(producers + consumers + 1);
-    std::vector<std::thread> threads;
+    std::vector<std::jthread> threads;
     threads.reserve(producers + consumers);
 
     std::atomic<std::size_t> pushed_items_count = 0;
@@ -89,9 +89,6 @@ void BM_queues_lockfree_mpsc_queue_nonblocking_throughput(
     state.ResumeTiming();
 
     latch.arrive_and_wait();
-    for (auto& thread : threads) {
-      thread.join();
-    }
   }
 
   state.counters["successful_push_ratio"] = benchmark::Counter(
@@ -144,7 +141,7 @@ void BM_queues_lockfree_mpsc_queue_blocking_throughput(
     queue_t queue(capacity);
 
     std::latch latch(producers + consumers + 1);
-    std::vector<std::thread> threads;
+    std::vector<std::jthread> threads;
     threads.reserve(producers + consumers);
 
     std::atomic<std::size_t> pushed_items_count = 0;
@@ -195,9 +192,6 @@ void BM_queues_lockfree_mpsc_queue_blocking_throughput(
     state.ResumeTiming();
 
     latch.arrive_and_wait();
-    for (auto& thread : threads) {
-      thread.join();
-    }
   }
 }
 BENCHMARK_TEMPLATE(BM_queues_lockfree_mpsc_queue_blocking_throughput, int)

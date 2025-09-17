@@ -94,7 +94,7 @@ TEST(net_inet6_udp_socket, blocking_echo_handshake) {
   client.set_reuseport(true);
   client.bind(client_sockaddr);
 
-  std::thread server_thread([&server, &client_sockaddr, &kBuffer] {
+  std::jthread server_thread([&server, &client_sockaddr, &kBuffer] {
     core::net::inet6::sockaddr peer(core::net::inet6::ip::kAny(),
                                     core::net::inet6::port(0));
     std::vector<std::byte> buffer(kBuffer.size());
@@ -120,8 +120,6 @@ TEST(net_inet6_udp_socket, blocking_echo_handshake) {
             core::net::inet6::udp::socket::connection_status::kSuccess);
   EXPECT_EQ(client.send(kBuffer), kBuffer.size());
   EXPECT_EQ(client.receive(buffer), kBuffer.size());
-
-  server_thread.join();
 }
 
 TEST(net_inet6_udp_socket, nonblocking_echo_handshake) {

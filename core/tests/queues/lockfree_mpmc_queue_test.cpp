@@ -99,7 +99,7 @@ TEST(queues_lockfree_mpmc_queue, blocking_push) {
   queue.push(1);
   queue.push(2);
 
-  std::thread consumer([&queue] {
+  std::jthread consumer([&queue] {
     int value;
     EXPECT_TRUE(queue.try_pop(value));
     EXPECT_EQ(value, 1);
@@ -107,18 +107,14 @@ TEST(queues_lockfree_mpmc_queue, blocking_push) {
 
   queue.push(3);
   EXPECT_EQ(queue.pop(), 2);
-
-  consumer.join();
 }
 
 TEST(queues_lockfree_mpmc_queue, blocking_pop) {
   core::queues::lockfree_mpmc_queue<int> queue(2);
 
-  std::thread producer([&queue] { EXPECT_TRUE(queue.try_push(42)); });
+  std::jthread producer([&queue] { EXPECT_TRUE(queue.try_push(42)); });
 
   EXPECT_EQ(queue.pop(), 42);
-
-  producer.join();
 }
 
 TEST(queues_lockfree_mpmc_queue, capacity_one) {
@@ -300,10 +296,10 @@ TEST(queues_lockfree_mpmc_queue, queued_producers_nonblocking) {
   queue.push(0);
   queue.push(1);
 
-  std::vector<std::thread> producers(16);
+  std::vector<std::jthread> producers(16);
   std::latch latch(producers.size() + 1);
   for (std::size_t i = 0; i < producers.size(); ++i) {
-    producers[i] = std::thread([&queue, &latch, i] {
+    producers[i] = std::jthread([&queue, &latch, i] {
       latch.count_down();
       queue.push(i + queue.capacity());
     });
@@ -314,10 +310,6 @@ TEST(queues_lockfree_mpmc_queue, queued_producers_nonblocking) {
     int value;
     i += queue.try_pop(value);
   }
-
-  for (auto& producer : producers) {
-    producer.join();
-  }
 }
 
 TEST(queues_lockfree_mpmc_queue, queued_producers_blocking) {
@@ -325,10 +317,10 @@ TEST(queues_lockfree_mpmc_queue, queued_producers_blocking) {
   queue.push(0);
   queue.push(1);
 
-  std::vector<std::thread> producers(16);
+  std::vector<std::jthread> producers(16);
   std::latch latch(producers.size() + 1);
   for (std::size_t i = 0; i < producers.size(); ++i) {
-    producers[i] = std::thread([&queue, &latch, i] {
+    producers[i] = std::jthread([&queue, &latch, i] {
       latch.count_down();
       queue.push(i + queue.capacity());
     });
@@ -338,19 +330,15 @@ TEST(queues_lockfree_mpmc_queue, queued_producers_blocking) {
   for (std::size_t i = 0; i < producers.size(); ++i) {
     queue.pop();
   }
-
-  for (auto& producer : producers) {
-    producer.join();
-  }
 }
 
 TEST(queues_lockfree_mpmc_queue, queued_consumers_nonblocking) {
   core::queues::lockfree_mpmc_queue<int> queue(2);
 
-  std::vector<std::thread> consumers(16);
+  std::vector<std::jthread> consumers(16);
   std::latch latch(consumers.size() + 1);
   for (std::size_t i = 0; i < consumers.size(); ++i) {
-    consumers[i] = std::thread([&queue, &latch] {
+    consumers[i] = std::jthread([&queue, &latch] {
       latch.count_down();
       queue.pop();
     });
@@ -360,19 +348,15 @@ TEST(queues_lockfree_mpmc_queue, queued_consumers_nonblocking) {
   for (std::size_t i = 0; i < consumers.size();) {
     i += queue.try_push(i);
   }
-
-  for (auto& consumer : consumers) {
-    consumer.join();
-  }
 }
 
 TEST(queues_lockfree_mpmc_queue, queued_consumers_blocking) {
   core::queues::lockfree_mpmc_queue<int> queue(2);
 
-  std::vector<std::thread> consumers(16);
+  std::vector<std::jthread> consumers(16);
   std::latch latch(consumers.size() + 1);
   for (std::size_t i = 0; i < consumers.size(); ++i) {
-    consumers[i] = std::thread([&queue, &latch] {
+    consumers[i] = std::jthread([&queue, &latch] {
       latch.count_down();
       queue.pop();
     });
@@ -381,10 +365,6 @@ TEST(queues_lockfree_mpmc_queue, queued_consumers_blocking) {
   latch.arrive_and_wait();
   for (std::size_t i = 0; i < consumers.size(); ++i) {
     queue.push(i);
-  }
-
-  for (auto& consumer : consumers) {
-    consumer.join();
   }
 }
 

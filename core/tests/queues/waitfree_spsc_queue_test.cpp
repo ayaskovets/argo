@@ -99,7 +99,7 @@ TEST(queues_waitfree_spsc_queue, blocking_push) {
   queue.push(1);
   queue.push(2);
 
-  std::thread consumer([&queue] {
+  std::jthread consumer([&queue] {
     int value;
     EXPECT_TRUE(queue.try_pop(value));
     EXPECT_EQ(value, 1);
@@ -107,18 +107,14 @@ TEST(queues_waitfree_spsc_queue, blocking_push) {
 
   queue.push(3);
   EXPECT_EQ(queue.pop(), 2);
-
-  consumer.join();
 }
 
 TEST(queues_waitfree_spsc_queue, blocking_pop) {
   core::queues::waitfree_spsc_queue<int> queue(2);
 
-  std::thread producer([&queue] { EXPECT_TRUE(queue.try_push(42)); });
+  std::jthread producer([&queue] { EXPECT_TRUE(queue.try_push(42)); });
 
   EXPECT_EQ(queue.pop(), 42);
-
-  producer.join();
 }
 
 TEST(queues_waitfree_spsc_queue, capacity_one) {

@@ -115,7 +115,7 @@ TEST(net_inet6_tcp_socket, blocking_echo_handshake) {
   client.set_reuseaddr(true);
   client.set_reuseport(true);
 
-  std::thread server_thread([&server, &kBuffer] {
+  std::jthread server_thread([&server, &kBuffer] {
     core::net::inet6::tcp::socket peer;
     EXPECT_EQ(server.accept(peer),
               core::net::inet6::tcp::socket::accept_status::kSuccess);
@@ -133,7 +133,6 @@ TEST(net_inet6_tcp_socket, blocking_echo_handshake) {
   EXPECT_EQ(client.send(kBuffer), kBuffer.size());
   EXPECT_EQ(client.receive(buffer), kBuffer.size());
   EXPECT_EQ(buffer, kBuffer);
-  server_thread.join();
 }
 
 TEST(net_inet6_tcp_socket, nonblocking_echo_handshake) {
