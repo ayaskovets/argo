@@ -23,7 +23,7 @@ void BM_net_unix_stream_nonblock_handshake(benchmark::State& state) {
     client.set_reuseport(true);
 
     while (client.connect(sockaddr) ==
-           core::net::unix::stream::socket::connection_status::kRefused);
+           core::net::unix::stream::socket::connect_status::kRefused);
     core::net::unix::stream::socket peer(core::io::fd::uninitialized_t{});
     while (server.accept(peer) !=
            core::net::unix::stream::socket::accept_status::kSuccess);
@@ -59,7 +59,7 @@ void BM_net_unix_stream_throughput(benchmark::State& state) {
     }
   } else {
     while (socket.connect(sockaddr) !=
-           core::net::unix::stream::socket::connection_status::kSuccess);
+           core::net::unix::stream::socket::connect_status::kSuccess);
 
     for (const auto _ : state) {
       std::size_t sent = 0;

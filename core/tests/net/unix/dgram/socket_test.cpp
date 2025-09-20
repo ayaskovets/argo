@@ -77,7 +77,7 @@ TEST(net_unix_dgram_socket, blocking_echo_handshake) {
 
     EXPECT_EQ(server.receive(buffer), kBuffer.size());
     EXPECT_EQ(server.connect(client_sockaddr),
-              core::net::unix::dgram::socket::connection_status::kSuccess);
+              core::net::unix::dgram::socket::connect_status::kSuccess);
     EXPECT_EQ(server.send(kBuffer), kBuffer.size());
   });
 
@@ -88,7 +88,7 @@ TEST(net_unix_dgram_socket, blocking_echo_handshake) {
   EXPECT_EQ(buffer, kBuffer);
   EXPECT_EQ(peer, server_sockaddr);
   EXPECT_EQ(client.connect(server_sockaddr),
-            core::net::unix::dgram::socket::connection_status::kSuccess);
+            core::net::unix::dgram::socket::connect_status::kSuccess);
   EXPECT_EQ(client.send(kBuffer), kBuffer.size());
   EXPECT_EQ(client.receive(buffer), kBuffer.size());
 }
@@ -120,9 +120,9 @@ TEST(net_unix_dgram_socket, nonblocking_echo_handshake) {
   EXPECT_EQ(peer, server_sockaddr);
 
   EXPECT_EQ(server.connect(client_sockaddr),
-            core::net::unix::dgram::socket::connection_status::kSuccess);
+            core::net::unix::dgram::socket::connect_status::kSuccess);
   EXPECT_EQ(client.connect(server_sockaddr),
-            core::net::unix::dgram::socket::connection_status::kSuccess);
+            core::net::unix::dgram::socket::connect_status::kSuccess);
 
   EXPECT_EQ(client.send(kBuffer), kBuffer.size());
   while (server.receive(buffer) != kBuffer.size());

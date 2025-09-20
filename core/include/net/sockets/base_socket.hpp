@@ -41,12 +41,12 @@ class base_socket : public io::fd {
   bind_status bind(const net::sockets::base_sockaddr& sockaddr);
 
  public:
-  enum class connection_status : std::uint8_t {
+  enum class connect_status : std::uint8_t {
     kSuccess,
     kPending,
     kRefused,
   };
-  connection_status connect(const net::sockets::base_sockaddr& sockaddr);
+  connect_status connect(const net::sockets::base_sockaddr& sockaddr);
 
  public:
   void get_bind_sockaddr(net::sockets::base_sockaddr& sockaddr) const;

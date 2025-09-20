@@ -110,7 +110,7 @@ TEST(net_unix_stream_socket, blocking_echo_handshake) {
   });
 
   EXPECT_EQ(client.connect(sockaddr),
-            core::net::unix::stream::socket::connection_status::kSuccess);
+            core::net::unix::stream::socket::connect_status::kSuccess);
 
   std::vector<std::byte> buffer(kBuffer.size());
   EXPECT_EQ(client.send(kBuffer), kBuffer.size());
@@ -134,7 +134,7 @@ TEST(net_unix_stream_socket, nonblocking_echo_handshake) {
   server.unlink_bind(sockaddr);
   server.listen(1);
   EXPECT_EQ(client.connect(sockaddr),
-            core::net::unix::stream::socket::connection_status::kSuccess);
+            core::net::unix::stream::socket::connect_status::kSuccess);
 
   core::net::unix::stream::socket peer(core::io::fd::uninitialized_t{});
   EXPECT_EQ(server.accept(peer),
@@ -158,7 +158,7 @@ TEST(net_unix_stream_socket, get_sockaddrs) {
   core::net::unix::stream::socket client;
   client.set_nonblock(true);
   EXPECT_EQ(client.connect(sockaddr),
-            core::net::unix::stream::socket::connection_status::kSuccess);
+            core::net::unix::stream::socket::connect_status::kSuccess);
 
   core::net::unix::stream::socket peer(core::io::fd::uninitialized_t{});
   EXPECT_EQ(server.accept(peer),

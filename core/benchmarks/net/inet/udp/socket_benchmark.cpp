@@ -39,7 +39,7 @@ void BM_net_inet_udp_throughput(benchmark::State& state) {
         loss * state.threads(), benchmark::Counter::kAvgIterations);
   } else {
     while (socket.connect(sockaddr) !=
-           core::net::inet::udp::socket::connection_status::kSuccess);
+           core::net::inet::udp::socket::connect_status::kSuccess);
 
     for (const auto _ : state) {
       sender_done = false;

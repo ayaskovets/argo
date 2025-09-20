@@ -55,7 +55,7 @@ TEST(net_inet_tcp_socket, connect) {
   socket.set_reuseport(true);
 
   EXPECT_EQ(socket.connect(sockaddr),
-            core::net::inet::tcp::socket::connection_status::kRefused);
+            core::net::inet::tcp::socket::connect_status::kRefused);
   EXPECT_ANY_THROW(socket.connect(sockaddr));
 }
 
@@ -81,7 +81,7 @@ TEST(net_inet_tcp_socket, sockaddrs) {
   EXPECT_ANY_THROW(socket.get_connect_sockaddr(out_sockaddr));
 
   EXPECT_EQ(socket.connect(connect_sockaddr),
-            core::net::inet::tcp::socket::connection_status::kPending);
+            core::net::inet::tcp::socket::connect_status::kPending);
   EXPECT_ANY_THROW(socket.get_connect_sockaddr(out_sockaddr));
 }
 
@@ -127,7 +127,7 @@ TEST(net_inet_tcp_socket, blocking_echo_handshake) {
   });
 
   EXPECT_EQ(client.connect(sockaddr),
-            core::net::inet::tcp::socket::connection_status::kSuccess);
+            core::net::inet::tcp::socket::connect_status::kSuccess);
 
   std::vector<std::byte> buffer(kBuffer.size());
   EXPECT_EQ(client.send(kBuffer), kBuffer.size());
@@ -155,7 +155,7 @@ TEST(net_inet_tcp_socket, nonblocking_echo_handshake) {
   server.bind(sockaddr);
   server.listen(1);
   EXPECT_EQ(client.connect(sockaddr),
-            core::net::inet::tcp::socket::connection_status::kPending);
+            core::net::inet::tcp::socket::connect_status::kPending);
 
   core::net::inet::tcp::socket peer(core::io::fd::uninitialized_t{});
   while (server.accept(peer) !=
