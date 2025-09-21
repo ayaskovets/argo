@@ -13,7 +13,7 @@ class leak_detector_allocator : public std::allocator<T> {
  public:
   constexpr T* allocate(std::size_t n) {
     T* ptr = std::allocator<T>::allocate(n);
-    allocations_[ptr] += n;
+    allocations_by_ptr_[ptr] += n;
     return ptr;
   }
 
@@ -22,8 +22,8 @@ class leak_detector_allocator : public std::allocator<T> {
   }
 
   constexpr void deallocate(T* ptr, std::size_t n) {
-    if ((allocations_.at(ptr) -= n) == 0) {
-      allocations_.erase(ptr);
+    if ((allocations_by_ptr_.at(ptr) -= n) == 0) {
+      allocations_by_ptr_.erase(ptr);
     }
     std::allocator<T>::deallocate(ptr, n);
   }
@@ -35,10 +35,10 @@ class leak_detector_allocator : public std::allocator<T> {
   };
 
  public:
-  static constexpr bool is_clean() { return allocations_.empty(); }
+  static constexpr bool is_clean() { return allocations_by_ptr_.empty(); }
 
  private:
-  static inline std::unordered_map<void*, std::size_t> allocations_;
+  static inline std::unordered_map<void*, std::size_t> allocations_by_ptr_;
 };
 
 }  // namespace core::utils
