@@ -20,7 +20,7 @@ struct non_copyable {
  */
 struct non_movable {
   constexpr non_movable() noexcept = default;
-  constexpr non_movable(non_copyable&&) = delete;
+  constexpr non_movable(non_movable&&) = delete;
   constexpr non_movable& operator=(non_movable&&) = delete;
 };
 
