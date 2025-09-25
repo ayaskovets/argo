@@ -4,6 +4,8 @@
 #include <span>
 #include <string>
 
+#include "net/network_byte_order.hpp"
+
 namespace core::net::inet6 {
 
 /**
@@ -14,9 +16,6 @@ class ip final {
   static const ip& kLoopback() noexcept;
   static const ip& kNonRoutable() noexcept;
   static const ip& kAny() noexcept;
-
- public:
-  class network_byte_order_t final {};
 
  public:
   ip(std::span<const std::byte, 16> bytes, network_byte_order_t) noexcept;

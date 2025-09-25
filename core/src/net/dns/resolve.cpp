@@ -49,9 +49,8 @@ std::variant<net::inet::sockaddr, net::inet6::sockaddr> to_sockaddr(
 
       return net::inet::sockaddr(
           net::inet::ip(static_cast<std::uint32_t>(sockaddr->sin_addr.s_addr),
-                        net::inet::ip::network_byte_order_t{}),
-          net::inet::port(sockaddr->sin_port,
-                          net::inet::port::network_byte_order_t{}));
+                        net::network_byte_order_t{}),
+          net::inet::port(sockaddr->sin_port, net::network_byte_order_t{}));
     }
     case AF_INET6: {
       const ::sockaddr_in6 *sockaddr =
@@ -60,9 +59,8 @@ std::variant<net::inet::sockaddr, net::inet6::sockaddr> to_sockaddr(
       return net::inet6::sockaddr(
           net::inet6::ip(std::span(reinterpret_cast<const std::byte(&)[16]>(
                              sockaddr->sin6_addr)),
-                         net::inet6::ip::network_byte_order_t{}),
-          net::inet6::port(sockaddr->sin6_port,
-                           net::inet6::port::network_byte_order_t{}));
+                         net::network_byte_order_t{}),
+          net::inet6::port(sockaddr->sin6_port, net::network_byte_order_t{}));
     }
     default:
       throw std::runtime_error(

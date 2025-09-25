@@ -3,15 +3,14 @@
 #include <cstdint>
 #include <format>
 
+#include "net/network_byte_order.hpp"
+
 namespace core::net::inet {
 
 /**
  * @brief IP port
  */
 class port final {
- public:
-  struct network_byte_order_t final {};
-
  public:
   explicit port(std::uint16_t port) noexcept;
   port(std::uint16_t port, network_byte_order_t) noexcept;

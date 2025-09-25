@@ -41,16 +41,14 @@ TEST(net_inet_ip, network_order) {
 
   const core::net::inet::ip host_byte_order(bytes);
   const core::net::inet::ip network_byte_order(
-      bytes, core::net::inet::ip::network_byte_order_t{});
+      bytes, core::net::network_byte_order_t{});
 
   EXPECT_EQ(host_byte_order.get_bytes(), bytes);
-  EXPECT_NE(
-      host_byte_order.get_bytes(core::net::inet::ip::network_byte_order_t{}),
-      bytes);
+  EXPECT_NE(host_byte_order.get_bytes(core::net::network_byte_order_t{}),
+            bytes);
   EXPECT_NE(network_byte_order.get_bytes(), bytes);
-  EXPECT_EQ(
-      network_byte_order.get_bytes(core::net::inet::ip::network_byte_order_t{}),
-      bytes);
+  EXPECT_EQ(network_byte_order.get_bytes(core::net::network_byte_order_t{}),
+            bytes);
 }
 
 TEST(net_inet_ip, invalid) {

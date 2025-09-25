@@ -3,6 +3,8 @@
 #include <format>
 #include <string>
 
+#include "net/network_byte_order.hpp"
+
 namespace core::net::inet {
 
 /**
@@ -14,9 +16,6 @@ class ip final {
   static const ip& kNonRoutable() noexcept;
   static const ip& kAny() noexcept;
   static const ip& kBroadcast() noexcept;
-
- public:
-  class network_byte_order_t final {};
 
  public:
   explicit ip(std::uint32_t bytes) noexcept;
