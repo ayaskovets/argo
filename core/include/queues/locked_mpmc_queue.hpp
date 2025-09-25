@@ -11,6 +11,8 @@
 
 namespace core::queues {
 
+namespace concepts {
+
 /**
  * @brief Queue entry requirements
  */
@@ -24,6 +26,8 @@ concept locked_mpmc_queue_entry = requires(T entry) {
   requires std::is_nothrow_move_constructible_v<Value>;
   requires std::is_nothrow_move_assignable_v<Value>;
 };
+
+}  // namespace concepts
 
 namespace detail {
 
@@ -61,7 +65,7 @@ class locked_mpmc_queue final : utils::non_copyable, utils::non_movable {
   using entry_t = typename Allocator::value_type;
 
  private:
-  static_assert(locked_mpmc_queue_entry<entry_t, value_t>);
+  static_assert(concepts::locked_mpmc_queue_entry<entry_t, value_t>);
 
  public:
   constexpr explicit locked_mpmc_queue(

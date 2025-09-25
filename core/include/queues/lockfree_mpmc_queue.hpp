@@ -11,6 +11,8 @@
 
 namespace core::queues {
 
+namespace concepts {
+
 /**
  * @brief Queue entry requirements
  *
@@ -33,7 +35,11 @@ concept lockfree_mpmc_queue_entry = requires(T entry) {
   requires std::is_nothrow_copy_constructible_v<T>;
   requires std::is_trivially_move_assignable_v<T>;
   requires std::is_nothrow_move_assignable_v<T>;
-} && std::unsigned_integral<Index>;
+
+  requires std::unsigned_integral<Index>;
+};
+
+}  // namespace concepts
 
 namespace detail {
 
@@ -77,7 +83,7 @@ class lockfree_mpmc_queue final : utils::non_copyable, utils::non_movable {
   using entry_t = typename atomic_entry_t::value_type;
 
  private:
-  static_assert(lockfree_mpmc_queue_entry<entry_t, value_t, index_t>);
+  static_assert(concepts::lockfree_mpmc_queue_entry<entry_t, value_t, index_t>);
 
  public:
   constexpr explicit lockfree_mpmc_queue(allocator_t allocator = allocator_t())

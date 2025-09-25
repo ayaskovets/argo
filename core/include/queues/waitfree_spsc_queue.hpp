@@ -10,6 +10,8 @@
 
 namespace core::queues {
 
+namespace concepts {
+
 /**
  * @brief Default queue entry only for internal usage
  */
@@ -23,6 +25,8 @@ concept waitfree_spsc_queue_entry = requires(T entry) {
   requires std::is_nothrow_move_constructible_v<Value>;
   requires std::is_nothrow_move_assignable_v<Value>;
 };
+
+}  // namespace concepts
 
 namespace detail {
 
@@ -60,7 +64,7 @@ class waitfree_spsc_queue final : utils::non_copyable, utils::non_movable {
   using entry_t = typename Allocator::value_type;
 
  private:
-  static_assert(waitfree_spsc_queue_entry<entry_t, value_t>);
+  static_assert(concepts::waitfree_spsc_queue_entry<entry_t, value_t>);
 
  public:
   constexpr explicit waitfree_spsc_queue(

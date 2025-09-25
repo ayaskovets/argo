@@ -11,6 +11,8 @@
 
 namespace core::queues {
 
+namespace concepts {
+
 /**
  * @brief Queue entry requirements
  *
@@ -30,6 +32,8 @@ concept lockless_mpmc_queue_entry = requires(T entry) {
 
   requires std::unsigned_integral<Index>;
 };
+
+}  // namespace concepts
 
 namespace detail {
 
@@ -74,7 +78,7 @@ class lockless_mpmc_queue final : utils::non_copyable, utils::non_movable {
   using entry_t = typename Allocator::value_type;
 
  private:
-  static_assert(lockless_mpmc_queue_entry<entry_t, value_t, index_t>);
+  static_assert(concepts::lockless_mpmc_queue_entry<entry_t, value_t, index_t>);
 
  public:
   constexpr explicit lockless_mpmc_queue(
