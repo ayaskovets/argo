@@ -18,8 +18,7 @@ class base_socket : public net::base_socket {
   void unlink_and_close();
 
  public:
-  net::base_socket::bind_status unlink_bind(
-      const net::unix::sockaddr& sockaddr);
+  net::bind_status unlink_bind(const net::unix::sockaddr& sockaddr);
 };
 
 }  // namespace core::net::unix

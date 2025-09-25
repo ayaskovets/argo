@@ -221,7 +221,7 @@ bool base_socket::get_keepalive() const {
   return (optval ? true : false);
 }
 
-base_socket::bind_status base_socket::bind(const net::base_sockaddr &sockaddr) {
+bind_status base_socket::bind(const net::base_sockaddr &sockaddr) {
   if (::bind(native_handle(),
              reinterpret_cast<const ::sockaddr *>(sockaddr.get_storage()),
              sockaddr.get_length()) == kSyscallError) [[unlikely]] {
@@ -236,8 +236,7 @@ base_socket::bind_status base_socket::bind(const net::base_sockaddr &sockaddr) {
   return bind_status::kSuccess;
 }
 
-base_socket::connect_status base_socket::connect(
-    const net::base_sockaddr &sockaddr) {
+connect_status base_socket::connect(const net::base_sockaddr &sockaddr) {
   if (::connect(native_handle(),
                 reinterpret_cast<const ::sockaddr *>(sockaddr.get_storage()),
                 sockaddr.get_length()) == kSyscallError) {
@@ -286,17 +285,17 @@ void base_socket::listen(std::size_t backlog) {
   }
 }
 
-base_socket::accept_status base_socket::accept(base_socket &socket) const {
+accept_status base_socket::accept(base_socket &socket) const {
   const int accepted = ::accept(native_handle(), nullptr, nullptr);
   if (accepted == kSyscallError) {
     if (errno == EAGAIN || errno == EWOULDBLOCK) {
-      return base_socket::accept_status::kEmptyQueue;
+      return accept_status::kEmptyQueue;
     }
     throw std::runtime_error(
         std::format("accept failed: {}", std::strerror(errno)));
   }
   static_cast<io::fd &>(socket) = io::fd::adopt(accepted);
-  return base_socket::accept_status::kSuccess;
+  return accept_status::kSuccess;
 }
 
 std::size_t base_socket::send(std::span<const std::byte> bytes) const {

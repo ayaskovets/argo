@@ -36,8 +36,7 @@ void BM_net_unix_dgram_throughput(benchmark::State& state) {
     state.counters["loss"] = benchmark::Counter(
         loss * state.threads(), benchmark::Counter::kAvgIterations);
   } else {
-    while (socket.connect(sockaddr) !=
-           core::net::unix::dgram::socket::connect_status::kSuccess);
+    while (socket.connect(sockaddr) != core::net::connect_status::kSuccess);
 
     for (const auto _ : state) {
       sender_done = false;

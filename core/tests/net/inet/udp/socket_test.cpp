@@ -43,10 +43,8 @@ TEST(net_inet_udp_socket, connect) {
   socket.set_reuseaddr(true);
   socket.set_reuseport(true);
 
-  EXPECT_EQ(socket.connect(sockaddr),
-            core::net::inet::udp::socket::connect_status::kSuccess);
-  EXPECT_EQ(socket.connect(sockaddr),
-            core::net::inet::udp::socket::connect_status::kSuccess);
+  EXPECT_EQ(socket.connect(sockaddr), core::net::connect_status::kSuccess);
+  EXPECT_EQ(socket.connect(sockaddr), core::net::connect_status::kSuccess);
 }
 
 TEST(net_inet_udp_socket, sockaddrs) {
@@ -70,7 +68,7 @@ TEST(net_inet_udp_socket, sockaddrs) {
   EXPECT_ANY_THROW(socket.get_connect_sockaddr(out_sockaddr));
 
   EXPECT_EQ(socket.connect(connect_sockaddr),
-            core::net::inet::udp::socket::connect_status::kSuccess);
+            core::net::connect_status::kSuccess);
   EXPECT_EQ((socket.get_connect_sockaddr(out_sockaddr), out_sockaddr),
             connect_sockaddr);
 }
@@ -105,7 +103,7 @@ TEST(net_inet_udp_socket, blocking_echo_handshake) {
 
     EXPECT_EQ(server.receive(buffer), kBuffer.size());
     EXPECT_EQ(server.connect(client_sockaddr),
-              core::net::inet::udp::socket::connect_status::kSuccess);
+              core::net::connect_status::kSuccess);
     EXPECT_EQ(server.send(kBuffer), kBuffer.size());
   });
 
@@ -117,7 +115,7 @@ TEST(net_inet_udp_socket, blocking_echo_handshake) {
   EXPECT_EQ(buffer, kBuffer);
   EXPECT_EQ(peer, server_sockaddr);
   EXPECT_EQ(client.connect(server_sockaddr),
-            core::net::inet::udp::socket::connect_status::kSuccess);
+            core::net::connect_status::kSuccess);
   EXPECT_EQ(client.send(kBuffer), kBuffer.size());
   EXPECT_EQ(client.receive(buffer), kBuffer.size());
 }

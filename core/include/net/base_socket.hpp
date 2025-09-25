@@ -11,6 +11,31 @@
 namespace core::net {
 
 /**
+ * @brief Return code for bind()
+ */
+enum class bind_status : std::uint8_t {
+  kSuccess,
+  kInUse,
+};
+
+/**
+ * @brief Return code for connect()
+ */
+enum class connect_status : std::uint8_t {
+  kSuccess,
+  kPending,
+  kRefused,
+};
+
+/**
+ * @brief Return code for accept()
+ */
+enum class accept_status : std::uint8_t {
+  kSuccess,
+  kEmptyQueue,
+};
+
+/**
  * @brief Socket base class
  */
 class base_socket : public io::fd {
@@ -34,18 +59,9 @@ class base_socket : public io::fd {
   net::sockets::type get_type() const;
 
  public:
-  enum class bind_status : std::uint8_t {
-    kSuccess,
-    kInUse,
-  };
   bind_status bind(const net::base_sockaddr& sockaddr);
 
  public:
-  enum class connect_status : std::uint8_t {
-    kSuccess,
-    kPending,
-    kRefused,
-  };
   connect_status connect(const net::base_sockaddr& sockaddr);
 
  public:
@@ -54,11 +70,6 @@ class base_socket : public io::fd {
 
  public:
   void listen(std::size_t backlog);
-
-  enum class accept_status : std::uint8_t {
-    kSuccess,
-    kEmptyQueue,
-  };
   accept_status accept(base_socket& socket) const;
 
  public:

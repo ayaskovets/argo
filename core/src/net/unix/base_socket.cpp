@@ -49,8 +49,7 @@ void base_socket::unlink_and_close() {
   net::base_socket::close();
 }
 
-net::base_socket::bind_status base_socket::unlink_bind(
-    const net::unix::sockaddr& sockaddr) {
+net::bind_status base_socket::unlink_bind(const net::unix::sockaddr& sockaddr) {
   if (::unlink(sockaddr.get_path().data()) == kSyscallError) {
     if (errno != ENOENT) {
       throw std::runtime_error(

@@ -16,12 +16,10 @@ TEST(net_unix_dgram_socket, unlink_bind) {
       core::net::unix::sockaddr("net_unix_dgram_socket_unlink_bind"));
 
   core::net::unix::dgram::socket socket;
-  EXPECT_EQ(socket.unlink_bind(sockaddr),
-            core::net::unix::dgram::socket::bind_status::kSuccess);
+  EXPECT_EQ(socket.unlink_bind(sockaddr), core::net::bind_status::kSuccess);
 
   core::net::unix::dgram::socket other;
-  EXPECT_EQ(other.unlink_bind(sockaddr),
-            core::net::unix::dgram::socket::bind_status::kSuccess);
+  EXPECT_EQ(other.unlink_bind(sockaddr), core::net::bind_status::kSuccess);
 }
 
 TEST(net_unix_dgram_socket, unlink_and_close) {
@@ -29,16 +27,13 @@ TEST(net_unix_dgram_socket, unlink_and_close) {
       core::net::unix::sockaddr("net_unix_dgram_socket_close_unlink"));
 
   core::net::unix::dgram::socket socket;
-  EXPECT_EQ(socket.unlink_bind(sockaddr),
-            core::net::unix::dgram::socket::bind_status::kSuccess);
+  EXPECT_EQ(socket.unlink_bind(sockaddr), core::net::bind_status::kSuccess);
 
   core::net::unix::dgram::socket other;
-  EXPECT_EQ(other.bind(sockaddr),
-            core::net::unix::dgram::socket::bind_status::kInUse);
+  EXPECT_EQ(other.bind(sockaddr), core::net::bind_status::kInUse);
 
   socket.unlink_and_close();
-  EXPECT_EQ(other.bind(sockaddr),
-            core::net::unix::dgram::socket::bind_status::kSuccess);
+  EXPECT_EQ(other.bind(sockaddr), core::net::bind_status::kSuccess);
 }
 
 TEST(net_unix_dgram_socket, not_connected_send_receive) {
@@ -61,11 +56,11 @@ TEST(net_unix_dgram_socket, blocking_echo_handshake) {
 
   core::net::unix::dgram::socket server;
   EXPECT_EQ(server.unlink_bind(server_sockaddr),
-            core::net::unix::dgram::socket::bind_status::kSuccess);
+            core::net::bind_status::kSuccess);
 
   core::net::unix::dgram::socket client;
   EXPECT_EQ(client.unlink_bind(client_sockaddr),
-            core::net::unix::dgram::socket::bind_status::kSuccess);
+            core::net::bind_status::kSuccess);
 
   std::jthread server_thread([&server, &client_sockaddr, &kBuffer] {
     core::net::unix::sockaddr peer(core::net::unix::sockaddr::kEmpty());
@@ -77,7 +72,7 @@ TEST(net_unix_dgram_socket, blocking_echo_handshake) {
 
     EXPECT_EQ(server.receive(buffer), kBuffer.size());
     EXPECT_EQ(server.connect(client_sockaddr),
-              core::net::unix::dgram::socket::connect_status::kSuccess);
+              core::net::connect_status::kSuccess);
     EXPECT_EQ(server.send(kBuffer), kBuffer.size());
   });
 
@@ -88,7 +83,7 @@ TEST(net_unix_dgram_socket, blocking_echo_handshake) {
   EXPECT_EQ(buffer, kBuffer);
   EXPECT_EQ(peer, server_sockaddr);
   EXPECT_EQ(client.connect(server_sockaddr),
-            core::net::unix::dgram::socket::connect_status::kSuccess);
+            core::net::connect_status::kSuccess);
   EXPECT_EQ(client.send(kBuffer), kBuffer.size());
   EXPECT_EQ(client.receive(buffer), kBuffer.size());
 }
@@ -105,12 +100,12 @@ TEST(net_unix_dgram_socket, nonblocking_echo_handshake) {
   core::net::unix::dgram::socket server;
   server.set_nonblock(true);
   EXPECT_EQ(server.unlink_bind(server_sockaddr),
-            core::net::unix::dgram::socket::bind_status::kSuccess);
+            core::net::bind_status::kSuccess);
 
   core::net::unix::dgram::socket client;
   client.set_nonblock(true);
   EXPECT_EQ(client.unlink_bind(client_sockaddr),
-            core::net::unix::dgram::socket::bind_status::kSuccess);
+            core::net::bind_status::kSuccess);
 
   std::vector<std::byte> buffer(kBuffer.size());
   core::net::unix::sockaddr peer(core::net::unix::sockaddr::kEmpty());
@@ -120,9 +115,9 @@ TEST(net_unix_dgram_socket, nonblocking_echo_handshake) {
   EXPECT_EQ(peer, server_sockaddr);
 
   EXPECT_EQ(server.connect(client_sockaddr),
-            core::net::unix::dgram::socket::connect_status::kSuccess);
+            core::net::connect_status::kSuccess);
   EXPECT_EQ(client.connect(server_sockaddr),
-            core::net::unix::dgram::socket::connect_status::kSuccess);
+            core::net::connect_status::kSuccess);
 
   EXPECT_EQ(client.send(kBuffer), kBuffer.size());
   while (server.receive(buffer) != kBuffer.size());

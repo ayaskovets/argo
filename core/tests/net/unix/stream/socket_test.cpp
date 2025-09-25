@@ -16,12 +16,10 @@ TEST(net_unix_stream_socket, unlink_bind) {
       core::net::unix::sockaddr("net_unix_stream_socket_unlink_bind"));
 
   core::net::unix::stream::socket socket;
-  EXPECT_EQ(socket.unlink_bind(sockaddr),
-            core::net::unix::stream::socket::bind_status::kSuccess);
+  EXPECT_EQ(socket.unlink_bind(sockaddr), core::net::bind_status::kSuccess);
 
   core::net::unix::stream::socket other;
-  EXPECT_EQ(other.unlink_bind(sockaddr),
-            core::net::unix::stream::socket::bind_status::kSuccess);
+  EXPECT_EQ(other.unlink_bind(sockaddr), core::net::bind_status::kSuccess);
 }
 
 TEST(net_unix_stream_socket, unlink_and_close) {
@@ -29,16 +27,13 @@ TEST(net_unix_stream_socket, unlink_and_close) {
       core::net::unix::sockaddr("net_unix_stream_socket_close_unlink"));
 
   core::net::unix::stream::socket socket;
-  EXPECT_EQ(socket.unlink_bind(sockaddr),
-            core::net::unix::stream::socket::bind_status::kSuccess);
+  EXPECT_EQ(socket.unlink_bind(sockaddr), core::net::bind_status::kSuccess);
 
   core::net::unix::stream::socket other;
-  EXPECT_EQ(other.bind(sockaddr),
-            core::net::unix::stream::socket::bind_status::kInUse);
+  EXPECT_EQ(other.bind(sockaddr), core::net::bind_status::kInUse);
 
   socket.unlink_and_close();
-  EXPECT_EQ(other.bind(sockaddr),
-            core::net::unix::stream::socket::bind_status::kSuccess);
+  EXPECT_EQ(other.bind(sockaddr), core::net::bind_status::kSuccess);
 }
 
 TEST(net_unix_stream_socket, not_connected_send_receive) {
@@ -81,8 +76,7 @@ TEST(net_unix_stream_socket, accept_error) {
   socket.unlink_bind(sockaddr);
   EXPECT_NO_THROW(socket.listen(1));
 
-  EXPECT_EQ(socket.accept(peer),
-            core::net::unix::stream::socket::accept_status::kEmptyQueue);
+  EXPECT_EQ(socket.accept(peer), core::net::accept_status::kEmptyQueue);
 }
 
 TEST(net_unix_stream_socket, blocking_echo_handshake) {
@@ -100,8 +94,7 @@ TEST(net_unix_stream_socket, blocking_echo_handshake) {
 
   std::jthread server_thread([&server, &kBuffer] {
     core::net::unix::stream::socket peer(core::io::fd::uninitialized_t{});
-    EXPECT_EQ(server.accept(peer),
-              core::net::unix::stream::socket::accept_status::kSuccess);
+    EXPECT_EQ(server.accept(peer), core::net::accept_status::kSuccess);
 
     std::vector<std::byte> buffer(kBuffer.size());
     EXPECT_EQ(peer.receive(buffer), kBuffer.size());
@@ -109,8 +102,7 @@ TEST(net_unix_stream_socket, blocking_echo_handshake) {
     EXPECT_EQ(peer.send(kBuffer), kBuffer.size());
   });
 
-  EXPECT_EQ(client.connect(sockaddr),
-            core::net::unix::stream::socket::connect_status::kSuccess);
+  EXPECT_EQ(client.connect(sockaddr), core::net::connect_status::kSuccess);
 
   std::vector<std::byte> buffer(kBuffer.size());
   EXPECT_EQ(client.send(kBuffer), kBuffer.size());
@@ -133,12 +125,10 @@ TEST(net_unix_stream_socket, nonblocking_echo_handshake) {
 
   server.unlink_bind(sockaddr);
   server.listen(1);
-  EXPECT_EQ(client.connect(sockaddr),
-            core::net::unix::stream::socket::connect_status::kSuccess);
+  EXPECT_EQ(client.connect(sockaddr), core::net::connect_status::kSuccess);
 
   core::net::unix::stream::socket peer(core::io::fd::uninitialized_t{});
-  EXPECT_EQ(server.accept(peer),
-            core::net::unix::stream::socket::accept_status::kSuccess);
+  EXPECT_EQ(server.accept(peer), core::net::accept_status::kSuccess);
 
   std::vector<std::byte> buffer(kBuffer.size());
   EXPECT_EQ(peer.send(kBuffer), kBuffer.size());
@@ -157,12 +147,10 @@ TEST(net_unix_stream_socket, get_sockaddrs) {
 
   core::net::unix::stream::socket client;
   client.set_nonblock(true);
-  EXPECT_EQ(client.connect(sockaddr),
-            core::net::unix::stream::socket::connect_status::kSuccess);
+  EXPECT_EQ(client.connect(sockaddr), core::net::connect_status::kSuccess);
 
   core::net::unix::stream::socket peer(core::io::fd::uninitialized_t{});
-  EXPECT_EQ(server.accept(peer),
-            core::net::unix::stream::socket::accept_status::kSuccess);
+  EXPECT_EQ(server.accept(peer), core::net::accept_status::kSuccess);
 
   core::net::unix::sockaddr out_sockaddr(core::net::unix::sockaddr::kEmpty());
   EXPECT_EQ((server.get_bind_sockaddr(out_sockaddr), out_sockaddr), sockaddr);
