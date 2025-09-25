@@ -7,6 +7,10 @@ namespace core::async {
 
 namespace concepts {
 
+/**
+ * @brief Channel requirements for async communication between schedulers and
+ * executors
+ */
 template <typename T, typename Value = typename T::value_t>
 concept channel = requires(T channel, Value value) {
   { channel.try_push(value) } -> std::same_as<bool>;
@@ -15,6 +19,9 @@ concept channel = requires(T channel, Value value) {
   requires std::is_same_v<typename T::value_t, Value>;
 };
 
+/**
+ * @brief Lvalue reference to channel
+ */
 template <typename T,
           typename Value = typename std::remove_reference_t<T>::value_t>
 concept channel_lvalue_reference = requires {

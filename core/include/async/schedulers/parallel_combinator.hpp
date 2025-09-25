@@ -6,6 +6,10 @@
 
 namespace core::async::schedulers {
 
+/**
+ * @brief Combinator for sequential execution of run_detached() with a single
+ stop token
+ */
 template <async::concepts::scheduler... Schedulers>
 class parallel_combinator final {
  public:

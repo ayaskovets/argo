@@ -6,6 +6,9 @@
 
 namespace core::async::schedulers {
 
+/**
+ * @brief Decorator for detached call to run_once()
+ */
 template <async::concepts::scheduler Scheduler>
 class detached_decorator : public Scheduler {
  public:

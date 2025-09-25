@@ -6,6 +6,10 @@
 
 namespace core::async::schedulers {
 
+/**
+ * @brief Combinator for sequential execution of run_once() for multiple
+ * schedulers
+ */
 template <async::concepts::scheduler... Schedulers>
 class sequential_combinator final {
  public:

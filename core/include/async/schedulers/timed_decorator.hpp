@@ -6,6 +6,9 @@
 
 namespace core::async::schedulers {
 
+/**
+ * @brief Decorator for timed calls to run_once()
+ */
 template <async::concepts::scheduler Scheduler>
 class timed_decorator : public Scheduler {
  public:
