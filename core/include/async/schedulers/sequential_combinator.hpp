@@ -13,7 +13,8 @@ class sequential_combinator final {
       : schedulers_(std::forward<Schedulers>(schedulers)...) {}
 
  public:
-  constexpr void run_once() {
+  constexpr void run_once() noexcept(
+      (noexcept(std::declval<Schedulers>().run_once()) && ...)) {
     std::apply([](auto&&... scheduler) { (scheduler.run_once(), ...); },
                schedulers_);
   }

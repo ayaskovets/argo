@@ -13,7 +13,8 @@ class parallel_combinator final {
       : schedulers_(std::forward<Schedulers>(schedulers)...) {}
 
  public:
-  constexpr void run_detached(std::stop_token stop_token) {
+  constexpr void run_detached(std::stop_token stop_token) noexcept(
+      (noexcept(std::declval<Schedulers>().run_detached()) && ...)) {
     std::apply(
         [stop_token](auto&&... scheduler) {
           (scheduler.run_detached(stop_token), ...);
