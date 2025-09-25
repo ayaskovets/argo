@@ -19,7 +19,7 @@ class base_socket;
  */
 class base_sockaddr {
  private:
-  friend class base_socket;  ///< Needed for base_socket to access the storage
+  friend class base_socket;  ///< Needed for base_socket to call get_storage()
 
  protected:
   explicit base_sockaddr(net::sockets::family family);
