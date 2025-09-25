@@ -237,7 +237,7 @@ base_socket::bind_status base_socket::bind(
   return bind_status::kSuccess;
 }
 
-base_socket::connection_status base_socket::connect(
+base_socket::connect_status base_socket::connect(
     const net::sockets::base_sockaddr &sockaddr) {
   if (::connect(native_handle(),
                 reinterpret_cast<const ::sockaddr *>(sockaddr.get_storage()),
@@ -248,16 +248,16 @@ base_socket::connection_status base_socket::connect(
       case EINPROGRESS:
       case EAGAIN:
       case EALREADY:
-        return connection_status::kPending;
+        return connect_status::kPending;
       case ECONNREFUSED:
       case ENOENT:
-        return connection_status::kRefused;
+        return connect_status::kRefused;
       [[unlikely]] default:
         throw std::runtime_error(std::format(
             "failed to connect base_socket: {}", std::strerror(errno)));
     }
   }
-  return connection_status::kSuccess;
+  return connect_status::kSuccess;
 }
 
 void base_socket::get_bind_sockaddr(
