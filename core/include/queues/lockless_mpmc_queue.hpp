@@ -27,7 +27,9 @@ concept lockless_mpmc_queue_entry = requires(T entry) {
   requires std::is_nothrow_destructible_v<Value>;
   requires std::is_nothrow_move_constructible_v<Value>;
   requires std::is_nothrow_move_assignable_v<Value>;
-} && std::unsigned_integral<Index>;
+
+  requires std::unsigned_integral<Index>;
+};
 
 namespace detail {
 
