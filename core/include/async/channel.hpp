@@ -1,0 +1,27 @@
+#pragma once
+
+#include <concepts>
+#include <type_traits>
+
+namespace core::async {
+
+namespace concepts {
+
+template <typename T, typename Value = typename T::value_t>
+concept channel = requires(T channel, Value value) {
+  { channel.try_push(value) } -> std::same_as<bool>;
+  { channel.try_pop(value) } -> std::same_as<bool>;
+
+  requires std::is_same_v<typename T::value_t, Value>;
+};
+
+template <typename T,
+          typename Value = typename std::remove_reference_t<T>::value_t>
+concept channel_lvalue_reference = requires {
+  requires std::is_lvalue_reference_v<T>;
+  requires channel<std::remove_reference_t<T>, Value>;
+};
+
+}  // namespace concepts
+
+}  // namespace core::async
