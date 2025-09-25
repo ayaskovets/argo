@@ -21,7 +21,7 @@ const sockaddr& sockaddr::kEmpty() noexcept {
 }
 
 sockaddr::sockaddr(std::string_view path)
-    : net::sockets::base_sockaddr(net::sockets::family::kUnix) {
+    : net::base_sockaddr(net::sockets::family::kUnix) {
   if (path.size() >= kMaxPathSize) [[unlikely]] {
     throw std::invalid_argument(
         std::format("invalid path size {}", path.size()));

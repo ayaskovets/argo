@@ -10,6 +10,8 @@ target_sources(${TARGET}
     io/fd_test.cpp
     io/poller_test.cpp
     logging/logger_test.cpp
+    net/base_sockaddr_test.cpp
+    net/base_socket_test.cpp
     net/dns/resolve_test.cpp
     net/inet/ip_test.cpp
     net/inet/port_test.cpp
@@ -21,7 +23,6 @@ target_sources(${TARGET}
     net/inet6/sockaddr_test.cpp
     net/inet6/tcp/socket_test.cpp
     net/inet6/udp/socket_test.cpp
-    net/sockets/base_sockaddr_test.cpp
     net/unix/dgram/socket_test.cpp
     net/unix/sockaddr_test.cpp
     net/unix/stream/socket_test.cpp
@@ -30,12 +31,12 @@ target_sources(${TARGET}
     queues/lockfree_mpsc_queue_test.cpp
     queues/lockfree_spmc_queue_test.cpp
     queues/lockless_mpmc_queue_test.cpp
-    queues/waitfree_spsc_queue_test.cpp
     queues/single_threaded_queue_test.cpp
+    queues/waitfree_spsc_queue_test.cpp
     utils/conditionally_runtime_test.cpp
+    utils/leak_detector_allocator_test.cpp
     utils/predicates_test.cpp
     utils/static_pimpl_test.cpp
-    utils/leak_detector_allocator_test.cpp
 )
 target_compile_features(${TARGET}
     PRIVATE cxx_std_23

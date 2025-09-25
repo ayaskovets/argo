@@ -1,25 +1,25 @@
-#include "net/sockets/base_sockaddr.hpp"
+#include "net/base_sockaddr.hpp"
 
 #include <gtest/gtest.h>
 
-namespace tests::net::sockets {
+namespace tests::net {
 
 namespace {
 
-class impl_sockaddr final : public core::net::sockets::base_sockaddr {
+class impl_sockaddr final : public core::net::base_sockaddr {
  public:
   explicit impl_sockaddr(core::net::sockets::family family)
-      : core::net::sockets::base_sockaddr(family) {}
+      : core::net::base_sockaddr(family) {}
 
  public:
-  using core::net::sockets::base_sockaddr::get_storage;
+  using core::net::base_sockaddr::get_storage;
 };
 
 }  // namespace
 
 TEST(net_sockets_base_sockaddr, size) {
-  static_assert(sizeof(core::net::sockets::base_sockaddr) == 16);
-  static_assert(alignof(core::net::sockets::base_sockaddr) == 8);
+  static_assert(sizeof(core::net::base_sockaddr) == 16);
+  static_assert(alignof(core::net::base_sockaddr) == 8);
 }
 
 class net_sockets_base_sockaddr
@@ -62,4 +62,4 @@ INSTANTIATE_TEST_SUITE_P(net_sockets_base_sockaddr, net_sockets_base_sockaddr,
                                            core::net::sockets::family::kInet6,
                                            core::net::sockets::family::kUnix));
 
-}  // namespace tests::net::sockets
+}  // namespace tests::net

@@ -6,7 +6,7 @@
 
 #include "net/sockets/family.hpp"
 
-namespace core::net::sockets {
+namespace core::net {
 
 class base_socket;
 
@@ -51,17 +51,17 @@ class base_sockaddr {
   std::shared_ptr<void> storage_;
 };
 
-}  // namespace core::net::sockets
+}  // namespace core::net
 
 template <>
-struct std::formatter<core::net::sockets::base_sockaddr> {
+struct std::formatter<core::net::base_sockaddr> {
   template <typename FormatContext>
   constexpr auto parse(FormatContext& ctx) const noexcept {
     return ctx.begin();
   }
 
   template <typename FormatContext>
-  constexpr auto format(const core::net::sockets::base_sockaddr& sockaddr,
+  constexpr auto format(const core::net::base_sockaddr& sockaddr,
                         FormatContext& ctx) const {
     return std::format_to(ctx.out(), "{}", sockaddr.to_string());
   }

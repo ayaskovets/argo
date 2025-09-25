@@ -1,4 +1,4 @@
-#include "net/sockets/base_socket.hpp"
+#include "net/base_socket.hpp"
 
 #include <arpa/inet.h>
 #include <fcntl.h>
@@ -7,7 +7,7 @@
 #include <cerrno>
 #include <format>
 
-namespace core::net::sockets {
+namespace core::net {
 
 namespace {
 
@@ -221,8 +221,7 @@ bool base_socket::get_keepalive() const {
   return (optval ? true : false);
 }
 
-base_socket::bind_status base_socket::bind(
-    const net::sockets::base_sockaddr &sockaddr) {
+base_socket::bind_status base_socket::bind(const net::base_sockaddr &sockaddr) {
   if (::bind(native_handle(),
              reinterpret_cast<const ::sockaddr *>(sockaddr.get_storage()),
              sockaddr.get_length()) == kSyscallError) [[unlikely]] {
@@ -238,7 +237,7 @@ base_socket::bind_status base_socket::bind(
 }
 
 base_socket::connect_status base_socket::connect(
-    const net::sockets::base_sockaddr &sockaddr) {
+    const net::base_sockaddr &sockaddr) {
   if (::connect(native_handle(),
                 reinterpret_cast<const ::sockaddr *>(sockaddr.get_storage()),
                 sockaddr.get_length()) == kSyscallError) {
@@ -260,8 +259,7 @@ base_socket::connect_status base_socket::connect(
   return connect_status::kSuccess;
 }
 
-void base_socket::get_bind_sockaddr(
-    net::sockets::base_sockaddr &sockaddr) const {
+void base_socket::get_bind_sockaddr(net::base_sockaddr &sockaddr) const {
   ::socklen_t socklen = static_cast<::socklen_t>(sockaddr.get_length());
   if (::getsockname(native_handle(),
                     reinterpret_cast<::sockaddr *>(sockaddr.get_storage()),
@@ -271,8 +269,7 @@ void base_socket::get_bind_sockaddr(
   }
 }
 
-void base_socket::get_connect_sockaddr(
-    net::sockets::base_sockaddr &sockaddr) const {
+void base_socket::get_connect_sockaddr(net::base_sockaddr &sockaddr) const {
   ::socklen_t socklen = static_cast<::socklen_t>(sockaddr.get_length());
   if (::getpeername(native_handle(),
                     reinterpret_cast<::sockaddr *>(sockaddr.get_storage()),
@@ -314,9 +311,8 @@ std::size_t base_socket::send(std::span<const std::byte> bytes) const {
   return static_cast<std::size_t>(sent);
 }
 
-std::size_t base_socket::send_to(
-    std::span<const std::byte> bytes,
-    const net::sockets::base_sockaddr &sockaddr) const {
+std::size_t base_socket::send_to(std::span<const std::byte> bytes,
+                                 const net::base_sockaddr &sockaddr) const {
   const ::ssize_t sent =
       ::sendto(native_handle(), bytes.data(), bytes.size(), 0,
                reinterpret_cast<const ::sockaddr *>(sockaddr.get_storage()),
@@ -344,8 +340,8 @@ std::size_t base_socket::receive(std::span<std::byte> bytes) const {
   return static_cast<std::size_t>(received);
 }
 
-std::size_t base_socket::receive_from(
-    std::span<std::byte> bytes, net::sockets::base_sockaddr &sockaddr) const {
+std::size_t base_socket::receive_from(std::span<std::byte> bytes,
+                                      net::base_sockaddr &sockaddr) const {
   ::socklen_t socklen = static_cast<::socklen_t>(sockaddr.get_length());
   const ::ssize_t received = ::recvfrom(
       native_handle(), bytes.data(), bytes.size(), 0,
@@ -360,4 +356,4 @@ std::size_t base_socket::receive_from(
   return static_cast<std::size_t>(received);
 }
 
-}  // namespace core::net::sockets
+}  // namespace core::net

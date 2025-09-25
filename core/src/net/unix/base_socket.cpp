@@ -11,11 +11,11 @@ constexpr int kSyscallError = -1;
 }  // namespace
 
 base_socket::base_socket(io::fd::uninitialized_t) noexcept
-    : net::sockets::base_socket(core::io::fd::uninitialized_t{}) {}
+    : net::base_socket(core::io::fd::uninitialized_t{}) {}
 
 base_socket::base_socket(net::sockets::type type)
-    : net::sockets::base_socket(net::sockets::family::kUnix, type,
-                                net::sockets::protocol::kUnspecified) {}
+    : net::base_socket(net::sockets::family::kUnix, type,
+                       net::sockets::protocol::kUnspecified) {}
 
 base_socket::~base_socket() noexcept {
   static const base_socket kUninitialized(io::fd::uninitialized_t{});
@@ -46,10 +46,10 @@ void base_socket::unlink_and_close() {
           std::format("unlink failed: {}", std::strerror(errno)));
     }
   }
-  net::sockets::base_socket::close();
+  net::base_socket::close();
 }
 
-net::sockets::base_socket::bind_status base_socket::unlink_bind(
+net::base_socket::bind_status base_socket::unlink_bind(
     const net::unix::sockaddr& sockaddr) {
   if (::unlink(sockaddr.get_path().data()) == kSyscallError) {
     if (errno != ENOENT) {
@@ -57,7 +57,7 @@ net::sockets::base_socket::bind_status base_socket::unlink_bind(
           std::format("unlink failed: {}", std::strerror(errno)));
     }
   }
-  return net::sockets::base_socket::bind(sockaddr);
+  return net::base_socket::bind(sockaddr);
 }
 
 }  // namespace core::net::unix

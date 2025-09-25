@@ -1,23 +1,23 @@
-#include "net/sockets/base_socket.hpp"
+#include "net/base_socket.hpp"
 
 #include <gtest/gtest.h>
 
-namespace tests::net::sockets {
+namespace tests::net {
 
 namespace {
 
-class impl_socket final : public core::net::sockets::base_socket {
+class impl_socket final : public core::net::base_socket {
  public:
   impl_socket(core::net::sockets::family family, core::net::sockets::type type,
               core::net::sockets::protocol protocol)
-      : core::net::sockets::base_socket(family, type, protocol) {}
+      : core::net::base_socket(family, type, protocol) {}
 };
 
 }  // namespace
 
 TEST(net_sockets_base_socket, size) {
-  static_assert(sizeof(core::net::sockets::base_socket) == 4);
-  static_assert(alignof(core::net::sockets::base_socket) == 4);
+  static_assert(sizeof(core::net::base_socket) == 4);
+  static_assert(alignof(core::net::base_socket) == 4);
 }
 
 class net_sockets_base_socket
@@ -106,4 +106,4 @@ INSTANTIATE_TEST_SUITE_P(
                            core::net::sockets::protocol::kTcp,
                            core::net::sockets::protocol::kUdp)));
 
-}  // namespace tests::net::sockets
+}  // namespace tests::net

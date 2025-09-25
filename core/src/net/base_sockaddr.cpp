@@ -1,4 +1,4 @@
-#include "net/sockets/base_sockaddr.hpp"
+#include "net/base_sockaddr.hpp"
 
 #include <arpa/inet.h>
 #include <sys/un.h>
@@ -6,7 +6,7 @@
 #include <cassert>
 #include <cerrno>
 
-namespace core::net::sockets {
+namespace core::net {
 
 namespace {
 
@@ -162,4 +162,4 @@ std::string base_sockaddr::to_string() const {
   return string;
 }
 
-}  // namespace core::net::sockets
+}  // namespace core::net

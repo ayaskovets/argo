@@ -1,13 +1,13 @@
 #pragma once
 
-#include "net/sockets/base_sockaddr.hpp"
+#include "net/base_sockaddr.hpp"
 
 namespace core::net::unix {
 
 /**
  * @brief UNIX address
  */
-class sockaddr final : public net::sockets::base_sockaddr {
+class sockaddr final : public net::base_sockaddr {
  public:
   static const sockaddr& kInvalid() noexcept;
   static const sockaddr& kEmpty() noexcept;

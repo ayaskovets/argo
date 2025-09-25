@@ -9,6 +9,8 @@ target_sources(${TARGET}
     src/logging/logger.cpp
     src/logging/renderer.cpp
     src/logging/writer.cpp
+    src/net/base_sockaddr.cpp
+    src/net/base_socket.cpp
     src/net/dns/resolve.cpp
     src/net/inet/ip.cpp
     src/net/inet/port.cpp
@@ -19,8 +21,6 @@ target_sources(${TARGET}
     src/net/inet6/sockaddr.cpp
     src/net/inet6/tcp/socket.cpp
     src/net/inet6/udp/socket.cpp
-    src/net/sockets/base_sockaddr.cpp
-    src/net/sockets/base_socket.cpp
     src/net/unix/base_socket.cpp
     src/net/unix/dgram/socket.cpp
     src/net/unix/sockaddr.cpp

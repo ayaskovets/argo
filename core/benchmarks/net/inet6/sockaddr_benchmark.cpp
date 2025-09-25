@@ -13,7 +13,7 @@ void BM_net_inet6_from_bytes(benchmark::State& state) {
   for (const auto _ : state) {
     benchmark::DoNotOptimize(core::net::inet6::sockaddr(
         core::net::inet6::ip(std::span(bytes),
-                             core::net::inet6::ip::network_byte_order_t{}),
+                             core::net::network_byte_order_t{}),
         core::net::inet::port(0)));
   }
 }

@@ -1,15 +1,15 @@
 #pragma once
 
+#include "net/base_sockaddr.hpp"
 #include "net/inet6/ip.hpp"
 #include "net/inet6/port.hpp"
-#include "net/sockets/base_sockaddr.hpp"
 
 namespace core::net::inet6 {
 
 /**
  * @brief IPv6 address:port pair
  */
-class sockaddr final : public net::sockets::base_sockaddr {
+class sockaddr final : public net::base_sockaddr {
  public:
   sockaddr(net::inet6::ip ip, net::inet6::port port);
 
