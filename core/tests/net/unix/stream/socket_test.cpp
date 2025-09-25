@@ -4,7 +4,7 @@
 
 #include <thread>
 
-namespace tests::ipc::unix::stream {
+namespace tests::net::unix::stream {
 
 TEST(net_unix_stream_socket, size) {
   static_assert(sizeof(core::net::unix::stream::socket) == 4);
@@ -171,4 +171,4 @@ TEST(net_unix_stream_socket, get_sockaddrs) {
   EXPECT_NO_THROW(client.get_bind_sockaddr(out_sockaddr));
 }
 
-}  // namespace tests::ipc::unix::stream
+}  // namespace tests::net::unix::stream
