@@ -33,7 +33,8 @@ class port final {
 }  // namespace core::net::inet
 
 template <>
-struct std::formatter<core::net::inet::port> {
+class std::formatter<core::net::inet::port> {
+ public:
   template <typename FormatContext>
   constexpr auto parse(FormatContext& ctx) const noexcept {
     return ctx.begin();

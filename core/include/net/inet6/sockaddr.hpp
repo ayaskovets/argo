@@ -21,7 +21,8 @@ class sockaddr final : public net::base_sockaddr {
 }  // namespace core::net::inet6
 
 template <>
-struct std::formatter<core::net::inet6::sockaddr> {
+class std::formatter<core::net::inet6::sockaddr> {
+ public:
   template <typename FormatContext>
   constexpr auto parse(FormatContext& ctx) const noexcept {
     return ctx.begin();

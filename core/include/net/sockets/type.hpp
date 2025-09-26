@@ -19,7 +19,8 @@ enum class type : std::uint8_t {
 }  // namespace core::net::sockets
 
 template <>
-struct std::formatter<core::net::sockets::type> {
+class std::formatter<core::net::sockets::type> {
+ public:
   template <typename FormatContext>
   constexpr auto parse(FormatContext& ctx) const noexcept {
     return ctx.begin();

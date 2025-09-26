@@ -22,7 +22,8 @@ class sockaddr final : public net::base_sockaddr {
 }  // namespace core::net::unix
 
 template <>
-struct std::formatter<core::net::unix::sockaddr> {
+class std::formatter<core::net::unix::sockaddr> {
+ public:
   template <typename FormatContext>
   constexpr auto parse(FormatContext& ctx) const noexcept {
     return ctx.begin();

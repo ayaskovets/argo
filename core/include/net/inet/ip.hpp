@@ -40,7 +40,8 @@ class ip final {
 }  // namespace core::net::inet
 
 template <>
-struct std::formatter<core::net::inet::ip> {
+class std::formatter<core::net::inet::ip> {
+ public:
   template <typename FormatContext>
   constexpr auto parse(FormatContext& ctx) const noexcept {
     return ctx.begin();

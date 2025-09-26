@@ -7,7 +7,8 @@ namespace core::utils {
  *
  * Please follow the rule of five for all derived types
  */
-struct non_copyable {
+class non_copyable {
+ public:
   constexpr non_copyable() noexcept = default;
   constexpr non_copyable(const non_copyable&) = delete;
   constexpr non_copyable& operator=(const non_copyable&) = delete;
@@ -18,7 +19,8 @@ struct non_copyable {
  *
  * Please follow the rule of five for all derived types
  */
-struct non_movable {
+class non_movable {
+ public:
   constexpr non_movable() noexcept = default;
   constexpr non_movable(non_movable&&) = delete;
   constexpr non_movable& operator=(non_movable&&) = delete;
