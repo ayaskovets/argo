@@ -33,6 +33,11 @@ concept lockless_mpmc_queue_entry = requires(T entry) {
   requires std::unsigned_integral<Index>;
 };
 
+template <typename T, typename Value, typename Index>
+concept lockless_mpmc_queue_allocator = requires {
+  requires lockless_mpmc_queue_entry<typename T::value_type, Value, Index>;
+};
+
 }  // namespace concepts
 
 namespace detail {
@@ -66,19 +71,17 @@ class alignas(Alignment) lockless_mpmc_queue_entry_impl final {
  * reduce the risk of the ABA problem when Index is a large enough type for
  * rollover to happen rarely
  */
-template <typename Value, std::unsigned_integral Index = std::size_t,
-          Index Capacity = utils::kRuntimeDefinedCapacity<Index>,
-          typename Allocator = std::allocator<
-              detail::lockless_mpmc_queue_entry_impl<Value, Index>>>
+template <
+    typename Value, std::unsigned_integral Index = std::size_t,
+    Index Capacity = utils::kRuntimeDefinedCapacity<Index>,
+    concepts::lockless_mpmc_queue_allocator<Value, Index> Allocator =
+        std::allocator<detail::lockless_mpmc_queue_entry_impl<Value, Index>>>
 class lockless_mpmc_queue final : utils::non_copyable, utils::non_movable {
  public:
   using value_t = Value;
   using index_t = Index;
   using allocator_t = Allocator;
-  using entry_t = typename Allocator::value_type;
-
- private:
-  static_assert(concepts::lockless_mpmc_queue_entry<entry_t, value_t, index_t>);
+  using allocator_value_t = typename Allocator::value_type;
 
  public:
   constexpr explicit lockless_mpmc_queue(
@@ -128,7 +131,7 @@ class lockless_mpmc_queue final : utils::non_copyable, utils::non_movable {
     requires(std::is_nothrow_constructible_v<Value, Args...>)
   {
     index_t push_to = push_to_.load(std::memory_order::relaxed);
-    entry_t& entry = ring_buffer_[push_to & (*capacity_ - 1)];
+    allocator_value_t& entry = ring_buffer_[push_to & (*capacity_ - 1)];
 
     if (push_to != entry.seqnum().load(std::memory_order::acquire)) {
       return false;
@@ -154,7 +157,7 @@ class lockless_mpmc_queue final : utils::non_copyable, utils::non_movable {
   {
     do {
       index_t push_to = push_to_.load(std::memory_order::relaxed);
-      entry_t& entry = ring_buffer_[push_to & (*capacity_ - 1)];
+      allocator_value_t& entry = ring_buffer_[push_to & (*capacity_ - 1)];
       if (push_to != entry.seqnum().load(std::memory_order::acquire)) {
         continue;
       }
@@ -172,7 +175,7 @@ class lockless_mpmc_queue final : utils::non_copyable, utils::non_movable {
 
   constexpr bool try_pop(value_t& value) noexcept {
     index_t pop_from = pop_from_.load(std::memory_order::relaxed);
-    entry_t& entry = ring_buffer_[pop_from & (*capacity_ - 1)];
+    allocator_value_t& entry = ring_buffer_[pop_from & (*capacity_ - 1)];
 
     if (pop_from + 1 != entry.seqnum().load(std::memory_order::acquire)) {
       return false;
@@ -192,7 +195,7 @@ class lockless_mpmc_queue final : utils::non_copyable, utils::non_movable {
   constexpr value_t pop() noexcept {
     do {
       index_t pop_from = pop_from_.load(std::memory_order::relaxed);
-      entry_t& entry = ring_buffer_[pop_from & (*capacity_ - 1)];
+      allocator_value_t& entry = ring_buffer_[pop_from & (*capacity_ - 1)];
       if (pop_from + 1 != entry.seqnum().load(std::memory_order::acquire)) {
         continue;
       }
@@ -222,7 +225,7 @@ class lockless_mpmc_queue final : utils::non_copyable, utils::non_movable {
   const allocator_t& get_allocator() const noexcept { return allocator_; }
 
  private:
-  entry_t* ring_buffer_ = nullptr;
+  allocator_value_t* ring_buffer_ = nullptr;
 
   alignas(utils::kCacheLineSize) std::atomic<index_t> push_to_ = 0;
   alignas(utils::kCacheLineSize) std::atomic<index_t> pop_from_ = 0;
@@ -240,7 +243,7 @@ class lockless_mpmc_queue final : utils::non_copyable, utils::non_movable {
   constexpr void clear() noexcept {
     while (true) {
       index_t pop_from = pop_from_.load(std::memory_order::relaxed);
-      entry_t& entry = ring_buffer_[pop_from & (*capacity_ - 1)];
+      allocator_value_t& entry = ring_buffer_[pop_from & (*capacity_ - 1)];
 
       if (pop_from + 1 != entry.seqnum().load(std::memory_order::acquire)) {
         break;

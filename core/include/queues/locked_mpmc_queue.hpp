@@ -27,6 +27,11 @@ concept locked_mpmc_queue_entry = requires(T entry) {
   requires std::is_nothrow_move_assignable_v<Value>;
 };
 
+template <typename T, typename Value>
+concept locked_mpmc_queue_allocator = requires {
+  requires locked_mpmc_queue_entry<typename T::value_type, Value>;
+};
+
 }  // namespace concepts
 
 namespace detail {
@@ -55,17 +60,14 @@ class alignas(Alignment) locked_mpmc_queue_entry_impl final {
  */
 template <typename Value, std::unsigned_integral Index = std::size_t,
           Index Capacity = utils::kRuntimeDefinedCapacity<Index>,
-          typename Allocator =
+          concepts::locked_mpmc_queue_allocator<Value> Allocator =
               std::allocator<detail::locked_mpmc_queue_entry_impl<Value>>>
 class locked_mpmc_queue final : utils::non_copyable, utils::non_movable {
  public:
   using value_t = Value;
   using index_t = Index;
   using allocator_t = Allocator;
-  using entry_t = typename Allocator::value_type;
-
- private:
-  static_assert(concepts::locked_mpmc_queue_entry<entry_t, value_t>);
+  using allocator_value_t = typename Allocator::value_type;
 
  public:
   constexpr explicit locked_mpmc_queue(
@@ -202,7 +204,7 @@ class locked_mpmc_queue final : utils::non_copyable, utils::non_movable {
   std::condition_variable pop_available_cv_;
   std::condition_variable push_available_cv_;
 
-  entry_t* ring_buffer_ = nullptr;
+  allocator_value_t* ring_buffer_ = nullptr;
 
   index_t push_to_ = 0;
   index_t pop_from_ = 0;

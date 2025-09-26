@@ -11,12 +11,12 @@ void BM_queues_single_threaded_queue_nonblocking_throughput(
   const std::size_t items = state.range(1);
   const Value value{};
 
-  using entry_t =
+  using allocator_value_t =
       core::queues::detail::single_threaded_queue_entry_impl<Value,
                                                              alignof(Value)>;
   using queue_t = core::queues::single_threaded_queue<
       Value, std::size_t, core::utils::kRuntimeDefinedCapacity<std::size_t>,
-      std::allocator<entry_t>>;
+      std::allocator<allocator_value_t>>;
 
   for (const auto _ : state) {
     state.PauseTiming();

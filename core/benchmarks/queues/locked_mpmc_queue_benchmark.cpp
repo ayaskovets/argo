@@ -16,11 +16,11 @@ void BM_queues_locked_mpmc_queue_nonblocking_throughput(
   const std::size_t consumers = state.range(3);
   const Value value{};
 
-  using entry_t =
+  using allocator_value_t =
       core::queues::detail::locked_mpmc_queue_entry_impl<Value, alignof(Value)>;
   using queue_t = core::queues::locked_mpmc_queue<
       Value, std::size_t, core::utils::kRuntimeDefinedCapacity<std::size_t>,
-      std::allocator<entry_t>>;
+      std::allocator<allocator_value_t>>;
 
   std::atomic<std::size_t> try_push_times = 0;
   std::atomic<std::size_t> try_pop_times = 0;
@@ -136,11 +136,11 @@ void BM_queues_locked_mpmc_queue_blocking_throughput(benchmark::State& state) {
   const std::size_t consumers = state.range(3);
   const Value value{};
 
-  using entry_t =
+  using allocator_value_t =
       core::queues::detail::locked_mpmc_queue_entry_impl<Value, alignof(Value)>;
   using queue_t = core::queues::locked_mpmc_queue<
       Value, std::size_t, core::utils::kRuntimeDefinedCapacity<std::size_t>,
-      std::allocator<entry_t>>;
+      std::allocator<allocator_value_t>>;
 
   for (const auto _ : state) {
     state.PauseTiming();

@@ -26,6 +26,11 @@ concept waitfree_spsc_queue_entry = requires(T entry) {
   requires std::is_nothrow_move_assignable_v<Value>;
 };
 
+template <typename T, typename Value>
+concept waitfree_spsc_queue_allocator = requires {
+  requires waitfree_spsc_queue_entry<typename T::value_type, Value>;
+};
+
 }  // namespace concepts
 
 namespace detail {
@@ -54,17 +59,14 @@ class alignas(Alignment) waitfree_spsc_queue_entry_impl final {
  */
 template <typename Value, std::unsigned_integral Index = std::size_t,
           Index Capacity = utils::kRuntimeDefinedCapacity<Index>,
-          typename Allocator =
+          concepts::waitfree_spsc_queue_allocator<Value> Allocator =
               std::allocator<detail::waitfree_spsc_queue_entry_impl<Value>>>
 class waitfree_spsc_queue final : utils::non_copyable, utils::non_movable {
  public:
   using value_t = Value;
   using index_t = Index;
   using allocator_t = Allocator;
-  using entry_t = typename Allocator::value_type;
-
- private:
-  static_assert(concepts::waitfree_spsc_queue_entry<entry_t, value_t>);
+  using allocator_value_t = typename Allocator::value_type;
 
  public:
   constexpr explicit waitfree_spsc_queue(
@@ -187,7 +189,7 @@ class waitfree_spsc_queue final : utils::non_copyable, utils::non_movable {
   const allocator_t& get_allocator() const noexcept { return allocator_; }
 
  private:
-  entry_t* ring_buffer_ = nullptr;
+  allocator_value_t* ring_buffer_ = nullptr;
 
   alignas(utils::kCacheLineSize) std::atomic<index_t> push_to_ = 0;
   alignas(utils::kCacheLineSize) index_t cached_push_to_ = 0;

@@ -32,6 +32,11 @@ concept lockfree_mpsc_queue_entry = requires(T entry) {
   requires std::is_nothrow_move_assignable_v<Value>;
 };
 
+template <typename T, typename Value>
+concept lockfree_mpsc_queue_allocator = requires {
+  requires lockfree_mpsc_queue_entry<typename T::value_type, Value>;
+};
+
 }  // namespace concepts
 
 namespace detail {
@@ -58,17 +63,14 @@ class alignas(Alignment) lockfree_mpsc_queue_entry_impl final {
  */
 template <typename Value, std::unsigned_integral Index = std::size_t,
           Index Capacity = utils::kRuntimeDefinedCapacity<Index>,
-          typename Allocator =
+          concepts::lockfree_mpsc_queue_allocator<Value> Allocator =
               std::allocator<detail::lockfree_mpsc_queue_entry_impl<Value>>>
 class lockfree_mpsc_queue final : utils::non_copyable, utils::non_movable {
  public:
   using value_t = Value;
   using index_t = Index;
   using allocator_t = Allocator;
-  using entry_t = typename Allocator::value_type;
-
- private:
-  static_assert(concepts::lockfree_mpsc_queue_entry<entry_t, value_t>);
+  using allocator_value_t = typename Allocator::value_type;
 
  public:
   constexpr explicit lockfree_mpsc_queue(
@@ -125,7 +127,7 @@ class lockfree_mpsc_queue final : utils::non_copyable, utils::non_movable {
     }
 
     const index_t push_to = push_to_.fetch_add(1, std::memory_order::relaxed);
-    entry_t& entry = ring_buffer_[push_to & (*capacity_ - 1)];
+    allocator_value_t& entry = ring_buffer_[push_to & (*capacity_ - 1)];
 
     std::construct_at(&entry.value(), std::forward<Args>(args)...);
     entry.empty().store(false, std::memory_order::release);
@@ -149,7 +151,7 @@ class lockfree_mpsc_queue final : utils::non_copyable, utils::non_movable {
     }
 
     const index_t push_to = push_to_.fetch_add(1, std::memory_order::relaxed);
-    entry_t& entry = ring_buffer_[push_to & (*capacity_ - 1)];
+    allocator_value_t& entry = ring_buffer_[push_to & (*capacity_ - 1)];
 
     std::construct_at(&entry.value(), std::forward<Args>(args)...);
     entry.empty().store(false, std::memory_order::release);
@@ -160,7 +162,7 @@ class lockfree_mpsc_queue final : utils::non_copyable, utils::non_movable {
   constexpr void push(value_t value) noexcept { emplace(std::move(value)); }
 
   constexpr bool try_pop(value_t& value) noexcept {
-    entry_t& entry = ring_buffer_[pop_from_ & (*capacity_ - 1)];
+    allocator_value_t& entry = ring_buffer_[pop_from_ & (*capacity_ - 1)];
     if (entry.empty().load(std::memory_order::acquire)) {
       return false;
     }
@@ -175,7 +177,7 @@ class lockfree_mpsc_queue final : utils::non_copyable, utils::non_movable {
   }
 
   constexpr value_t pop() noexcept {
-    entry_t& entry = ring_buffer_[pop_from_ & (*capacity_ - 1)];
+    allocator_value_t& entry = ring_buffer_[pop_from_ & (*capacity_ - 1)];
     entry.empty().wait(true, std::memory_order::acquire);
 
     value_t value(std::move(entry.value()));
@@ -197,7 +199,7 @@ class lockfree_mpsc_queue final : utils::non_copyable, utils::non_movable {
   const allocator_t& get_allocator() const noexcept { return allocator_; }
 
  private:
-  entry_t* ring_buffer_ = nullptr;
+  allocator_value_t* ring_buffer_ = nullptr;
 
   alignas(utils::kCacheLineSize) std::atomic<index_t> available_to_pop_ = 0;
   alignas(utils::kCacheLineSize) std::atomic<index_t> push_to_ = 0;
@@ -215,7 +217,7 @@ class lockfree_mpsc_queue final : utils::non_copyable, utils::non_movable {
    */
   constexpr void clear() noexcept {
     while (true) {
-      entry_t& entry = ring_buffer_[pop_from_ & (*capacity_ - 1)];
+      allocator_value_t& entry = ring_buffer_[pop_from_ & (*capacity_ - 1)];
       if (entry.empty().load(std::memory_order::acquire)) {
         break;
       }
