@@ -9,7 +9,7 @@ namespace core::async {
 
 class base_scheduler_parameters {
  public:
-  constexpr virtual ~base_scheduler_parameters() noexcept {}
+  constexpr virtual ~base_scheduler_parameters() noexcept = default;
 };
 
 namespace concepts {
@@ -28,7 +28,7 @@ concept scheduler = requires(T scheduler) {
       });
 
   requires std::is_base_of_v<async::base_scheduler_parameters,
-                             typename T::params_t>;
+                             typename T::parameters_t>;
 };
 
 }  // namespace concepts
