@@ -170,7 +170,7 @@ TEST(queues_lockless_mpmc_queue, allocator) {
   using index_t = std::size_t;
   using allocator_value_t =
       core::queues::detail::lockless_mpmc_queue_entry_impl<
-          value_t, index_t, core::utils::kCacheLineSize>;
+          value_t, index_t, std::hardware_destructive_interference_size>;
   core::utils::leak_detector_allocator<allocator_value_t> allocator;
 
   EXPECT_TRUE(allocator.is_clean());

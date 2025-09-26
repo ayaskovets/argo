@@ -18,7 +18,7 @@ void BM_queues_lockfree_spmc_queue_nonblocking_throughput(
 
   using allocator_value_t =
       core::queues::detail::lockfree_spmc_queue_entry_impl<
-          Value, core::utils::kCacheLineSize>;
+          Value, std::hardware_destructive_interference_size>;
   using queue_t = core::queues::lockfree_spmc_queue<
       Value, std::size_t, core::utils::kRuntimeDefinedCapacity<std::size_t>,
       std::allocator<allocator_value_t>>;
@@ -132,7 +132,7 @@ void BM_queues_lockfree_spmc_queue_blocking_throughput(
 
   using allocator_value_t =
       core::queues::detail::lockfree_spmc_queue_entry_impl<
-          Value, core::utils::kCacheLineSize>;
+          Value, std::hardware_destructive_interference_size>;
   using queue_t = core::queues::lockfree_spmc_queue<
       Value, std::size_t, core::utils::kRuntimeDefinedCapacity<std::size_t>,
       std::allocator<allocator_value_t>>;

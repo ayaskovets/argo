@@ -18,7 +18,7 @@ void BM_queues_lockless_mpmc_queue_nonblocking_throughput(
 
   using allocator_value_t =
       core::queues::detail::lockless_mpmc_queue_entry_impl<
-          Value, std::size_t, core::utils::kCacheLineSize>;
+          Value, std::size_t, std::hardware_destructive_interference_size>;
   using queue_t = core::queues::lockless_mpmc_queue<
       Value, std::size_t, core::utils::kRuntimeDefinedCapacity<std::size_t>,
       std::allocator<allocator_value_t>>;
@@ -140,7 +140,7 @@ void BM_queues_lockless_mpmc_queue_blocking_throughput(
 
   using allocator_value_t =
       core::queues::detail::lockless_mpmc_queue_entry_impl<
-          Value, std::size_t, core::utils::kCacheLineSize>;
+          Value, std::size_t, std::hardware_destructive_interference_size>;
   using queue_t = core::queues::lockless_mpmc_queue<
       Value, std::size_t, core::utils::kRuntimeDefinedCapacity<std::size_t>,
       std::allocator<allocator_value_t>>;

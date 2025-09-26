@@ -2,6 +2,7 @@
 
 #include <atomic>
 #include <memory>
+#include <new>
 #include <stdexcept>
 
 #include "utils/conditionally_runtime.hpp"
@@ -233,8 +234,10 @@ class lockfree_mpmc_queue final : utils::non_copyable, utils::non_movable {
  private:
   atomic_entry_t* ring_buffer_ = nullptr;
 
-  alignas(utils::kCacheLineSize) std::atomic<index_t> push_to_ = 0;
-  alignas(utils::kCacheLineSize) std::atomic<index_t> pop_from_ = 0;
+  alignas(std::hardware_destructive_interference_size)
+      std::atomic<index_t> push_to_ = 0;
+  alignas(std::hardware_destructive_interference_size)
+      std::atomic<index_t> pop_from_ = 0;
 
   [[no_unique_address]] allocator_t allocator_;
   [[no_unique_address]] const utils::conditionally_runtime<

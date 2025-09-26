@@ -3,6 +3,7 @@
 #include <atomic>
 #include <memory>
 #include <mutex>
+#include <new>
 #include <stdexcept>
 
 #include "utils/conditionally_runtime.hpp"
@@ -208,7 +209,8 @@ class locked_mpmc_queue final : utils::non_copyable, utils::non_movable {
 
   index_t push_to_ = 0;
   index_t pop_from_ = 0;
-  alignas(utils::kCacheLineSize) std::atomic<index_t> size_;
+  alignas(
+      std::hardware_destructive_interference_size) std::atomic<index_t> size_;
 
   [[no_unique_address]] allocator_t allocator_;
   [[no_unique_address]] const utils::conditionally_runtime<
