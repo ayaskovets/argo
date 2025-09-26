@@ -5,7 +5,7 @@
 namespace tests::utils {
 
 TEST(utils_static_pimpl, size) {
-  struct alignas(16) impl final {};
+  class alignas(16) impl final {};
   const core::utils::static_pimpl<impl, 16, 16> pimpl;
 
   static_assert(sizeof(decltype(pimpl)) == sizeof(impl));

@@ -2,6 +2,7 @@
 
 #include <atomic>
 #include <memory>
+#include <new>
 #include <stdexcept>
 
 #include "utils/conditionally_runtime.hpp"
