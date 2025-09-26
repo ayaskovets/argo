@@ -16,6 +16,12 @@ concept channel = requires(T channel, Value value) {
   { channel.try_push(value) } -> std::same_as<bool>;
   { channel.try_pop(value) } -> std::same_as<bool>;
 
+  requires noexcept(channel.try_push(value));
+  requires noexcept(channel.try_pop(value));
+
+  { channel.push(value) } -> std::same_as<void>;
+  { channel.pop() } -> std::same_as<Value>;
+
   requires std::is_same_v<typename T::value_t, Value>;
 };
 
