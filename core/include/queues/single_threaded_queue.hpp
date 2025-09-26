@@ -5,7 +5,7 @@
 #include <stdexcept>
 
 #include "utils/conditionally_runtime.hpp"
-#include "utils/constants.hpp"
+#include "utils/dynamic_extent.hpp"
 #include "utils/mixins.hpp"
 
 namespace core::queues {
@@ -55,7 +55,7 @@ class alignas(Alignment) single_threaded_queue_entry_impl final {
  * Implemented as a ring buffer
  */
 template <typename Value, std::unsigned_integral Index = std::size_t,
-          Index Capacity = utils::kRuntimeDefinedCapacity<Index>,
+          Index Capacity = utils::kDynamicExtent<Index>,
           concepts::single_threaded_queue_allocator<Value> Allocator =
               std::allocator<detail::single_threaded_queue_entry_impl<Value>>>
 class single_threaded_queue final : utils::non_copyable, utils::non_movable {
@@ -68,8 +68,7 @@ class single_threaded_queue final : utils::non_copyable, utils::non_movable {
  public:
   constexpr explicit single_threaded_queue(
       const allocator_t& allocator = allocator_t())
-    requires(Capacity != utils::kRuntimeDefinedCapacity<index_t> &&
-             Capacity > 0)
+    requires(Capacity != utils::kDynamicExtent<index_t> && Capacity > 0)
       : allocator_(allocator) {
     if (!(ring_buffer_ = allocator_.allocate(*capacity_))) [[unlikely]] {
       throw std::runtime_error("failed to allocate memory");
@@ -78,7 +77,7 @@ class single_threaded_queue final : utils::non_copyable, utils::non_movable {
 
   constexpr explicit single_threaded_queue(
       index_t capacity, const allocator_t& allocator = allocator_t())
-    requires(Capacity == utils::kRuntimeDefinedCapacity<index_t>)
+    requires(Capacity == utils::kDynamicExtent<index_t>)
       : allocator_(allocator), capacity_(capacity) {
     if (*capacity_ <= 0) [[unlikely]] {
       throw std::invalid_argument("capacity must be greater than zero");
@@ -179,8 +178,7 @@ class single_threaded_queue final : utils::non_copyable, utils::non_movable {
 
   [[no_unique_address]] allocator_t allocator_;
   [[no_unique_address]] const utils::conditionally_runtime<
-      index_t, Capacity == utils::kRuntimeDefinedCapacity<index_t>, Capacity>
-      capacity_;
+      index_t, Capacity == utils::kDynamicExtent<index_t>, Capacity> capacity_;
 
  private:
   /**

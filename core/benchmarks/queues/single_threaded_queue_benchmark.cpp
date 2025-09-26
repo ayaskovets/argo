@@ -15,7 +15,7 @@ void BM_queues_single_threaded_queue_nonblocking_throughput(
       core::queues::detail::single_threaded_queue_entry_impl<Value,
                                                              alignof(Value)>;
   using queue_t = core::queues::single_threaded_queue<
-      Value, std::size_t, core::utils::kRuntimeDefinedCapacity<std::size_t>,
+      Value, std::size_t, core::utils::kDynamicExtent<std::size_t>,
       std::allocator<allocator_value_t>>;
 
   for (const auto _ : state) {

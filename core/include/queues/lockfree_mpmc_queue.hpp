@@ -6,7 +6,7 @@
 #include <stdexcept>
 
 #include "utils/conditionally_runtime.hpp"
-#include "utils/constants.hpp"
+#include "utils/dynamic_extent.hpp"
 #include "utils/mixins.hpp"
 #include "utils/predicates.hpp"
 
@@ -78,7 +78,7 @@ class alignas(Alignment) lockfree_mpmc_queue_entry_impl final {
  * Allocator value_type must be std::atomic
  */
 template <typename Value, std::unsigned_integral Index = std::size_t,
-          Index Capacity = utils::kRuntimeDefinedCapacity<Index>,
+          Index Capacity = utils::kDynamicExtent<Index>,
           concepts::lockfree_mpmc_queue_allocator<Value, Index> Allocator =
               std::allocator<std::atomic<
                   detail::lockfree_mpmc_queue_entry_impl<Value, Index>>>>
@@ -94,7 +94,7 @@ class lockfree_mpmc_queue final : utils::non_copyable, utils::non_movable {
 
  public:
   constexpr explicit lockfree_mpmc_queue(allocator_t allocator = allocator_t())
-    requires(Capacity != utils::kRuntimeDefinedCapacity<index_t> &&
+    requires(Capacity != utils::kDynamicExtent<index_t> &&
              utils::is_power_of_two(Capacity) && Capacity >= 2)
       : allocator_(std::move(allocator)) {
     if (!(ring_buffer_ = allocator_.allocate(Capacity))) [[unlikely]] {
@@ -111,7 +111,7 @@ class lockfree_mpmc_queue final : utils::non_copyable, utils::non_movable {
 
   constexpr explicit lockfree_mpmc_queue(index_t capacity,
                                          allocator_t allocator = allocator_t())
-    requires(Capacity == utils::kRuntimeDefinedCapacity<index_t>)
+    requires(Capacity == utils::kDynamicExtent<index_t>)
       : allocator_(std::move(allocator)), capacity_(capacity) {
     if (!(utils::is_power_of_two(*capacity_) && *capacity_ >= 2)) {
       throw std::invalid_argument(
@@ -241,8 +241,7 @@ class lockfree_mpmc_queue final : utils::non_copyable, utils::non_movable {
 
   [[no_unique_address]] allocator_t allocator_;
   [[no_unique_address]] const utils::conditionally_runtime<
-      index_t, Capacity == utils::kRuntimeDefinedCapacity<index_t>, Capacity>
-      capacity_;
+      index_t, Capacity == utils::kDynamicExtent<index_t>, Capacity> capacity_;
 };
 
 }  // namespace core::queues
