@@ -17,7 +17,7 @@ void BM_queues_locked_mpmc_queue_nonblocking_throughput(
   const Value value{};
 
   using allocator_value_t =
-      core::queues::detail::locked_mpmc_queue_entry_impl<Value, alignof(Value)>;
+      core::queues::detail::locked_mpmc_queue_entry<Value, alignof(Value)>;
   using queue_t =
       core::queues::locked_mpmc_queue<Value, std::size_t,
                                       core::utils::kDynamicExtent<std::size_t>,
@@ -138,7 +138,7 @@ void BM_queues_locked_mpmc_queue_blocking_throughput(benchmark::State& state) {
   const Value value{};
 
   using allocator_value_t =
-      core::queues::detail::locked_mpmc_queue_entry_impl<Value, alignof(Value)>;
+      core::queues::detail::locked_mpmc_queue_entry<Value, alignof(Value)>;
   using queue_t =
       core::queues::locked_mpmc_queue<Value, std::size_t,
                                       core::utils::kDynamicExtent<std::size_t>,

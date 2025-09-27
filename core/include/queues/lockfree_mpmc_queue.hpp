@@ -57,7 +57,7 @@ namespace detail {
  */
 template <typename Value, std::unsigned_integral Index = std::size_t,
           std::size_t Alignment = alignof(std::pair<Value, Index>)>
-class alignas(Alignment) lockfree_mpmc_queue_entry_impl final {
+class alignas(Alignment) lockfree_mpmc_queue_entry final {
  public:
   constexpr Value& value() noexcept { return value_; }
   constexpr Index& seqnum() noexcept { return seqnum_; }
@@ -80,8 +80,8 @@ class alignas(Alignment) lockfree_mpmc_queue_entry_impl final {
 template <typename Value, std::unsigned_integral Index = std::size_t,
           Index Capacity = utils::kDynamicExtent<Index>,
           concepts::lockfree_mpmc_queue_allocator<Value, Index> Allocator =
-              std::allocator<std::atomic<
-                  detail::lockfree_mpmc_queue_entry_impl<Value, Index>>>>
+              std::allocator<
+                  std::atomic<detail::lockfree_mpmc_queue_entry<Value, Index>>>>
 class lockfree_mpmc_queue final : utils::non_copyable, utils::non_movable {
  private:
   using atomic_entry_t = typename Allocator::value_type;

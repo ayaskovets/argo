@@ -178,7 +178,7 @@ TEST(queues_single_threaded_queue, allocator) {
   using value_t = double;
   using index_t = std::size_t;
   using allocator_value_t =
-      core::queues::detail::single_threaded_queue_entry_impl<value_t>;
+      core::queues::detail::single_threaded_queue_entry<value_t>;
   core::utils::leak_detector_allocator<allocator_value_t> allocator;
 
   EXPECT_TRUE(allocator.is_clean());

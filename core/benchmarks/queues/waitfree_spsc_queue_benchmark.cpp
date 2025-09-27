@@ -16,9 +16,8 @@ void BM_queues_waitfree_spsc_queue_nonblocking_throughput(
   const std::size_t consumers = state.range(3);
   const Value value{};
 
-  using allocator_value_t =
-      core::queues::detail::waitfree_spsc_queue_entry_impl<
-          Value, std::hardware_destructive_interference_size>;
+  using allocator_value_t = core::queues::detail::waitfree_spsc_queue_entry<
+      Value, std::hardware_destructive_interference_size>;
   using queue_t = core::queues::waitfree_spsc_queue<
       Value, std::size_t, core::utils::kDynamicExtent<std::size_t>,
       std::allocator<allocator_value_t>>;
@@ -122,9 +121,8 @@ void BM_queues_waitfree_spsc_queue_blocking_throughput(
   const std::size_t consumers = state.range(3);
   const Value value{};
 
-  using allocator_value_t =
-      core::queues::detail::waitfree_spsc_queue_entry_impl<
-          Value, std::hardware_destructive_interference_size>;
+  using allocator_value_t = core::queues::detail::waitfree_spsc_queue_entry<
+      Value, std::hardware_destructive_interference_size>;
   using queue_t = core::queues::waitfree_spsc_queue<
       Value, std::size_t, core::utils::kDynamicExtent<std::size_t>,
       std::allocator<allocator_value_t>>;

@@ -39,7 +39,7 @@ namespace detail {
  * @brief Default queue entry only for internal usage
  */
 template <typename Value, std::size_t Alignment = alignof(Value)>
-class alignas(Alignment) single_threaded_queue_entry_impl final {
+class alignas(Alignment) single_threaded_queue_entry final {
  public:
   constexpr Value& value() noexcept { return value_; }
 
@@ -57,7 +57,7 @@ class alignas(Alignment) single_threaded_queue_entry_impl final {
 template <typename Value, std::unsigned_integral Index = std::size_t,
           Index Capacity = utils::kDynamicExtent<Index>,
           concepts::single_threaded_queue_allocator<Value> Allocator =
-              std::allocator<detail::single_threaded_queue_entry_impl<Value>>>
+              std::allocator<detail::single_threaded_queue_entry<Value>>>
 class single_threaded_queue final : utils::non_copyable, utils::non_movable {
  public:
   using value_t = Value;

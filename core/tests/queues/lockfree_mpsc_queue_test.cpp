@@ -168,9 +168,8 @@ TEST(queues_lockfree_mpsc_queue, non_copyable_item_type) {
 TEST(queues_lockfree_mpsc_queue, allocator) {
   using value_t = double;
   using index_t = std::size_t;
-  using allocator_value_t =
-      core::queues::detail::lockfree_mpsc_queue_entry_impl<
-          value_t, std::hardware_destructive_interference_size>;
+  using allocator_value_t = core::queues::detail::lockfree_mpsc_queue_entry<
+      value_t, std::hardware_destructive_interference_size>;
   core::utils::leak_detector_allocator<allocator_value_t> allocator;
 
   EXPECT_TRUE(allocator.is_clean());

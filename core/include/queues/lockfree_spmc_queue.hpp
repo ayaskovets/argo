@@ -47,7 +47,7 @@ namespace detail {
  */
 template <typename Value,
           std::size_t Alignment = alignof(std::pair<Value, bool>)>
-class alignas(Alignment) lockfree_spmc_queue_entry_impl final {
+class alignas(Alignment) lockfree_spmc_queue_entry final {
  public:
   constexpr Value& value() noexcept { return value_; }
   constexpr std::atomic<bool>& empty() noexcept { return empty_; }
@@ -65,7 +65,7 @@ class alignas(Alignment) lockfree_spmc_queue_entry_impl final {
 template <typename Value, std::unsigned_integral Index = std::size_t,
           Index Capacity = utils::kDynamicExtent<Index>,
           concepts::lockfree_spmc_queue_allocator<Value> Allocator =
-              std::allocator<detail::lockfree_spmc_queue_entry_impl<Value>>>
+              std::allocator<detail::lockfree_spmc_queue_entry<Value>>>
 class lockfree_spmc_queue final : utils::non_copyable, utils::non_movable {
  public:
   using value_t = Value;

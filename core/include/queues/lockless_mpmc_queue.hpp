@@ -48,7 +48,7 @@ namespace detail {
  */
 template <typename Value, std::unsigned_integral Index = std::size_t,
           std::size_t Alignment = alignof(std::pair<Value, Index>)>
-class alignas(Alignment) lockless_mpmc_queue_entry_impl final {
+class alignas(Alignment) lockless_mpmc_queue_entry final {
  public:
   constexpr Value& value() noexcept { return value_; }
   constexpr std::atomic<Index>& seqnum() noexcept { return seqnum_; }
@@ -72,11 +72,10 @@ class alignas(Alignment) lockless_mpmc_queue_entry_impl final {
  * reduce the risk of the ABA problem when Index is a large enough type for
  * rollover to happen rarely
  */
-template <
-    typename Value, std::unsigned_integral Index = std::size_t,
-    Index Capacity = utils::kDynamicExtent<Index>,
-    concepts::lockless_mpmc_queue_allocator<Value, Index> Allocator =
-        std::allocator<detail::lockless_mpmc_queue_entry_impl<Value, Index>>>
+template <typename Value, std::unsigned_integral Index = std::size_t,
+          Index Capacity = utils::kDynamicExtent<Index>,
+          concepts::lockless_mpmc_queue_allocator<Value, Index> Allocator =
+              std::allocator<detail::lockless_mpmc_queue_entry<Value, Index>>>
 class lockless_mpmc_queue final : utils::non_copyable, utils::non_movable {
  public:
   using value_t = Value;
