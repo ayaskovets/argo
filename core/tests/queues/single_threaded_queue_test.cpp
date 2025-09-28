@@ -2,10 +2,6 @@
 
 #include <gtest/gtest.h>
 
-#include <latch>
-#include <numeric>
-#include <thread>
-
 #include "utils/leak_detector_allocator.hpp"
 
 namespace tests::queues {

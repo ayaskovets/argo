@@ -6,8 +6,6 @@
 #include <format>
 #include <span>
 
-#include "utils/scope.hpp"
-
 namespace core::net::dns {
 
 namespace {

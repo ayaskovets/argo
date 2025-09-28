@@ -1,6 +1,6 @@
-#include <gtest/gtest.h>
+#include "logging/logger.hpp"
 
-#include "logging/logging.hpp"
+#include <gtest/gtest.h>
 
 namespace tests::logging {
 
