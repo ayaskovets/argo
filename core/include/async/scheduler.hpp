@@ -7,13 +7,26 @@
 
 namespace core::async {
 
-class base_scheduler_parameters {
+/**
+ * @brief Common type for all scheduler input parameters to use with any
+ * multiplexed channel that supports dynamic dispatching of heterogeneous
+ * awaiter parameters into a correct scheduler
+ */
+class base_scheduler_input {
  public:
-  constexpr virtual ~base_scheduler_parameters() noexcept = default;
+  constexpr virtual ~base_scheduler_input() noexcept = default;
 };
 
 namespace concepts {
 
+/**
+ * @brief Task scheduler concept
+ *
+ * Input and output data for a scheduler is expected to be implemented with two
+ * asynchronous channels allowing to abstract away expected thread safety for a
+ * specific scheduler by passing the synchronization responsibility to the
+ * channels
+ */
 template <typename T>
 concept scheduler = requires(T scheduler) {
   { scheduler.in_channel() } -> async::concepts::channel_lvalue_reference<>;
@@ -26,9 +39,6 @@ concept scheduler = requires(T scheduler) {
       requires(std::stop_token stop_token) {
         { scheduler.run_detached(stop_token) } -> std::same_as<void>;
       });
-
-  requires std::is_base_of_v<async::base_scheduler_parameters,
-                             typename T::parameters_t>;
 };
 
 }  // namespace concepts

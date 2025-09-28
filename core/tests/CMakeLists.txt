@@ -33,6 +33,7 @@ target_sources(${TARGET}
     queues/lockless_mpmc_queue_test.cpp
     queues/single_threaded_queue_test.cpp
     queues/waitfree_spsc_queue_test.cpp
+    utils/as_ref_test.cpp
     utils/conditionally_runtime_test.cpp
     utils/leak_detector_allocator_test.cpp
     utils/predicates_test.cpp
