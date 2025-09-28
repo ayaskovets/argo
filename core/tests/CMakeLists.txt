@@ -6,6 +6,7 @@ set(CMAKE_GTEST_DISCOVER_TESTS_DISCOVERY_MODE PRE_TEST)
 add_executable(${TARGET})
 target_sources(${TARGET}
     PRIVATE
+    async/channel_test.cpp
     datetime/iso8601_test.cpp
     io/fd_test.cpp
     io/poller_test.cpp
