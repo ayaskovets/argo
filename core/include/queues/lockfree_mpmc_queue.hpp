@@ -27,8 +27,6 @@ concept lockfree_mpmc_queue_entry = requires(T entry) {
   requires noexcept(entry.value());
   requires noexcept(entry.seqnum());
 
-  requires std::atomic<T>::is_always_lock_free;
-
   requires std::is_nothrow_default_constructible_v<T>;
   requires std::is_trivially_destructible_v<T>;
   requires std::is_nothrow_destructible_v<T>;
@@ -44,6 +42,7 @@ template <typename T, typename Value, typename Index>
 concept lockfree_mpmc_queue_allocator = requires {
   requires std::is_same_v<typename T::value_type,
                           std::atomic<typename T::value_type::value_type>>;
+  requires T::value_type::is_always_lock_free;
   requires lockfree_mpmc_queue_entry<typename T::value_type::value_type, Value,
                                      Index>;
 };
@@ -84,13 +83,14 @@ template <typename Value, std::unsigned_integral Index = std::size_t,
                   std::atomic<detail::lockfree_mpmc_queue_entry<Value, Index>>>>
 class lockfree_mpmc_queue final : utils::non_copyable, utils::non_movable {
  private:
-  using atomic_entry_t = typename Allocator::value_type;
+  using allocator_underlying_value_t =
+      typename Allocator::value_type::value_type;
 
  public:
   using value_t = Value;
   using index_t = Index;
   using allocator_t = Allocator;
-  using allocator_value_t = typename atomic_entry_t::value_type;
+  using allocator_value_t = typename Allocator::value_type;
 
  public:
   constexpr explicit lockfree_mpmc_queue(allocator_t allocator = allocator_t())
@@ -102,7 +102,7 @@ class lockfree_mpmc_queue final : utils::non_copyable, utils::non_movable {
     }
 
     for (index_t i = 0; i < *capacity_; ++i) {
-      allocator_value_t entry{};
+      allocator_underlying_value_t entry{};
       entry.seqnum() = (i << 1);
 
       ring_buffer_[i].store(entry, std::memory_order::relaxed);
@@ -123,7 +123,7 @@ class lockfree_mpmc_queue final : utils::non_copyable, utils::non_movable {
     }
 
     for (index_t i = 0; i < *capacity_; ++i) {
-      allocator_value_t entry{};
+      allocator_underlying_value_t entry{};
       entry.seqnum() = (i << 1);
 
       ring_buffer_[i].store(entry, std::memory_order::relaxed);
@@ -147,11 +147,12 @@ class lockfree_mpmc_queue final : utils::non_copyable, utils::non_movable {
     requires(std::is_nothrow_constructible_v<Value, Args...>)
   {
     index_t push_to = push_to_.load(std::memory_order::relaxed);
-    allocator_value_t entry = ring_buffer_[push_to & (*capacity_ - 1)].load(
-        std::memory_order::acquire);
+    allocator_underlying_value_t entry =
+        ring_buffer_[push_to & (*capacity_ - 1)].load(
+            std::memory_order::acquire);
 
     if (entry.seqnum() == (push_to << 1)) {
-      allocator_value_t desired{};
+      allocator_underlying_value_t desired{};
       std::construct_at(&desired.value(), std::forward<Args>(args)...);
       desired.seqnum() = ((push_to << 1) | 1);
 
@@ -187,11 +188,12 @@ class lockfree_mpmc_queue final : utils::non_copyable, utils::non_movable {
 
   constexpr bool try_pop(value_t& value) noexcept {
     index_t pop_from = pop_from_.load(std::memory_order::relaxed);
-    allocator_value_t entry = ring_buffer_[pop_from & (*capacity_ - 1)].load(
-        std::memory_order::acquire);
+    allocator_underlying_value_t entry =
+        ring_buffer_[pop_from & (*capacity_ - 1)].load(
+            std::memory_order::acquire);
 
     if (entry.seqnum() == ((pop_from << 1) | 1)) {
-      allocator_value_t desired{};
+      allocator_underlying_value_t desired{};
       std::construct_at(&desired.value(), value_t{});
       desired.seqnum() = ((pop_from + *capacity_) << 1);
 
@@ -221,18 +223,18 @@ class lockfree_mpmc_queue final : utils::non_copyable, utils::non_movable {
  public:
   constexpr index_t capacity() const noexcept { return *capacity_; }
   constexpr index_t size_approx() const noexcept {
-    const index_t push_to = push_to_.load(std::memory_order::relaxed);
-    const index_t pop_from = pop_from_.load(std::memory_order::relaxed);
+    index_t const push_to = push_to_.load(std::memory_order::relaxed);
+    index_t const pop_from = pop_from_.load(std::memory_order::relaxed);
 
     return push_to >= pop_from ? push_to - pop_from
                                : *capacity_ - pop_from - push_to + 1;
   }
 
  public:
-  const allocator_t& get_allocator() const noexcept { return allocator_; }
+  allocator_t const& get_allocator() const noexcept { return allocator_; }
 
  private:
-  atomic_entry_t* ring_buffer_ = nullptr;
+  allocator_value_t* ring_buffer_ = nullptr;
 
   alignas(std::hardware_destructive_interference_size)
       std::atomic<index_t> push_to_ = 0;
@@ -240,8 +242,9 @@ class lockfree_mpmc_queue final : utils::non_copyable, utils::non_movable {
       std::atomic<index_t> pop_from_ = 0;
 
   [[no_unique_address]] allocator_t allocator_;
-  [[no_unique_address]] const utils::conditionally_runtime<
-      index_t, Capacity == utils::kDynamicExtent<index_t>, Capacity> capacity_;
+  [[no_unique_address]] utils::conditionally_runtime<
+      index_t, Capacity == utils::kDynamicExtent<index_t>, Capacity> const
+      capacity_;
 };
 
 }  // namespace core::queues
