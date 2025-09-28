@@ -69,7 +69,7 @@ class io_scheduler : utils::non_copyable {
         out_channel_(out_channel),
         poller_([this](const io::fd& fd,
                        [[maybe_unused]] io::poller::events_t events) {
-          if (events & core::io::poller::event::kPollHup) {
+          if (events & core::io::poller::event::kPollHup) [[unlikely]] {
             payload_by_fd_.erase(fd.native_handle());
             poller_.erase(fd);
             return;
@@ -77,7 +77,7 @@ class io_scheduler : utils::non_copyable {
 
           typename OutChannel::value_t out_value(
               payload_by_fd_.at(fd.native_handle()));
-          if (out_channel_.try_push(std::move(out_value))) {
+          if (out_channel_.try_push(std::move(out_value))) [[unlikely]] {
             payload_by_fd_.erase(fd.native_handle());
             poller_.erase(fd);
           }
@@ -96,23 +96,13 @@ class io_scheduler : utils::non_copyable {
     // TODO: implement bulk execution
 
     if (in_value_.has_value()) [[unlikely]] {
-      poller_.insert_or_assign(utils::as_ref(*in_value_).fd(),
-                               utils::as_ref(*in_value_).events());
-      payload_by_fd_.insert_or_assign(
-          utils::as_ref(*in_value_).fd().native_handle(),
-          utils::as_ref(*in_value_).payload());
-      in_value_.reset();
+      consume_in_value();
     }
 
     typename InChannel::value_t in_value{};
-    if (in_channel_.try_pop(in_value)) {
+    if (in_channel_.try_pop(in_value)) [[likely]] {
       in_value_.emplace(std::move(in_value));
-      poller_.insert_or_assign(utils::as_ref(*in_value_).fd(),
-                               utils::as_ref(*in_value_).events());
-      payload_by_fd_.insert_or_assign(
-          utils::as_ref(*in_value_).fd().native_handle(),
-          utils::as_ref(*in_value_).payload());
-      in_value_.reset();
+      consume_in_value();
     }
 
     poller_.try_poll();
@@ -126,6 +116,16 @@ class io_scheduler : utils::non_copyable {
   std::optional<typename InChannel::value_t> in_value_;
   io::poller poller_;
   std::unordered_map<int, typename OutChannel::value_t> payload_by_fd_;
+
+ private:
+  constexpr void consume_in_value() noexcept {
+    poller_.insert_or_assign(utils::as_ref(*in_value_).fd(),
+                             utils::as_ref(*in_value_).events());
+    payload_by_fd_.insert_or_assign(
+        utils::as_ref(*in_value_).fd().native_handle(),
+        utils::as_ref(*in_value_).payload());
+    in_value_.reset();
+  }
 };
 
 }  // namespace core::async::schedulers

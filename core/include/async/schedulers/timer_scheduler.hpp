@@ -92,31 +92,27 @@ class timer_scheduler : utils::non_copyable {
     // TODO: implement bulk execution
 
     if (in_value_.has_value()) [[unlikely]] {
-      queue_.emplace(utils::as_ref(*in_value_).schedule_at(),
-                     utils::as_ref(*in_value_).payload());
-      in_value_.reset();
+      consume_in_value();
     }
 
     typename InChannel::value_t in_value{};
     if (in_channel_.try_pop(in_value)) [[likely]] {
       in_value_.emplace(std::move(in_value));
-      queue_.emplace(utils::as_ref(*in_value_).schedule_at(),
-                     utils::as_ref(*in_value_).payload());
-      in_value_.reset();
+      consume_in_value();
     }
 
-    if (queue_.empty()) {
+    if (queue_.empty()) [[unlikely]] {
       return;
     }
 
     const auto now = Clock::now();
-    const auto [schedule_at, payload] = queue_.top();
+    const auto& [schedule_at, payload] = queue_.top();
     if (schedule_at > now) {
       return;
     }
 
     typename OutChannel::value_t out_value(payload);
-    if (out_channel_.try_push(std::move(out_value))) {
+    if (out_channel_.try_push(std::move(out_value))) [[unlikely]] {
       queue_.pop();
     }
   }
@@ -130,6 +126,13 @@ class timer_scheduler : utils::non_copyable {
   std::priority_queue<allocator_value_t, std::vector<allocator_value_t>,
                       std::greater<allocator_value_t>>
       queue_;
+
+ private:
+  constexpr void consume_in_value() {
+    queue_.emplace(utils::as_ref(*in_value_).schedule_at(),
+                   utils::as_ref(*in_value_).payload());
+    in_value_.reset();
+  }
 };
 
 }  // namespace core::async::schedulers
