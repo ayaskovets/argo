@@ -4,6 +4,7 @@
 #include <queue>
 
 #include "async/channel.hpp"
+#include "async/scheduler.hpp"
 #include "utils/as_ref.hpp"
 #include "utils/mixins.hpp"
 
@@ -39,7 +40,7 @@ namespace detail {
  * @brief Default timer_scheduler parameters for internal usage
  */
 template <typename Clock, typename Payload>
-class timer_scheduler_input final : public base_scheduler_input {
+class timer_scheduler_input final : public async::base_scheduler_input {
  public:
   constexpr timer_scheduler_input(typename Clock::time_point&& schedule_at,
                                   Payload&& payload) noexcept

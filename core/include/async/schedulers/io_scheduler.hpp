@@ -3,6 +3,7 @@
 #include <unordered_map>
 
 #include "async/channel.hpp"
+#include "async/scheduler.hpp"
 #include "io/poller.hpp"
 #include "utils/as_ref.hpp"
 #include "utils/mixins.hpp"
@@ -37,7 +38,7 @@ namespace detail {
  * @brief Default io_scheduler parameters for internal usage
  */
 template <typename Payload>
-class io_scheduler_input final : public base_scheduler_input {
+class io_scheduler_input final : public async::base_scheduler_input {
  public:
   constexpr io_scheduler_input(const io::fd& fd, io::poller::events_t events,
                                Payload&& payload) noexcept
