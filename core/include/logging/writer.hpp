@@ -22,7 +22,8 @@ class writer final {
       std::function<void(logging::level level, std::string_view message)>;
 
  public:
-  explicit writer(write_t write) noexcept : write_(std::move(write)) {}
+  constexpr explicit writer(write_t write) noexcept
+      : write_(std::move(write)) {}
 
  public:
   constexpr void operator()(logging::level level,

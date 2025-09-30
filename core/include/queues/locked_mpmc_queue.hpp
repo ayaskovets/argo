@@ -104,13 +104,13 @@ class locked_mpmc_queue final : utils::non_copyable, utils::non_movable {
 
  public:
   template <typename... Args>
-  bool try_emplace(Args&&... args) noexcept
+  constexpr bool try_emplace(Args&&... args) noexcept
     requires(std::is_nothrow_constructible_v<Value, Args...>)
   {
     if (size_.load(std::memory_order::relaxed) >= *capacity_) {
       return false;
     }
-    std::unique_lock<std::mutex> lock(mutex_, std::defer_lock_t{});
+    std::unique_lock lock(mutex_, std::defer_lock_t{});
     if (!lock.try_lock()) {
       return false;
     }
@@ -133,10 +133,10 @@ class locked_mpmc_queue final : utils::non_copyable, utils::non_movable {
   }
 
   template <typename... Args>
-  void emplace(Args&&... args) noexcept
+  constexpr void emplace(Args&&... args) noexcept
     requires(std::is_nothrow_constructible_v<Value, Args...>)
   {
-    std::unique_lock<std::mutex> lock(mutex_);
+    std::unique_lock lock(mutex_);
     push_available_cv_.wait(lock, [this] {
       const index_t next_push_to = (push_to_ == *capacity_) ? 0 : push_to_ + 1;
       return next_push_to != pop_from_;
@@ -153,11 +153,11 @@ class locked_mpmc_queue final : utils::non_copyable, utils::non_movable {
 
   constexpr void push(value_t value) noexcept { emplace(std::move(value)); }
 
-  bool try_pop(value_t& value) noexcept {
+  constexpr bool try_pop(value_t& value) noexcept {
     if (size_.load(std::memory_order::relaxed) == 0) {
       return false;
     }
-    std::unique_lock<std::mutex> lock(mutex_, std::defer_lock_t{});
+    std::unique_lock lock(mutex_, std::defer_lock_t{});
     if (!lock.try_lock()) {
       return false;
     }
@@ -175,8 +175,8 @@ class locked_mpmc_queue final : utils::non_copyable, utils::non_movable {
     return true;
   }
 
-  value_t pop() noexcept {
-    std::unique_lock<std::mutex> lock(mutex_);
+  constexpr value_t pop() noexcept {
+    std::unique_lock lock(mutex_);
     pop_available_cv_.wait(lock, [this] { return pop_from_ != push_to_; });
 
     value_t value(std::move(ring_buffer_[pop_from_].value()));
@@ -220,8 +220,8 @@ class locked_mpmc_queue final : utils::non_copyable, utils::non_movable {
    * @brief Preserves queue invariants. Assumes that no other thread is doing
    * any operations on the queue
    */
-  void clear() noexcept {
-    std::unique_lock<std::mutex> lock(mutex_);
+  constexpr void clear() noexcept {
+    std::unique_lock lock(mutex_);
     while (true) {
       if (pop_from_ == push_to_) {
         break;
@@ -234,7 +234,7 @@ class locked_mpmc_queue final : utils::non_copyable, utils::non_movable {
       pop_from_ = next_pop_from;
     }
     size_.store(0, std::memory_order::relaxed);
-    push_available_cv_.notify_one();
+    push_available_cv_.notify_all();
   }
 };
 

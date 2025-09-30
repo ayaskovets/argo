@@ -17,8 +17,8 @@ class logger {
   static const logger& kDefault();
 
  public:
-  logger(logging::level level, logging::renderer renderer,
-         logging::writer writer) noexcept
+  constexpr logger(logging::level level, logging::renderer renderer,
+                   logging::writer writer) noexcept
       : level_(level),
         renderer_(std::move(renderer)),
         writer_(std::move(writer)) {}
