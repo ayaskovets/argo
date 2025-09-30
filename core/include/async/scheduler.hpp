@@ -10,7 +10,7 @@ namespace core::async {
 /**
  * @brief Common type for all scheduler input parameters to use with any
  * multiplexed channel that supports dynamic dispatching of heterogeneous
- * awaiter parameters into a correct scheduler
+ * awaiter parameters into the correct scheduler
  */
 class base_scheduler_input {
  public:
@@ -26,6 +26,9 @@ namespace concepts {
  * asynchronous channels allowing to abstract away expected thread safety for a
  * specific scheduler by passing the synchronization responsibility to the
  * channels
+ *
+ * A scheduler represents an event loop with some specific logic related to when
+ * to "schedule" (aka send to the out channel) the data from input channel
  */
 template <typename T>
 concept scheduler = requires(T scheduler) {

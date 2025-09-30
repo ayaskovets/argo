@@ -1,6 +1,7 @@
 #pragma once
 
 #include <concepts>
+#include <optional>
 #include <queue>
 
 #include "async/channel.hpp"
@@ -59,6 +60,9 @@ class timer_scheduler_input final : public async::base_scheduler_input {
 
 }  // namespace detail
 
+/**
+ * @brief Task scheduler implementing scheduling on a specified time point
+ */
 template <typename Clock, async::concepts::channel InChannel,
           async::concepts::channel OutChannel>
 class timer_scheduler : utils::non_copyable {

@@ -57,6 +57,10 @@ class io_scheduler_input final : public async::base_scheduler_input {
 
 }  // namespace detail
 
+/**
+ * @brief Task scheduler implementing scheduling on a specified set of events on
+ * a file descriptor
+ */
 template <async::concepts::channel InChannel,
           async::concepts::channel OutChannel>
 class io_scheduler : utils::non_copyable {
