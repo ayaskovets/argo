@@ -52,7 +52,7 @@ class alignas(Alignment) locked_mpmc_queue_entry final {
 }  // namespace detail
 
 /**
- * @brief Ring buffer for a single-threaded usage. Not threadsafe
+ * @brief Locked ring-buffer for many producers and many consumers
  *
  * Implemented as a ring buffer
  *
