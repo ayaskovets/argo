@@ -5,7 +5,11 @@
 
 namespace core::utils {
 
-template <typename T>
+/**
+ * @brief Simple leak detecting allocator. If Shared=true allocations are stored
+ * on per-allocator-class basis rather than per-allocator-variable
+ */
+template <typename T, bool Shared = false>
 class leak_detector_allocator : public std::allocator<T> {
  public:
   using std::allocator<T>::allocator;
@@ -13,7 +17,11 @@ class leak_detector_allocator : public std::allocator<T> {
  public:
   constexpr T* allocate(std::size_t n) {
     T* ptr = std::allocator<T>::allocate(n);
-    allocations_by_ptr_[ptr] += n;
+    if constexpr (Shared) {
+      static_allocations_by_ptr_[ptr] += n;
+    } else {
+      allocations_by_ptr_[ptr] += n;
+    }
     return ptr;
   }
 
@@ -22,8 +30,14 @@ class leak_detector_allocator : public std::allocator<T> {
   }
 
   constexpr void deallocate(T* ptr, std::size_t n) {
-    if ((allocations_by_ptr_.at(ptr) -= n) == 0) {
-      allocations_by_ptr_.erase(ptr);
+    if constexpr (Shared) {
+      if ((static_allocations_by_ptr_.at(ptr) -= n) == 0) {
+        static_allocations_by_ptr_.erase(ptr);
+      }
+    } else {
+      if ((allocations_by_ptr_.at(ptr) -= n) == 0) {
+        allocations_by_ptr_.erase(ptr);
+      }
     }
     std::allocator<T>::deallocate(ptr, n);
   }
@@ -32,14 +46,29 @@ class leak_detector_allocator : public std::allocator<T> {
   template <typename To>
   class rebind {
    public:
-    typedef leak_detector_allocator<To> other;
+    typedef leak_detector_allocator<To, Shared> other;
   };
 
  public:
-  static constexpr bool is_clean() { return allocations_by_ptr_.empty(); }
+  constexpr void clear() noexcept
+    requires(Shared)
+  {
+    static_allocations_by_ptr_.clear();
+  }
+
+ public:
+  constexpr bool is_clean() const noexcept {
+    if constexpr (Shared) {
+      return static_allocations_by_ptr_.empty();
+    } else {
+      return allocations_by_ptr_.empty();
+    }
+  }
 
  private:
-  static inline std::unordered_map<void*, std::size_t> allocations_by_ptr_;
+  std::unordered_map<void*, std::size_t> allocations_by_ptr_;
+  static inline std::unordered_map<void*, std::size_t>
+      static_allocations_by_ptr_;
 };
 
 }  // namespace core::utils
