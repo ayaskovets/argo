@@ -231,7 +231,7 @@ class lockfree_mpmc_queue final : utils::non_copyable, utils::non_movable {
   }
 
  public:
-  allocator_t const& get_allocator() const noexcept { return allocator_; }
+  const allocator_t& get_allocator() const noexcept { return allocator_; }
 
  private:
   allocator_value_t* ring_buffer_ = nullptr;
