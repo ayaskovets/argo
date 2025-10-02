@@ -50,7 +50,7 @@ class leak_detector_allocator : public std::allocator<T> {
   };
 
  public:
-  constexpr void clear() noexcept
+  constexpr static void clear() noexcept
     requires(Shared)
   {
     static_allocations_by_ptr_.clear();

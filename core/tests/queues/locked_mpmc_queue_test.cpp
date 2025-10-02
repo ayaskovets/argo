@@ -177,7 +177,8 @@ TEST(queues_locked_mpmc_queue, allocator) {
   using value_t = double;
   using allocator_value_t = core::queues::detail::locked_mpmc_queue_entry<
       value_t, std::hardware_destructive_interference_size>;
-  core::utils::leak_detector_allocator<allocator_value_t> allocator;
+  core::utils::leak_detector_allocator<allocator_value_t, true> allocator;
+  core::utils::leak_detector_allocator<allocator_value_t, true>::clear();
 
   EXPECT_TRUE(allocator.is_clean());
   {

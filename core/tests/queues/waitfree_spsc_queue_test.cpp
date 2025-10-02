@@ -179,7 +179,8 @@ TEST(queues_waitfree_spsc_queue, allocator) {
   using index_t = std::size_t;
   using allocator_value_t = core::queues::detail::waitfree_spsc_queue_entry<
       value_t, std::hardware_destructive_interference_size>;
-  core::utils::leak_detector_allocator<allocator_value_t> allocator;
+  core::utils::leak_detector_allocator<allocator_value_t, true> allocator;
+  core::utils::leak_detector_allocator<allocator_value_t, true>::clear();
 
   EXPECT_TRUE(allocator.is_clean());
   {

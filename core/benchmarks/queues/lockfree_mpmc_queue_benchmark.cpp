@@ -30,12 +30,12 @@ void BM_queues_lockfree_mpmc_queue_nonblocking_throughput(
 
     queue_t queue(capacity);
 
+    std::atomic<std::size_t> pushed_items_count = 0;
+    std::atomic<std::size_t> popped_items_count = 0;
+
     std::latch latch(producers + consumers + 1);
     std::vector<std::jthread> threads;
     threads.reserve(producers + consumers);
-
-    std::atomic<std::size_t> pushed_items_count = 0;
-    std::atomic<std::size_t> popped_items_count = 0;
 
     const auto producer = [&latch, &queue, items, producers,
                            &pushed_items_count, &try_push_times,
@@ -133,12 +133,12 @@ void BM_queues_lockfree_mpmc_queue_blocking_throughput(
 
     queue_t queue(capacity);
 
+    std::atomic<std::size_t> pushed_items_count = 0;
+    std::atomic<std::size_t> popped_items_count = 0;
+
     std::latch latch(producers + consumers + 1);
     std::vector<std::jthread> threads;
     threads.reserve(producers + consumers);
-
-    std::atomic<std::size_t> pushed_items_count = 0;
-    std::atomic<std::size_t> popped_items_count = 0;
 
     const auto producer = [&latch, &queue, items, producers,
                            &pushed_items_count, value = value] {
