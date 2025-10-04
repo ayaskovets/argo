@@ -4,6 +4,7 @@
 #include <memory>
 #include <mutex>
 #include <stdexcept>
+#include <type_traits>
 
 #include "utils/conditionally_runtime.hpp"
 #include "utils/dynamic_extent.hpp"
@@ -16,16 +17,15 @@ namespace concepts {
 /**
  * @brief Queue entry requirements
  */
-template <typename T, typename Value>
-concept locked_std_deque_entry = requires(T entry) {
-  // TODO: impl
-  requires true;
+template <typename T>
+concept locked_std_deque_entry = requires {
+  requires std::is_nothrow_move_constructible_v<T>;
+  requires std::is_nothrow_move_assignable_v<T>;
 };
 
-template <typename T, typename Value>
-concept locked_std_deque_allocator = requires {
-  requires locked_std_deque_entry<typename T::value_type, Value>;
-};
+template <typename T>
+concept locked_std_deque_allocator =
+    requires { requires locked_std_deque_entry<typename T::value_type>; };
 
 }  // namespace concepts
 
@@ -35,7 +35,7 @@ concept locked_std_deque_allocator = requires {
  */
 template <typename Value, std::unsigned_integral Index = std::size_t,
           Index Capacity = utils::kDynamicExtent<Index>,
-          concepts::locked_std_deque_allocator<Value> Allocator =
+          concepts::locked_std_deque_allocator Allocator =
               std::allocator<Value>>
 class locked_std_deque final : utils::non_copyable, utils::non_movable {
  public:
@@ -63,7 +63,9 @@ class locked_std_deque final : utils::non_copyable, utils::non_movable {
 
  public:
   template <typename... Args>
-  constexpr bool try_emplace(Args&&... args) {
+  constexpr bool try_emplace(Args&&... args)
+    requires(std::is_constructible_v<Value, Args...>)
+  {
     std::unique_lock lock(mutex_, std::defer_lock_t{});
     if (!lock.try_lock()) {
       return false;
@@ -84,7 +86,9 @@ class locked_std_deque final : utils::non_copyable, utils::non_movable {
   }
 
   template <typename... Args>
-  constexpr void emplace(Args&&... args) {
+  constexpr void emplace(Args&&... args)
+    requires(std::is_constructible_v<Value, Args...>)
+  {
     std::unique_lock lock(mutex_);
     push_available_cv_.wait(lock,
                             [this] { return deque_.size() != *capacity_; });
