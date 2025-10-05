@@ -93,7 +93,8 @@ class lockfree_mpmc_queue final : utils::non_copyable, utils::non_movable {
   using allocator_value_t = typename Allocator::value_type;
 
  public:
-  constexpr explicit lockfree_mpmc_queue(allocator_t allocator = allocator_t())
+  constexpr explicit lockfree_mpmc_queue(
+      allocator_t allocator = allocator_t()) noexcept(false)
     requires(Capacity != utils::kDynamicExtent<index_t> &&
              utils::is_power_of_two(Capacity) && Capacity >= 2)
       : allocator_(std::move(allocator)) {
@@ -109,8 +110,8 @@ class lockfree_mpmc_queue final : utils::non_copyable, utils::non_movable {
     }
   }
 
-  constexpr explicit lockfree_mpmc_queue(index_t capacity,
-                                         allocator_t allocator = allocator_t())
+  constexpr explicit lockfree_mpmc_queue(
+      index_t capacity, allocator_t allocator = allocator_t()) noexcept(false)
     requires(Capacity == utils::kDynamicExtent<index_t>)
       : allocator_(std::move(allocator)), capacity_(capacity) {
     if (!(utils::is_power_of_two(*capacity_) && *capacity_ >= 2)) {

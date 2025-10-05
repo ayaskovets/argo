@@ -22,7 +22,7 @@ class base_sockaddr {
   friend class base_socket;  ///< Needed for base_socket to call get_storage()
 
  protected:
-  explicit base_sockaddr(net::sockets::family family);
+  explicit base_sockaddr(net::sockets::family family) noexcept(false);
 
  protected:
   /**
@@ -37,15 +37,15 @@ class base_sockaddr {
   const storage* get_storage() const noexcept;
 
  public:
-  bool operator==(const base_sockaddr& that) const;
-  bool operator!=(const base_sockaddr& that) const;
+  bool operator==(const base_sockaddr& that) const noexcept(false);
+  bool operator!=(const base_sockaddr& that) const noexcept(false);
 
  public:
-  std::size_t get_length() const;
-  net::sockets::family get_family() const;
+  std::size_t get_length() const noexcept(false);
+  net::sockets::family get_family() const noexcept(false);
 
  public:
-  std::string to_string() const;
+  std::string to_string() const noexcept(false);
 
  private:
   std::shared_ptr<void> storage_;
@@ -63,7 +63,7 @@ class std::formatter<core::net::base_sockaddr> {
 
   template <typename FormatContext>
   constexpr auto format(const core::net::base_sockaddr& sockaddr,
-                        FormatContext& ctx) const {
+                        FormatContext& ctx) const noexcept(false) {
     return std::format_to(ctx.out(), "{}", sockaddr.to_string());
   }
 };

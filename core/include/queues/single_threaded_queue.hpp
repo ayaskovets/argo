@@ -66,7 +66,7 @@ class single_threaded_queue final : utils::non_copyable, utils::non_movable {
 
  public:
   constexpr explicit single_threaded_queue(
-      const allocator_t& allocator = allocator_t())
+      const allocator_t& allocator = allocator_t()) noexcept(false)
     requires(Capacity != utils::kDynamicExtent<index_t> && Capacity > 0)
       : allocator_(allocator) {
     if (!(ring_buffer_ = allocator_.allocate(*capacity_))) [[unlikely]] {
@@ -75,7 +75,8 @@ class single_threaded_queue final : utils::non_copyable, utils::non_movable {
   }
 
   constexpr explicit single_threaded_queue(
-      index_t capacity, const allocator_t& allocator = allocator_t())
+      index_t capacity,
+      const allocator_t& allocator = allocator_t()) noexcept(false)
     requires(Capacity == utils::kDynamicExtent<index_t>)
       : allocator_(allocator), capacity_(capacity) {
     if (*capacity_ <= 0) [[unlikely]] {
@@ -120,7 +121,7 @@ class single_threaded_queue final : utils::non_copyable, utils::non_movable {
   }
 
   template <typename... Args>
-  constexpr void emplace(Args&&... args)
+  constexpr void emplace(Args&&... args) noexcept(false)
     requires(std::is_nothrow_constructible_v<Value, Args...>)
   {
     if (!try_emplace(std::forward<Args>(args)...)) {
@@ -128,7 +129,9 @@ class single_threaded_queue final : utils::non_copyable, utils::non_movable {
     }
   }
 
-  constexpr void push(value_t value) { emplace(std::move(value)); }
+  constexpr void push(value_t value) noexcept(false) {
+    emplace(std::move(value));
+  }
 
   constexpr bool try_pop(value_t& value) noexcept {
     if (size_ == 0) {
@@ -145,7 +148,7 @@ class single_threaded_queue final : utils::non_copyable, utils::non_movable {
     return true;
   }
 
-  constexpr value_t pop() {
+  constexpr value_t pop() noexcept(false) {
     if (size_ == 0) {
       throw std::runtime_error("queue is empty");
     }

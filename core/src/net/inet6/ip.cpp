@@ -33,7 +33,7 @@ ip::ip(std::span<const std::byte, 16> bytes, network_byte_order_t) noexcept {
   std::memcpy(data_.data(), bytes.data(), bytes.size());
 }
 
-ip::ip(std::string_view string) {
+ip::ip(std::string_view string) noexcept(false) {
   if (string.size() > INET6_ADDRSTRLEN) {
     throw std::invalid_argument(std::format("invalid ip: {}", string));
   }
@@ -48,7 +48,7 @@ const std::array<std::byte, 16>& ip::get_bytes(
   return data_;
 }
 
-std::string ip::to_string() const {
+std::string ip::to_string() const noexcept(false) {
   std::string string;
   string.resize(INET6_ADDRSTRLEN);
 

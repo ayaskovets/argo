@@ -7,9 +7,8 @@ namespace core::io {
 /**
  * @brief Copy-featured RAII wrapper for a file descriptor
  *
- * It is assumed that the programmer is responsible for the  parameter of the
- * constructor representing an open file descriptor. The constructor still
- * verifies whether the value itself is in the range is a valid file descriptor
+ * The programmer is responsible for opening the native descriptor. The
+ * constructor does still verifies whether the validity of a handed descriptor
  */
 class fd {
  public:
@@ -25,13 +24,13 @@ class fd {
 
  protected:
   explicit fd(uninitialized_t) noexcept;
-  static fd adopt(int fd);
+  static fd adopt(int fd) noexcept(false);
 
  public:
-  fd(const fd& that);
-  fd& operator=(const fd& that);
+  fd(const fd& that) noexcept(false);
+  fd& operator=(const fd& that) noexcept(false);
   fd(fd&& that) noexcept;
-  fd& operator=(fd&& that);
+  fd& operator=(fd&& that) noexcept(false);
   ~fd() noexcept;
 
  public:
@@ -54,9 +53,9 @@ class fd {
    *
    * Any subsequent call results in an exception
    */
-  void close();
+  void close() noexcept(false);
 
- protected:
+  //  protected:
   int native_handle() const noexcept;
 
  private:
@@ -65,3 +64,10 @@ class fd {
 };
 
 }  // namespace core::io
+
+// template <>
+// struct std::hash<core::io::fd> {
+//   std::size_t operator()(const core::io::fd& s) const noexcept {
+//     return std::hash<int>{}(s.hash());
+//   }
+// };

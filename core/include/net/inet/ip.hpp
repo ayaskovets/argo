@@ -20,18 +20,18 @@ class ip final {
  public:
   explicit ip(std::uint32_t bytes) noexcept;
   ip(std::uint32_t bytes, network_byte_order_t) noexcept;
-  explicit ip(std::string_view string);
+  explicit ip(std::string_view string) noexcept(false);
 
  public:
-  constexpr bool operator==(const ip&) const = default;
-  constexpr bool operator!=(const ip&) const = default;
+  constexpr bool operator==(const ip&) const noexcept = default;
+  constexpr bool operator!=(const ip&) const noexcept = default;
 
  public:
   std::uint32_t get_bytes() const noexcept;
   std::uint32_t get_bytes(network_byte_order_t) const noexcept;
 
  public:
-  std::string to_string() const;
+  std::string to_string() const noexcept(false);
 
  private:
   std::uint32_t data_;
@@ -48,8 +48,8 @@ class std::formatter<core::net::inet::ip> {
   }
 
   template <typename FormatContext>
-  constexpr auto format(const core::net::inet::ip& ip,
-                        FormatContext& ctx) const {
+  constexpr auto format(const core::net::inet::ip& ip, FormatContext& ctx) const
+      noexcept(false) {
     return std::format_to(ctx.out(), "{}", ip.to_string());
   }
 };

@@ -72,7 +72,7 @@ class locked_mpmc_queue final : utils::non_copyable, utils::non_movable {
 
  public:
   constexpr explicit locked_mpmc_queue(
-      const allocator_t& allocator = allocator_t())
+      const allocator_t& allocator = allocator_t()) noexcept(false)
     requires(Capacity != utils::kDynamicExtent<index_t> && Capacity > 0)
       : size_(0), allocator_(allocator) {
     if (!(ring_buffer_ = allocator_.allocate(*capacity_ + 1))) [[unlikely]] {
@@ -81,7 +81,8 @@ class locked_mpmc_queue final : utils::non_copyable, utils::non_movable {
   }
 
   constexpr explicit locked_mpmc_queue(
-      index_t capacity, const allocator_t& allocator = allocator_t())
+      index_t capacity,
+      const allocator_t& allocator = allocator_t()) noexcept(false)
     requires(Capacity == utils::kDynamicExtent<index_t>)
       : size_(0), allocator_(allocator), capacity_(capacity) {
     if (*capacity_ <= 0) [[unlikely]] {

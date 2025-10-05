@@ -15,7 +15,7 @@ class leak_detector_allocator : public std::allocator<T> {
   using std::allocator<T>::allocator;
 
  public:
-  constexpr T* allocate(std::size_t n) {
+  constexpr T* allocate(std::size_t n) noexcept(false) {
     T* ptr = std::allocator<T>::allocate(n);
     if constexpr (Shared) {
       static_allocations_by_ptr_[ptr] += n;
@@ -25,11 +25,12 @@ class leak_detector_allocator : public std::allocator<T> {
     return ptr;
   }
 
-  constexpr std::allocation_result<T*> allocate_at_least(std::size_t n) {
+  constexpr std::allocation_result<T*> allocate_at_least(
+      std::size_t n) noexcept(false) {
     return std::allocation_result<T*>{.ptr = allocate(n), .count = n};
   }
 
-  constexpr void deallocate(T* ptr, std::size_t n) {
+  constexpr void deallocate(T* ptr, std::size_t n) noexcept(false) {
     if constexpr (Shared) {
       if ((static_allocations_by_ptr_.at(ptr) -= n) == 0) {
         static_allocations_by_ptr_.erase(ptr);

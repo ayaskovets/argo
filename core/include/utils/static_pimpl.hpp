@@ -3,6 +3,7 @@
 #include <cstddef>
 #include <memory>
 #include <new>
+#include <type_traits>
 #include <utility>
 
 namespace core::utils {
@@ -18,24 +19,29 @@ template <typename T, std::size_t Size, std::size_t Alignment>
 class static_pimpl final {
  public:
   template <typename... Args>
-  constexpr explicit static_pimpl(Args&&... args) {
+  constexpr explicit static_pimpl(Args&&... args) noexcept(
+      std::is_nothrow_constructible_v<T, Args...>) {
     std::construct_at(operator->(), std::forward<Args>(args)...);
   }
 
-  constexpr static_pimpl(const static_pimpl& that) {
+  constexpr static_pimpl(const static_pimpl& that) noexcept(
+      std::is_nothrow_copy_constructible_v<T>) {
     std::construct_at(operator->(), that.operator*());
   }
 
-  constexpr static_pimpl& operator=(const static_pimpl& that) {
+  constexpr static_pimpl& operator=(const static_pimpl& that) noexcept(
+      std::is_nothrow_copy_assignable_v<T>) {
     operator*() = that.operator*();
     return *this;
   }
 
-  constexpr static_pimpl(static_pimpl&& that) {
+  constexpr static_pimpl(static_pimpl&& that) noexcept(
+      std::is_nothrow_move_constructible_v<T>) {
     std::construct_at(operator->(), std::move(that.operator*()));
   }
 
-  constexpr static_pimpl& operator=(static_pimpl&& that) {
+  constexpr static_pimpl& operator=(static_pimpl&& that) noexcept(
+      std::is_nothrow_move_assignable_v<T>) {
     operator*() = std::move(that.operator*());
     return *this;
   }

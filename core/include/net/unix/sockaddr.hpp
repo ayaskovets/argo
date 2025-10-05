@@ -13,7 +13,7 @@ class sockaddr final : public net::base_sockaddr {
   static const sockaddr& kEmpty() noexcept;
 
  public:
-  explicit sockaddr(std::string_view path);
+  explicit sockaddr(std::string_view path) noexcept(false);
 
  public:
   std::string_view get_path() const noexcept;
@@ -31,7 +31,7 @@ class std::formatter<core::net::unix::sockaddr> {
 
   template <typename FormatContext>
   constexpr auto format(const core::net::unix::sockaddr& sockaddr,
-                        FormatContext& ctx) const {
+                        FormatContext& ctx) const noexcept(false) {
     return std::format_to(ctx.out(), "{}", sockaddr.to_string());
   }
 };

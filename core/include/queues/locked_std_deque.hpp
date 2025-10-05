@@ -72,12 +72,13 @@ class locked_std_deque final : utils::non_copyable, utils::non_movable {
 
  public:
   constexpr explicit locked_std_deque(
-      const allocator_t& allocator = allocator_t())
+      const allocator_t& allocator = allocator_t()) noexcept(false)
     requires(Capacity != utils::kDynamicExtent<index_t> && Capacity > 0)
       : deque_(allocator) {}
 
   constexpr explicit locked_std_deque(
-      index_t capacity, const allocator_t& allocator = allocator_t())
+      index_t capacity,
+      const allocator_t& allocator = allocator_t()) noexcept(false)
     requires(Capacity == utils::kDynamicExtent<index_t>)
       : deque_(allocator), capacity_(capacity) {
     if (*capacity_ <= 0) [[unlikely]] {
@@ -89,7 +90,7 @@ class locked_std_deque final : utils::non_copyable, utils::non_movable {
 
  public:
   template <typename... Args>
-  constexpr bool try_emplace(Args&&... args)
+  constexpr bool try_emplace(Args&&... args) noexcept(false)
     requires(std::is_constructible_v<Value, Args...>)
   {
     std::unique_lock lock(mutex_, std::defer_lock_t{});
@@ -112,7 +113,7 @@ class locked_std_deque final : utils::non_copyable, utils::non_movable {
   }
 
   template <typename... Args>
-  constexpr void emplace(Args&&... args)
+  constexpr void emplace(Args&&... args) noexcept(false)
     requires(std::is_constructible_v<Value, Args...>)
   {
     std::unique_lock lock(mutex_);
@@ -124,7 +125,9 @@ class locked_std_deque final : utils::non_copyable, utils::non_movable {
     pop_available_cv_.notify_one();
   }
 
-  constexpr void push(value_t value) { emplace(std::move(value)); }
+  constexpr void push(value_t value) noexcept(false) {
+    emplace(std::move(value));
+  }
 
   constexpr bool try_pop(value_t& value) noexcept {
     std::unique_lock lock(mutex_, std::defer_lock_t{});

@@ -11,7 +11,7 @@ namespace core::net::inet6 {
  */
 class sockaddr final : public net::base_sockaddr {
  public:
-  sockaddr(net::inet6::ip ip, net::inet6::port port);
+  sockaddr(net::inet6::ip ip, net::inet6::port port) noexcept(false);
 
  public:
   net::inet6::ip get_ip() const noexcept;
@@ -30,7 +30,7 @@ class std::formatter<core::net::inet6::sockaddr> {
 
   template <typename FormatContext>
   constexpr auto format(const core::net::inet6::sockaddr& sockaddr,
-                        FormatContext& ctx) const {
+                        FormatContext& ctx) const noexcept(false) {
     return std::format_to(ctx.out(), "{}", sockaddr.to_string());
   }
 };

@@ -14,8 +14,8 @@ class non_copyable {
   constexpr non_copyable& operator=(const non_copyable&) = delete;
 
  public:
-  constexpr non_copyable(non_copyable&&) = default;
-  constexpr non_copyable& operator=(non_copyable&&) = default;
+  constexpr non_copyable(non_copyable&&) noexcept = default;
+  constexpr non_copyable& operator=(non_copyable&&) noexcept = default;
 };
 
 /**
@@ -33,8 +33,8 @@ class non_movable {
   constexpr non_movable& operator=(non_movable&&) = delete;
 
  public:
-  constexpr non_movable(const non_movable&) = default;
-  constexpr non_movable& operator=(const non_movable&) = default;
+  constexpr non_movable(const non_movable&) noexcept = default;
+  constexpr non_movable& operator=(const non_movable&) noexcept = default;
 };
 
 }  // namespace core::utils

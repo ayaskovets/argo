@@ -27,7 +27,7 @@ class std::formatter<core::net::sockets::family> {
 
   template <typename FormatContext>
   constexpr auto format(const core::net::sockets::family& family,
-                        FormatContext& ctx) const {
+                        FormatContext& ctx) const noexcept {
     switch (family) {
       case core::net::sockets::family::kUnspecified:
         return std::format_to(ctx.out(), "AF_UNSPEC");

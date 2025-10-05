@@ -13,8 +13,8 @@ namespace core::logging {
  */
 class logger {
  public:
-  static const logger& kColoredLeveledTimestampedStderr();
-  static const logger& kDefault();
+  static const logger& kColoredLeveledTimestampedStderr() noexcept;
+  static const logger& kDefault() noexcept;
 
  public:
   constexpr logger(logging::level level, logging::renderer renderer,
@@ -27,7 +27,7 @@ class logger {
   template <typename... Args>
   constexpr decltype(auto) operator()(logging::level level,
                                       std::format_string<Args...> fmt,
-                                      Args&&... args) const {
+                                      Args&&... args) const noexcept(false) {
     if (level_ <= level) [[likely]] {
       writer_(level,
               renderer_(level, fmt.get(), std::make_format_args(args...)));

@@ -75,7 +75,7 @@ class lockfree_spmc_queue final : utils::non_copyable, utils::non_movable {
 
  public:
   constexpr explicit lockfree_spmc_queue(
-      const allocator_t& allocator = allocator_t())
+      const allocator_t& allocator = allocator_t()) noexcept(false)
     requires(Capacity != utils::kDynamicExtent<index_t> &&
              utils::is_power_of_two(Capacity) && Capacity > 1)
       : available_to_push_(Capacity), allocator_(allocator) {
@@ -89,7 +89,8 @@ class lockfree_spmc_queue final : utils::non_copyable, utils::non_movable {
   }
 
   constexpr explicit lockfree_spmc_queue(
-      index_t capacity, const allocator_t& allocator = allocator_t())
+      index_t capacity,
+      const allocator_t& allocator = allocator_t()) noexcept(false)
     requires(Capacity == utils::kDynamicExtent<index_t>)
       : available_to_push_(capacity),
         allocator_(allocator),

@@ -5,7 +5,7 @@ namespace core::net::inet6::tcp {
 socket::socket(io::fd::uninitialized_t) noexcept
     : net::base_socket(core::io::fd::uninitialized_t{}) {}
 
-socket::socket()
+socket::socket() noexcept(false)
     : net::base_socket(net::sockets::family::kInet6,
                        net::sockets::type::kStream,
                        net::sockets::protocol::kTcp) {}

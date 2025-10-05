@@ -1,5 +1,6 @@
 #pragma once
 
+#include <type_traits>
 #include <utility>
 
 namespace core::utils {
@@ -19,7 +20,9 @@ template <typename T, T CompileTimeValue>
 class conditionally_runtime<T, true, CompileTimeValue> final {
  public:
   constexpr conditionally_runtime() = delete;
-  constexpr conditionally_runtime(T value) : value_(std::move(value)) {}
+  constexpr conditionally_runtime(T value) noexcept(
+      std::is_nothrow_move_constructible_v<T>)
+      : value_(std::move(value)) {}
 
  public:
   constexpr T& operator*() noexcept { return value_; }

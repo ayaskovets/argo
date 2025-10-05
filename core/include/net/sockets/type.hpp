@@ -28,7 +28,7 @@ class std::formatter<core::net::sockets::type> {
 
   template <typename FormatContext>
   constexpr auto format(const core::net::sockets::type& type,
-                        FormatContext& ctx) const {
+                        FormatContext& ctx) const noexcept {
     switch (type) {
       case core::net::sockets::type::kStream:
         return std::format_to(ctx.out(), "SOCK_STREAM");

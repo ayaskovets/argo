@@ -35,7 +35,7 @@ const fd& fd::kStderr() noexcept {
 
 fd::fd(uninitialized_t) noexcept : pimpl_(impl{.native_handle = kInvalidFd}) {}
 
-fd fd::adopt(int fd) {
+fd fd::adopt(int fd) noexcept(false) {
   if (fd < 0) [[unlikely]] {
     throw std::invalid_argument(std::format("invalid file descriptor: {}", fd));
   }
@@ -45,7 +45,7 @@ fd fd::adopt(int fd) {
   return adopter;
 }
 
-fd::fd(const fd& that) {
+fd::fd(const fd& that) noexcept(false) {
   if (that.pimpl_->native_handle == kInvalidFd) [[unlikely]] {
     pimpl_->native_handle = kInvalidFd;
   } else if ((pimpl_->native_handle = ::dup(that.pimpl_->native_handle)) ==
@@ -55,7 +55,7 @@ fd::fd(const fd& that) {
   }
 }
 
-fd& fd::operator=(const fd& that) {
+fd& fd::operator=(const fd& that) noexcept(false) {
   if (pimpl_->native_handle == that.pimpl_->native_handle) {
     return *this;
   }
@@ -82,7 +82,7 @@ fd& fd::operator=(const fd& that) {
 fd::fd(fd&& that) noexcept
     : pimpl_(std::exchange(*that.pimpl_, impl{.native_handle = kInvalidFd})) {}
 
-fd& fd::operator=(fd&& that) {
+fd& fd::operator=(fd&& that) noexcept(false) {
   if (pimpl_->native_handle == that.pimpl_->native_handle) {
     return *this;
   }
@@ -110,7 +110,7 @@ bool fd::operator==(const fd& that) const noexcept {
 
 bool fd::operator!=(const fd& that) const noexcept { return !operator==(that); }
 
-void fd::close() {
+void fd::close() noexcept(false) {
   if (pimpl_->native_handle == kInvalidFd) [[unlikely]] {
     throw std::runtime_error(
         std::format("close() called on already closed file descriptor: {}",

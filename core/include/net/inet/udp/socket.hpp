@@ -10,7 +10,7 @@ namespace core::net::inet::udp {
 class socket final : public net::base_socket {
  public:
   socket(io::fd::uninitialized_t) noexcept;
-  socket();
+  socket() noexcept(false);
 };
 
 }  // namespace core::net::inet::udp

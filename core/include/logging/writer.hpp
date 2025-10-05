@@ -12,10 +12,10 @@ namespace core::logging {
  */
 class writer final {
  public:
-  static const writer& kStdout();
-  static const writer& kStderr();
-  static const writer& kNoop();
-  static const writer& kDefault();
+  static const writer& kStdout() noexcept;
+  static const writer& kStderr() noexcept;
+  static const writer& kNoop() noexcept;
+  static const writer& kDefault() noexcept;
 
  private:
   using write_t =
@@ -27,7 +27,7 @@ class writer final {
 
  public:
   constexpr void operator()(logging::level level,
-                            std::string_view message) const {
+                            std::string_view message) const noexcept(false) {
     write_(level, message);
   }
 

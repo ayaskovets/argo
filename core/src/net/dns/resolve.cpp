@@ -10,7 +10,7 @@ namespace core::net::dns {
 
 namespace {
 
-constexpr int to_native_family(net::sockets::family family) {
+constexpr int to_native_family(net::sockets::family family) noexcept(false) {
   switch (family) {
     case net::sockets::family::kUnspecified:
       return AF_UNSPEC;
@@ -24,7 +24,7 @@ constexpr int to_native_family(net::sockets::family family) {
   }
 }
 
-constexpr int to_native_type(net::sockets::protocol protocol) {
+constexpr int to_native_type(net::sockets::protocol protocol) noexcept(false) {
   switch (protocol) {
     case net::sockets::protocol::kUnspecified:
       return 0;
@@ -39,7 +39,7 @@ constexpr int to_native_type(net::sockets::protocol protocol) {
 }
 
 std::variant<net::inet::sockaddr, net::inet6::sockaddr> to_sockaddr(
-    const ::addrinfo &addrinfo) {
+    const ::addrinfo &addrinfo) noexcept(false) {
   switch (addrinfo.ai_family) {
     case AF_INET: {
       const ::sockaddr_in *sockaddr =
@@ -70,7 +70,7 @@ std::variant<net::inet::sockaddr, net::inet6::sockaddr> to_sockaddr(
 
 std::vector<std::variant<net::inet::sockaddr, net::inet6::sockaddr>> resolve(
     std::string_view hostname, net::sockets::family family,
-    net::sockets::protocol protocol) {
+    net::sockets::protocol protocol) noexcept(false) {
   std::unique_ptr<::addrinfo, decltype(&::freeaddrinfo)> results_raii(
       nullptr, ::freeaddrinfo);
 

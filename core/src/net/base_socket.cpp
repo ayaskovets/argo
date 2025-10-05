@@ -13,7 +13,7 @@ namespace {
 
 constexpr int kSyscallError = -1;
 
-constexpr int to_native_family(net::sockets::family family) {
+constexpr int to_native_family(net::sockets::family family) noexcept(false) {
   switch (family) {
     case net::sockets::family::kUnspecified:
       throw std::invalid_argument(
@@ -27,7 +27,7 @@ constexpr int to_native_family(net::sockets::family family) {
   }
 }
 
-constexpr net::sockets::family from_native_family(int family) {
+constexpr net::sockets::family from_native_family(int family) noexcept(false) {
   switch (family) {
     case AF_INET:
       return net::sockets::family::kInet;
@@ -55,7 +55,7 @@ constexpr int to_native_type(net::sockets::type type) noexcept {
   }
 }
 
-constexpr net::sockets::type from_native_type(int type) {
+constexpr net::sockets::type from_native_type(int type) noexcept(false) {
   switch (type) {
     case SOCK_STREAM:
       return net::sockets::type::kStream;
@@ -89,7 +89,7 @@ base_socket::base_socket(io::fd::uninitialized_t) noexcept
     : io::fd(io::fd::uninitialized_t{}) {}
 
 base_socket::base_socket(net::sockets::family family, net::sockets::type type,
-                         net::sockets::protocol protocol)
+                         net::sockets::protocol protocol) noexcept(false)
     : io::fd(io::fd::adopt([family, type, protocol] {
         const int fd = ::socket(to_native_family(family), to_native_type(type),
                                 to_native_protocol(protocol));
@@ -100,7 +100,7 @@ base_socket::base_socket(net::sockets::family family, net::sockets::type type,
         return fd;
       }())) {}
 
-void base_socket::set_nonblock(bool value) {
+void base_socket::set_nonblock(bool value) noexcept(false) {
   int flags = ::fcntl(native_handle(), F_GETFL);
   if (flags == kSyscallError) [[unlikely]] {
     throw std::runtime_error(std::format("failed to get F_GETFL on socket: {}",
@@ -114,7 +114,7 @@ void base_socket::set_nonblock(bool value) {
   }
 }
 
-void base_socket::set_reuseaddr(bool value) {
+void base_socket::set_reuseaddr(bool value) noexcept(false) {
   const int optval = (value ? 1 : 0);
   if (::setsockopt(native_handle(), SOL_SOCKET, SO_REUSEADDR, &optval,
                    sizeof(optval)) == kSyscallError) [[unlikely]] {
@@ -123,7 +123,7 @@ void base_socket::set_reuseaddr(bool value) {
   }
 }
 
-void base_socket::set_reuseport(bool value) {
+void base_socket::set_reuseport(bool value) noexcept(false) {
   const int optval = (value ? 1 : 0);
   if (::setsockopt(native_handle(), SOL_SOCKET, SO_REUSEPORT, &optval,
                    sizeof(optval)) == kSyscallError) [[unlikely]] {
@@ -132,7 +132,7 @@ void base_socket::set_reuseport(bool value) {
   }
 }
 
-void base_socket::set_keepalive(bool value) {
+void base_socket::set_keepalive(bool value) noexcept(false) {
   const int optval = (value ? 1 : 0);
   if (::setsockopt(native_handle(), SOL_SOCKET, SO_KEEPALIVE, &optval,
                    sizeof(optval)) == kSyscallError) [[unlikely]] {
@@ -141,7 +141,7 @@ void base_socket::set_keepalive(bool value) {
   }
 }
 
-net::sockets::family base_socket::get_family() const {
+net::sockets::family base_socket::get_family() const noexcept(false) {
 #ifdef SO_DOMAIN
   int optval;
   ::socklen_t optlen = sizeof(int);
@@ -164,7 +164,7 @@ net::sockets::family base_socket::get_family() const {
 #endif
 }
 
-net::sockets::type base_socket::get_type() const {
+net::sockets::type base_socket::get_type() const noexcept(false) {
   int optval;
   ::socklen_t optlen = sizeof(optval);
   if (::getsockopt(native_handle(), SOL_SOCKET, SO_TYPE, &optval, &optlen) ==
@@ -176,7 +176,7 @@ net::sockets::type base_socket::get_type() const {
   return from_native_type(optval);
 }
 
-bool base_socket::get_nonblock() const {
+bool base_socket::get_nonblock() const noexcept(false) {
   const int flags = ::fcntl(native_handle(), F_GETFL);
   if (flags == kSyscallError) [[unlikely]] {
     throw std::runtime_error(std::format(
@@ -185,7 +185,7 @@ bool base_socket::get_nonblock() const {
   return (flags & O_NONBLOCK);
 }
 
-bool base_socket::get_reuseaddr() const {
+bool base_socket::get_reuseaddr() const noexcept(false) {
   int optval;
   ::socklen_t optlen = sizeof(optval);
   if (::getsockopt(native_handle(), SOL_SOCKET, SO_REUSEADDR, &optval,
@@ -197,7 +197,7 @@ bool base_socket::get_reuseaddr() const {
   return (optval ? true : false);
 }
 
-bool base_socket::get_reuseport() const {
+bool base_socket::get_reuseport() const noexcept(false) {
   int optval;
   ::socklen_t optlen = sizeof(optval);
   if (::getsockopt(native_handle(), SOL_SOCKET, SO_REUSEPORT, &optval,
@@ -209,7 +209,7 @@ bool base_socket::get_reuseport() const {
   return (optval ? true : false);
 }
 
-bool base_socket::get_keepalive() const {
+bool base_socket::get_keepalive() const noexcept(false) {
   int optval;
   ::socklen_t optlen = sizeof(optval);
   if (::getsockopt(native_handle(), SOL_SOCKET, SO_KEEPALIVE, &optval,
@@ -221,7 +221,8 @@ bool base_socket::get_keepalive() const {
   return (optval ? true : false);
 }
 
-bind_status base_socket::bind(const net::base_sockaddr &sockaddr) {
+bind_status base_socket::bind(const net::base_sockaddr &sockaddr) noexcept(
+    false) {
   if (::bind(native_handle(),
              reinterpret_cast<const ::sockaddr *>(sockaddr.get_storage()),
              sockaddr.get_length()) == kSyscallError) [[unlikely]] {
@@ -236,7 +237,8 @@ bind_status base_socket::bind(const net::base_sockaddr &sockaddr) {
   return bind_status::kSuccess;
 }
 
-connect_status base_socket::connect(const net::base_sockaddr &sockaddr) {
+connect_status base_socket::connect(
+    const net::base_sockaddr &sockaddr) noexcept(false) {
   if (::connect(native_handle(),
                 reinterpret_cast<const ::sockaddr *>(sockaddr.get_storage()),
                 sockaddr.get_length()) == kSyscallError) {
@@ -258,7 +260,8 @@ connect_status base_socket::connect(const net::base_sockaddr &sockaddr) {
   return connect_status::kSuccess;
 }
 
-void base_socket::get_bind_sockaddr(net::base_sockaddr &sockaddr) const {
+void base_socket::get_bind_sockaddr(net::base_sockaddr &sockaddr) const
+    noexcept(false) {
   ::socklen_t socklen = static_cast<::socklen_t>(sockaddr.get_length());
   if (::getsockname(native_handle(),
                     reinterpret_cast<::sockaddr *>(sockaddr.get_storage()),
@@ -278,14 +281,14 @@ void base_socket::get_connect_sockaddr(net::base_sockaddr &sockaddr) const {
   }
 }
 
-void base_socket::listen(std::size_t backlog) {
+void base_socket::listen(std::size_t backlog) noexcept(false) {
   if (::listen(native_handle(), static_cast<int>(backlog)) == kSyscallError) {
     throw std::runtime_error(
         std::format("listen failed: {}", std::strerror(errno)));
   }
 }
 
-accept_status base_socket::accept(base_socket &socket) const {
+accept_status base_socket::accept(base_socket &socket) const noexcept(false) {
   const int accepted = ::accept(native_handle(), nullptr, nullptr);
   if (accepted == kSyscallError) {
     if (errno == EAGAIN || errno == EWOULDBLOCK) {
@@ -298,7 +301,8 @@ accept_status base_socket::accept(base_socket &socket) const {
   return accept_status::kSuccess;
 }
 
-std::size_t base_socket::send(std::span<const std::byte> bytes) const {
+std::size_t base_socket::send(std::span<const std::byte> bytes) const
+    noexcept(false) {
   const ::ssize_t sent = ::send(native_handle(), bytes.data(), bytes.size(), 0);
   if (sent == kSyscallError) {
     if (errno == EAGAIN || errno == EWOULDBLOCK || errno == ENOBUFS) {
@@ -311,7 +315,8 @@ std::size_t base_socket::send(std::span<const std::byte> bytes) const {
 }
 
 std::size_t base_socket::send_to(std::span<const std::byte> bytes,
-                                 const net::base_sockaddr &sockaddr) const {
+                                 const net::base_sockaddr &sockaddr) const
+    noexcept(false) {
   const ::ssize_t sent =
       ::sendto(native_handle(), bytes.data(), bytes.size(), 0,
                reinterpret_cast<const ::sockaddr *>(sockaddr.get_storage()),
@@ -326,7 +331,8 @@ std::size_t base_socket::send_to(std::span<const std::byte> bytes,
   return static_cast<std::size_t>(sent);
 }
 
-std::size_t base_socket::receive(std::span<std::byte> bytes) const {
+std::size_t base_socket::receive(std::span<std::byte> bytes) const
+    noexcept(false) {
   const ::ssize_t received =
       ::recv(native_handle(), bytes.data(), bytes.size(), 0);
   if (received == kSyscallError) {
@@ -340,7 +346,8 @@ std::size_t base_socket::receive(std::span<std::byte> bytes) const {
 }
 
 std::size_t base_socket::receive_from(std::span<std::byte> bytes,
-                                      net::base_sockaddr &sockaddr) const {
+                                      net::base_sockaddr &sockaddr) const
+    noexcept(false) {
   ::socklen_t socklen = static_cast<::socklen_t>(sockaddr.get_length());
   const ::ssize_t received = ::recvfrom(
       native_handle(), bytes.data(), bytes.size(), 0,

@@ -26,7 +26,7 @@ class std::formatter<core::net::sockets::protocol> {
 
   template <typename FormatContext>
   constexpr auto format(const core::net::sockets::protocol& protocol,
-                        FormatContext& ctx) const {
+                        FormatContext& ctx) const noexcept {
     switch (protocol) {
       case core::net::sockets::protocol::kUnspecified:
         return std::format_to(ctx.out(), "UNSPECIFIED");

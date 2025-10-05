@@ -16,7 +16,7 @@ constexpr std::size_t kBracketStrlen = 1;
 
 }  // namespace
 
-base_sockaddr::base_sockaddr(net::sockets::family family) {
+base_sockaddr::base_sockaddr(net::sockets::family family) noexcept(false) {
   switch (family) {
     case net::sockets::family::kUnspecified:
       throw std::invalid_argument(
@@ -47,7 +47,8 @@ const base_sockaddr::storage* base_sockaddr::get_storage() const noexcept {
   return static_cast<const base_sockaddr::storage*>(storage_.get());
 }
 
-bool base_sockaddr::operator==(const base_sockaddr& that) const {
+bool base_sockaddr::operator==(const base_sockaddr& that) const
+    noexcept(false) {
   if (storage_ == that.storage_) {
     return true;
   }
@@ -82,7 +83,8 @@ bool base_sockaddr::operator==(const base_sockaddr& that) const {
   }
 }
 
-bool base_sockaddr::operator!=(const base_sockaddr& that) const {
+bool base_sockaddr::operator!=(const base_sockaddr& that) const
+    noexcept(false) {
   return !operator==(that);
 }
 
@@ -99,7 +101,7 @@ std::size_t base_sockaddr::get_length() const {
   }
 }
 
-net::sockets::family base_sockaddr::get_family() const {
+net::sockets::family base_sockaddr::get_family() const noexcept(false) {
   switch (static_cast<const ::sockaddr*>(storage_.get())->sa_family) {
     case AF_INET:
       return net::sockets::family::kInet;
@@ -112,7 +114,7 @@ net::sockets::family base_sockaddr::get_family() const {
   }
 }
 
-std::string base_sockaddr::to_string() const {
+std::string base_sockaddr::to_string() const noexcept(false) {
   std::string string;
   switch (static_cast<const ::sockaddr*>(storage_.get())->sa_family) {
     case AF_INET: {

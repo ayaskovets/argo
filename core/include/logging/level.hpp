@@ -24,7 +24,7 @@ class std::formatter<core::logging::level> {
 
   template <typename FormatContext>
   constexpr auto format(const core::logging::level& level,
-                        FormatContext& ctx) const {
+                        FormatContext& ctx) const noexcept {
     switch (level) {
       case core::logging::level::kDebug:
         return std::format_to(ctx.out(), "DEBUG");

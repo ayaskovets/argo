@@ -10,7 +10,7 @@ namespace core::net::unix::stream {
 class socket final : public net::unix::base_socket {
  public:
   socket(io::fd::uninitialized_t) noexcept;
-  socket();
+  socket() noexcept(false);
 };
 
 }  // namespace core::net::unix::stream

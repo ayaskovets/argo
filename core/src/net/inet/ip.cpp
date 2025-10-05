@@ -38,7 +38,7 @@ ip::ip(std::uint32_t bytes) noexcept : data_(htonl(bytes)) {}
 
 ip::ip(std::uint32_t bytes, network_byte_order_t) noexcept : data_(bytes) {}
 
-ip::ip(std::string_view string) {
+ip::ip(std::string_view string) noexcept(false) {
   if (string.size() > INET_ADDRSTRLEN) {
     throw std::invalid_argument(std::format("invalid ip: {}", string));
   }
@@ -54,7 +54,7 @@ std::uint32_t ip::get_bytes(network_byte_order_t) const noexcept {
   return data_;
 }
 
-std::string ip::to_string() const {
+std::string ip::to_string() const noexcept(false) {
   std::string string;
   string.resize(INET_ADDRSTRLEN);
 

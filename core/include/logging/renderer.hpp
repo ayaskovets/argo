@@ -13,10 +13,10 @@ namespace core::logging {
  */
 class renderer final {
  public:
-  static const renderer& kNoop();
-  static const renderer& kColoredLeveled();
-  static const renderer& kColoredLeveledTimestamped();
-  static const renderer& kDefault();
+  static const renderer& kNoop() noexcept;
+  static const renderer& kColoredLeveled() noexcept;
+  static const renderer& kColoredLeveledTimestamped() noexcept;
+  static const renderer& kDefault() noexcept;
 
  private:
   using render_t = std::string (*)(logging::level level, std::string_view fmt,
@@ -28,7 +28,8 @@ class renderer final {
 
  public:
   constexpr std::string operator()(logging::level level, std::string_view fmt,
-                                   std::format_args args) const {
+                                   std::format_args args) const
+      noexcept(false) {
     return render_(level, fmt, std::move(args));
   }
 

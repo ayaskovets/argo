@@ -13,7 +13,7 @@ constexpr int kSyscallError = -1;
 base_socket::base_socket(io::fd::uninitialized_t) noexcept
     : net::base_socket(core::io::fd::uninitialized_t{}) {}
 
-base_socket::base_socket(net::sockets::type type)
+base_socket::base_socket(net::sockets::type type) noexcept(false)
     : net::base_socket(net::sockets::family::kUnix, type,
                        net::sockets::protocol::kUnspecified) {}
 
@@ -31,7 +31,7 @@ base_socket::~base_socket() noexcept {
   }
 }
 
-void base_socket::unlink_and_close() {
+void base_socket::unlink_and_close() noexcept(false) {
   static const base_socket kUninitialized(io::fd::uninitialized_t{});
   if (*this == kUninitialized) {
     return;
@@ -49,7 +49,8 @@ void base_socket::unlink_and_close() {
   net::base_socket::close();
 }
 
-net::bind_status base_socket::unlink_bind(const net::unix::sockaddr& sockaddr) {
+net::bind_status base_socket::unlink_bind(
+    const net::unix::sockaddr& sockaddr) noexcept(false) {
   if (::unlink(sockaddr.get_path().data()) == kSyscallError) {
     if (errno != ENOENT) {
       throw std::runtime_error(

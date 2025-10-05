@@ -85,7 +85,7 @@ class lockless_mpmc_queue final : utils::non_copyable, utils::non_movable {
 
  public:
   constexpr explicit lockless_mpmc_queue(
-      const allocator_t& allocator = allocator_t())
+      const allocator_t& allocator = allocator_t()) noexcept(false)
     requires(Capacity != utils::kDynamicExtent<index_t> &&
              utils::is_power_of_two(Capacity) && Capacity > 1)
       : allocator_(allocator) {
@@ -99,7 +99,8 @@ class lockless_mpmc_queue final : utils::non_copyable, utils::non_movable {
   }
 
   constexpr explicit lockless_mpmc_queue(
-      index_t capacity, const allocator_t& allocator = allocator_t())
+      index_t capacity,
+      const allocator_t& allocator = allocator_t()) noexcept(false)
     requires(Capacity == utils::kDynamicExtent<index_t>)
       : allocator_(allocator), capacity_(capacity) {
     if (!utils::is_power_of_two(*capacity_) || *capacity_ <= 1) {

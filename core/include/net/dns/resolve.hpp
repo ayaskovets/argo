@@ -19,6 +19,6 @@ namespace core::net::dns {
  */
 std::vector<std::variant<net::inet::sockaddr, net::inet6::sockaddr>> resolve(
     std::string_view hostname, net::sockets::family family,
-    net::sockets::protocol protocol);
+    net::sockets::protocol protocol) noexcept(false);
 
 }  // namespace core::net::dns

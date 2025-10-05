@@ -25,14 +25,14 @@ constexpr auto kResetColor = "\033[0m";
 
 }  // namespace
 
-const renderer& renderer::kNoop() {
+const renderer& renderer::kNoop() noexcept {
   static const renderer renderer(
       []([[maybe_unused]] logging::level level, std::string_view fmt,
          std::format_args args) { return std::vformat(fmt, std::move(args)); });
   return renderer;
 }
 
-const renderer& renderer::kColoredLeveled() {
+const renderer& renderer::kColoredLeveled() noexcept {
   static const renderer renderer([](logging::level level, std::string_view fmt,
                                     std::format_args args) {
     return std::vformat(
@@ -42,7 +42,7 @@ const renderer& renderer::kColoredLeveled() {
   return renderer;
 }
 
-const renderer& renderer::kColoredLeveledTimestamped() {
+const renderer& renderer::kColoredLeveledTimestamped() noexcept {
   static const renderer renderer(
       [](logging::level level, std::string_view fmt, std::format_args args) {
         return std::vformat(
@@ -54,6 +54,8 @@ const renderer& renderer::kColoredLeveledTimestamped() {
   return renderer;
 }
 
-const renderer& renderer::kDefault() { return kColoredLeveledTimestamped(); }
+const renderer& renderer::kDefault() noexcept {
+  return kColoredLeveledTimestamped();
+}
 
 }  // namespace core::logging
