@@ -17,17 +17,43 @@ namespace concepts {
 /**
  * @brief Queue entry requirements
  */
-template <typename T>
-concept locked_std_deque_entry = requires {
-  requires std::is_nothrow_move_constructible_v<T>;
-  requires std::is_nothrow_move_assignable_v<T>;
+template <typename T, typename Value>
+concept locked_std_deque_entry = requires(T entry) {
+  { entry.value() } -> std::same_as<Value&>;
+
+  requires noexcept(entry.value());
+
+  requires std::is_nothrow_destructible_v<Value>;
+  requires std::is_nothrow_move_constructible_v<Value>;
+  requires std::is_nothrow_move_assignable_v<Value>;
 };
 
-template <typename T>
-concept locked_std_deque_allocator =
-    requires { requires locked_std_deque_entry<typename T::value_type>; };
+template <typename T, typename Value>
+concept locked_std_deque_allocator = requires {
+  requires locked_std_deque_entry<typename T::value_type, Value>;
+};
 
 }  // namespace concepts
+
+namespace detail {
+
+/**
+ * @brief Default queue entry only for internal usage
+ */
+template <typename Value, std::size_t Alignment = alignof(Value)>
+class alignas(Alignment) locked_std_deque_entry final {
+ public:
+  constexpr explicit locked_std_deque_entry(Value&& value) noexcept
+      : value_(std::move(value)) {}
+
+ public:
+  constexpr Value& value() noexcept { return value_; }
+
+ private:
+  Value value_;
+};
+
+}  // namespace detail
 
 /**
  * @brief Locked std::queue. This class is intended to represent a naive
@@ -35,8 +61,8 @@ concept locked_std_deque_allocator =
  */
 template <typename Value, std::unsigned_integral Index = std::size_t,
           Index Capacity = utils::kDynamicExtent<Index>,
-          concepts::locked_std_deque_allocator Allocator =
-              std::allocator<Value>>
+          concepts::locked_std_deque_allocator<Value> Allocator =
+              std::allocator<detail::locked_std_deque_entry<Value>>>
 class locked_std_deque final : utils::non_copyable, utils::non_movable {
  public:
   using value_t = Value;
@@ -110,7 +136,7 @@ class locked_std_deque final : utils::non_copyable, utils::non_movable {
       return false;
     }
 
-    value = std::move(deque_.front());
+    value = std::move(deque_.front().value());
     deque_.pop_front();
 
     push_available_cv_.notify_one();
@@ -121,7 +147,7 @@ class locked_std_deque final : utils::non_copyable, utils::non_movable {
     std::unique_lock lock(mutex_);
     pop_available_cv_.wait(lock, [this] { return !deque_.empty(); });
 
-    value_t value(std::move(deque_.front()));
+    value_t value(std::move(deque_.front().value()));
     deque_.pop_front();
 
     push_available_cv_.notify_one();

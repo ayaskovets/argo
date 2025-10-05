@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <latch>
+#include <new>
 #include <numeric>
 #include <thread>
 
@@ -175,7 +176,8 @@ TEST(queues_locked_std_deque, non_copyable_item_type) {
 
 TEST(queues_locked_std_deque, allocator) {
   using value_t = double;
-  using allocator_value_t = value_t;
+  using allocator_value_t = core::queues::detail::locked_std_deque_entry<
+      value_t, std::hardware_destructive_interference_size>;
   core::utils::leak_detector_allocator<allocator_value_t, true> allocator;
   core::utils::leak_detector_allocator<allocator_value_t, true>::clear();
 
