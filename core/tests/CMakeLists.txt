@@ -28,6 +28,7 @@ target_sources(${TARGET}
     net/unix/sockaddr_test.cpp
     net/unix/stream/socket_test.cpp
     queues/locked_mpmc_queue_test.cpp
+    queues/locked_std_deque_test.cpp
     queues/lockfree_mpmc_queue_test.cpp
     queues/lockfree_mpsc_queue_test.cpp
     queues/lockfree_spmc_queue_test.cpp
