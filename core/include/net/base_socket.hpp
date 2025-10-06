@@ -42,7 +42,7 @@ class base_socket : public io::fd {
  protected:
   base_socket(io::fd::uninitialized_t) noexcept;
   base_socket(net::sockets::family family, net::sockets::type type,
-              net::sockets::protocol protocol);
+              net::sockets::protocol protocol) noexcept(false);
 
  public:
   void set_nonblock(bool value) noexcept(false);

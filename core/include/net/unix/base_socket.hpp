@@ -15,7 +15,7 @@ class base_socket : public net::base_socket {
   ~base_socket() noexcept;
 
  public:
-  void unlink_and_close();
+  void unlink_and_close() noexcept(false);
 
  public:
   net::bind_status unlink_bind(const net::unix::sockaddr& sockaddr) noexcept(
