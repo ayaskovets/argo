@@ -8,14 +8,6 @@
 
 namespace core::net {
 
-namespace {
-
-constexpr std::size_t kPortStrlen = 6;
-constexpr std::size_t kColonStrlen = 1;
-constexpr std::size_t kBracketStrlen = 1;
-
-}  // namespace
-
 base_sockaddr::base_sockaddr(net::sockets::family family) noexcept(false) {
   switch (family) {
     case net::sockets::family::kUnspecified:
@@ -115,6 +107,10 @@ net::sockets::family base_sockaddr::get_family() const noexcept(false) {
 }
 
 std::string base_sockaddr::to_string() const noexcept(false) {
+  constexpr std::size_t kPortStrlen = 6;
+  constexpr std::size_t kColonStrlen = 1;
+  constexpr std::size_t kBracketStrlen = 1;
+
   std::string string;
   switch (static_cast<const ::sockaddr*>(storage_.get())->sa_family) {
     case AF_INET: {

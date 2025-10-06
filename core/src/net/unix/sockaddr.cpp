@@ -4,12 +4,6 @@
 
 namespace core::net::unix {
 
-namespace {
-
-constexpr std::size_t kMaxPathSize = sizeof(sockaddr_un{}.sun_path) - 1;
-
-}  // namespace
-
 const sockaddr& sockaddr::kInvalid() noexcept {
   static const sockaddr sockaddr("/");
   return sockaddr;
@@ -22,6 +16,8 @@ const sockaddr& sockaddr::kEmpty() noexcept {
 
 sockaddr::sockaddr(std::string_view path) noexcept(false)
     : net::base_sockaddr(net::sockets::family::kUnix) {
+  constexpr std::size_t kMaxPathSize = sizeof(sockaddr_un{}.sun_path) - 1;
+
   if (path.size() >= kMaxPathSize) [[unlikely]] {
     throw std::invalid_argument(
         std::format("invalid path size {}", path.size()));

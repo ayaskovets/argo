@@ -13,8 +13,6 @@ namespace {
 
 constexpr int kSyscallError = -1;
 constexpr short kEmptyEvents = 0;
-constexpr std::chrono::milliseconds kBlockingTimeout(-1);
-constexpr std::chrono::milliseconds kNonBlockingPollTimeout(0);
 
 constexpr short to_native_events(poller::events_t events) noexcept {
   short native_events = kEmptyEvents;
@@ -116,10 +114,14 @@ bool poller::erase(const io::fd& fd) noexcept {
 }
 
 std::size_t poller::try_poll() noexcept(false) {
+  constexpr std::chrono::milliseconds kNonBlockingPollTimeout(0);
+
   return poll_for(kNonBlockingPollTimeout);
 }
 
 std::size_t poller::poll() noexcept(false) {
+  constexpr std::chrono::milliseconds kBlockingTimeout(-1);
+
   return poll_for(kBlockingTimeout);
 }
 

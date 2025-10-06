@@ -7,13 +7,6 @@
 
 namespace core::net::inet6 {
 
-namespace {
-
-constexpr int kInetPtonSuccess = 1;
-constexpr auto kInetNtopError = nullptr;
-
-}  // namespace
-
 const ip& ip::kLoopback() noexcept {
   static const ip ip("::1");
   return ip;
@@ -34,6 +27,8 @@ ip::ip(std::span<const std::byte, 16> bytes, network_byte_order_t) noexcept {
 }
 
 ip::ip(std::string_view string) noexcept(false) {
+  constexpr int kInetPtonSuccess = 1;
+
   if (string.size() > INET6_ADDRSTRLEN) {
     throw std::invalid_argument(std::format("invalid ip: {}", string));
   }
@@ -49,6 +44,8 @@ const std::array<std::byte, 16>& ip::get_bytes(
 }
 
 std::string ip::to_string() const noexcept(false) {
+  constexpr auto kInetNtopError = nullptr;
+
   std::string string;
   string.resize(INET6_ADDRSTRLEN);
 
