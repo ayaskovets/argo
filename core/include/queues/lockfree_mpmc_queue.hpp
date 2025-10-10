@@ -94,10 +94,10 @@ class lockfree_mpmc_queue final : utils::non_copyable, utils::non_movable {
 
  public:
   constexpr explicit lockfree_mpmc_queue(
-      allocator_t allocator = allocator_t()) noexcept(false)
+      const allocator_t& allocator = allocator_t()) noexcept(false)
     requires(Capacity != utils::kDynamicExtent<index_t> &&
              utils::is_power_of_two(Capacity) && Capacity >= 2)
-      : allocator_(std::move(allocator)) {
+      : allocator_(allocator) {
     if (!(ring_buffer_ = allocator_.allocate(Capacity))) [[unlikely]] {
       throw std::runtime_error("failed to allocate memory");
     }
@@ -111,9 +111,10 @@ class lockfree_mpmc_queue final : utils::non_copyable, utils::non_movable {
   }
 
   constexpr explicit lockfree_mpmc_queue(
-      index_t capacity, allocator_t allocator = allocator_t()) noexcept(false)
+      index_t capacity,
+      const allocator_t& allocator = allocator_t()) noexcept(false)
     requires(Capacity == utils::kDynamicExtent<index_t>)
-      : allocator_(std::move(allocator)), capacity_(capacity) {
+      : allocator_(allocator), capacity_(capacity) {
     if (!(utils::is_power_of_two(*capacity_) && *capacity_ >= 2)) {
       throw std::invalid_argument(
           "capacity must be a power of two greater than one");

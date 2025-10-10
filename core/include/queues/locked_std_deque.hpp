@@ -63,7 +63,7 @@ template <typename Value, std::unsigned_integral Index = std::size_t,
           Index Capacity = utils::kDynamicExtent<Index>,
           concepts::locked_std_deque_allocator<Value> Allocator =
               std::allocator<detail::locked_std_deque_entry<Value>>>
-class locked_std_deque final : utils::non_copyable, utils::non_movable {
+class locked_std_deque : utils::non_copyable, utils::non_movable {
  public:
   using value_t = Value;
   using index_t = Index;
@@ -164,13 +164,18 @@ class locked_std_deque final : utils::non_copyable, utils::non_movable {
   }
   constexpr index_t capacity() const noexcept { return *capacity_; }
 
+ public:
+  const allocator_t get_allocator() const
+      noexcept(std::is_nothrow_copy_constructible_v<allocator_t>) {
+    return deque_.get_allocator();
+  }
+
  private:
   mutable std::mutex mutex_;
   std::condition_variable pop_available_cv_;
   std::condition_variable push_available_cv_;
   std::deque<allocator_value_t, allocator_t> deque_;
 
-  [[no_unique_address]] allocator_t allocator_;
   [[no_unique_address]] const utils::conditionally_runtime<
       index_t, Capacity == utils::kDynamicExtent<index_t>, Capacity> capacity_;
 
