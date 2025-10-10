@@ -20,7 +20,7 @@ class timed_decorator : public Scheduler {
 
   template <typename Clock, typename Duration>
   constexpr void run_for(Duration duration) noexcept(
-      noexcept(Scheduler::run_once())) [[likely]] {
+      noexcept(Scheduler::run_once())) {
     run_until(Clock::now() + duration);
   }
 };
