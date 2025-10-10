@@ -62,7 +62,8 @@ template <typename Value, std::unsigned_integral Index = std::size_t,
           Index Capacity = utils::kDynamicExtent<Index>,
           concepts::waitfree_spsc_queue_allocator<Value> Allocator =
               std::allocator<detail::waitfree_spsc_queue_entry<Value>>>
-class waitfree_spsc_queue final : utils::non_copyable, utils::non_movable {
+class waitfree_spsc_queue final : public utils::non_copyable,
+                                  public utils::non_movable {
  public:
   using value_t = Value;
   using index_t = Index;

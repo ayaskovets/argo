@@ -11,7 +11,7 @@ namespace core::utils {
  * @brief Declarative way to do an noexcept operation when exiting a scope
  */
 template <std::invocable T>
-class scope_exit final : utils::non_copyable, utils::non_movable {
+class scope_exit final : public utils::non_copyable, public utils::non_movable {
  private:
   static_assert(noexcept(std::declval<T>()()));
 

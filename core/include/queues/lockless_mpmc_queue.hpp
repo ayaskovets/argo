@@ -76,7 +76,8 @@ template <typename Value, std::unsigned_integral Index = std::size_t,
           Index Capacity = utils::kDynamicExtent<Index>,
           concepts::lockless_mpmc_queue_allocator<Value, Index> Allocator =
               std::allocator<detail::lockless_mpmc_queue_entry<Value, Index>>>
-class lockless_mpmc_queue final : utils::non_copyable, utils::non_movable {
+class lockless_mpmc_queue final : public utils::non_copyable,
+                                  public utils::non_movable {
  public:
   using value_t = Value;
   using index_t = Index;

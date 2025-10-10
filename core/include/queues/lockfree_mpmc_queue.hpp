@@ -81,7 +81,8 @@ template <typename Value, std::unsigned_integral Index = std::size_t,
           concepts::lockfree_mpmc_queue_allocator<Value, Index> Allocator =
               std::allocator<
                   std::atomic<detail::lockfree_mpmc_queue_entry<Value, Index>>>>
-class lockfree_mpmc_queue final : utils::non_copyable, utils::non_movable {
+class lockfree_mpmc_queue final : public utils::non_copyable,
+                                  public utils::non_movable {
  private:
   using allocator_underlying_value_t =
       typename Allocator::value_type::value_type;

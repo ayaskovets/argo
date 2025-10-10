@@ -66,7 +66,8 @@ template <typename Value, std::unsigned_integral Index = std::size_t,
           Index Capacity = utils::kDynamicExtent<Index>,
           concepts::lockfree_spmc_queue_allocator<Value> Allocator =
               std::allocator<detail::lockfree_spmc_queue_entry<Value>>>
-class lockfree_spmc_queue final : utils::non_copyable, utils::non_movable {
+class lockfree_spmc_queue final : public utils::non_copyable,
+                                  public utils::non_movable {
  public:
   using value_t = Value;
   using index_t = Index;

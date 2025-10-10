@@ -16,7 +16,7 @@ namespace core::io {
  * invalidates the descriptor would be noticeable only after poll() on the
  * invalidated descriptor
  */
-class poller final : utils::non_copyable {
+class poller final : public utils::non_copyable {
  public:
   enum event : std::uint8_t {
     kPollIn = 1 << 0,

@@ -63,7 +63,7 @@ template <typename Value, std::unsigned_integral Index = std::size_t,
           Index Capacity = utils::kDynamicExtent<Index>,
           concepts::locked_std_deque_allocator<Value> Allocator =
               std::allocator<detail::locked_std_deque_entry<Value>>>
-class locked_std_deque : utils::non_copyable, utils::non_movable {
+class locked_std_deque : public utils::non_copyable, public utils::non_movable {
  public:
   using value_t = Value;
   using index_t = Index;

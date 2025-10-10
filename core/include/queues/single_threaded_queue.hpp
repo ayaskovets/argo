@@ -57,7 +57,8 @@ template <typename Value, std::unsigned_integral Index = std::size_t,
           Index Capacity = utils::kDynamicExtent<Index>,
           concepts::single_threaded_queue_allocator<Value> Allocator =
               std::allocator<detail::single_threaded_queue_entry<Value>>>
-class single_threaded_queue final : utils::non_copyable, utils::non_movable {
+class single_threaded_queue final : public utils::non_copyable,
+                                    public utils::non_movable {
  public:
   using value_t = Value;
   using index_t = Index;

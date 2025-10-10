@@ -63,7 +63,8 @@ template <typename Value, std::unsigned_integral Index = std::size_t,
           Index Capacity = utils::kDynamicExtent<Index>,
           concepts::locked_mpmc_queue_allocator<Value> Allocator =
               std::allocator<detail::locked_mpmc_queue_entry<Value>>>
-class locked_mpmc_queue final : utils::non_copyable, utils::non_movable {
+class locked_mpmc_queue final : public utils::non_copyable,
+                                public utils::non_movable {
  public:
   using value_t = Value;
   using index_t = Index;

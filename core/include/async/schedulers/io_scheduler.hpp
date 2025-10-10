@@ -63,7 +63,7 @@ class io_scheduler_input final : public async::base_scheduler_input {
  */
 template <async::concepts::channel InChannel,
           async::concepts::channel OutChannel>
-class io_scheduler : utils::non_copyable {
+class io_scheduler : public utils::non_copyable {
  private:
   static_assert(concepts::io_scheduler_channels<InChannel, OutChannel>);
 
@@ -82,6 +82,7 @@ class io_scheduler : utils::non_copyable {
 
           typename OutChannel::value_t out_value(
               payload_by_fd_.at(fd.native_handle()));
+          // TODO: try_push throws
           if (out_channel_.try_push(std::move(out_value))) [[unlikely]] {
             payload_by_fd_.erase(fd.native_handle());
             poller_.erase(fd);
@@ -105,6 +106,7 @@ class io_scheduler : utils::non_copyable {
     }
 
     typename InChannel::value_t in_value{};
+    // TODO: try_pop throws
     if (in_channel_.try_pop(in_value)) [[likely]] {
       in_value_.emplace(std::move(in_value));
       consume_in_value();

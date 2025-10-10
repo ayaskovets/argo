@@ -43,6 +43,7 @@ namespace detail {
 template <typename Clock, typename Payload>
 class timer_scheduler_input final : public async::base_scheduler_input {
  public:
+  constexpr timer_scheduler_input() noexcept = default;
   constexpr timer_scheduler_input(typename Clock::time_point&& schedule_at,
                                   Payload&& payload) noexcept
       : schedule_at_(std::move(schedule_at)), payload_(std::move(payload)) {}
@@ -64,18 +65,18 @@ class timer_scheduler_input final : public async::base_scheduler_input {
  * @brief Task scheduler implementing scheduling on a specified time point
  */
 template <typename Clock, async::concepts::channel InChannel,
-          async::concepts::channel OutChannel>
-class timer_scheduler : utils::non_copyable {
+          async::concepts::channel OutChannel,
+          typename Allocator = std::allocator<std::pair<
+              typename Clock::time_point, typename OutChannel::value_t>>>
+class timer_scheduler : public utils::non_copyable {
  private:
   static_assert(
       concepts::timer_scheduler_channels<Clock, InChannel, OutChannel>);
 
  public:
-  using allocator_value_t =
-      std::pair<typename Clock::time_point, typename OutChannel::value_t>;
+  using allocator_value_t = typename Allocator::value_type;
 
  public:
-  template <typename Allocator = std::allocator<allocator_value_t>>
   constexpr timer_scheduler(InChannel& in_channel, OutChannel& out_channel,
                             const Allocator& allocator = Allocator()) noexcept
       : in_channel_(in_channel),
@@ -101,6 +102,7 @@ class timer_scheduler : utils::non_copyable {
     }
 
     typename InChannel::value_t in_value{};
+    // TODO: try_pop throws
     if (in_channel_.try_pop(in_value)) [[likely]] {
       in_value_.emplace(std::move(in_value));
       consume_in_value();
@@ -117,6 +119,7 @@ class timer_scheduler : utils::non_copyable {
     }
 
     typename OutChannel::value_t out_value(payload);
+    // TODO: try_push throws
     if (out_channel_.try_push(std::move(out_value))) [[unlikely]] {
       queue_.pop();
     }
@@ -128,7 +131,8 @@ class timer_scheduler : utils::non_copyable {
 
  private:
   std::optional<typename InChannel::value_t> in_value_;
-  std::priority_queue<allocator_value_t, std::vector<allocator_value_t>,
+  std::priority_queue<allocator_value_t,
+                      std::vector<allocator_value_t, Allocator>,
                       std::greater<allocator_value_t>>
       queue_;
 
