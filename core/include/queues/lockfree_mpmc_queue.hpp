@@ -225,7 +225,11 @@ class lockfree_mpmc_queue final : public utils::non_copyable,
 
  public:
   constexpr index_t capacity() const noexcept { return *capacity_; }
-  constexpr index_t size_approx() const noexcept {
+
+  /**
+   * @brief Approximate size
+   */
+  constexpr index_t size() const noexcept {
     index_t const push_to = push_to_.load(std::memory_order::relaxed);
     index_t const pop_from = pop_from_.load(std::memory_order::relaxed);
 

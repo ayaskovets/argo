@@ -197,7 +197,11 @@ class lockfree_spmc_queue final : public utils::non_copyable,
 
  public:
   constexpr index_t capacity() const noexcept { return *capacity_; }
-  constexpr index_t size_approx() const noexcept {
+
+  /**
+   * @brief Approximate size
+   */
+  constexpr index_t size() const noexcept {
     return *capacity_ - available_to_push_.load(std::memory_order::relaxed);
   }
 

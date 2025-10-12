@@ -71,27 +71,27 @@ TEST(queues_lockfree_mpsc_queue, smoke) {
   int value;
   core::queues::lockfree_mpsc_queue<int> queue(2);
 
-  EXPECT_EQ(queue.size_approx(), 0);
+  EXPECT_EQ(queue.size(), 0);
   EXPECT_FALSE(queue.try_pop(value));
-  EXPECT_EQ(queue.size_approx(), 0);
+  EXPECT_EQ(queue.size(), 0);
   queue.push(1);
-  EXPECT_EQ(queue.size_approx(), 1);
+  EXPECT_EQ(queue.size(), 1);
   queue.push(2);
-  EXPECT_EQ(queue.size_approx(), 2);
+  EXPECT_EQ(queue.size(), 2);
   EXPECT_FALSE(queue.try_emplace(3));
-  EXPECT_EQ(queue.size_approx(), 2);
+  EXPECT_EQ(queue.size(), 2);
   EXPECT_EQ(queue.pop(), 1);
-  EXPECT_EQ(queue.size_approx(), 1);
+  EXPECT_EQ(queue.size(), 1);
   queue.emplace(4);
-  EXPECT_EQ(queue.size_approx(), 2);
+  EXPECT_EQ(queue.size(), 2);
   EXPECT_FALSE(queue.try_push(5));
-  EXPECT_EQ(queue.size_approx(), 2);
+  EXPECT_EQ(queue.size(), 2);
   EXPECT_EQ(queue.pop(), 2);
-  EXPECT_EQ(queue.size_approx(), 1);
+  EXPECT_EQ(queue.size(), 1);
   EXPECT_EQ(queue.pop(), 4);
-  EXPECT_EQ(queue.size_approx(), 0);
+  EXPECT_EQ(queue.size(), 0);
   EXPECT_FALSE(queue.try_pop(value));
-  EXPECT_EQ(queue.size_approx(), 0);
+  EXPECT_EQ(queue.size(), 0);
 }
 
 TEST(queues_lockfree_mpsc_queue, blocking_push) {
