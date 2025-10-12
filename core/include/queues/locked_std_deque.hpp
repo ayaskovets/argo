@@ -165,7 +165,7 @@ class locked_std_deque : public utils::non_copyable, public utils::non_movable {
   }
 
  public:
-  const allocator_t get_allocator() const
+  allocator_t get_allocator() const
       noexcept(std::is_nothrow_copy_constructible_v<allocator_t>) {
     return deque_.get_allocator();
   }

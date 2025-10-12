@@ -169,7 +169,7 @@ class single_threaded_queue final : public utils::non_copyable,
   constexpr index_t size() const noexcept { return size_; }
 
  public:
-  const allocator_t get_allocator() const noexcept { return allocator_; }
+  allocator_t get_allocator() const noexcept { return allocator_; }
 
  private:
   allocator_value_t* ring_buffer_ = nullptr;
