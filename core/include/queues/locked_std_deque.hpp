@@ -158,11 +158,11 @@ class locked_std_deque : public utils::non_copyable, public utils::non_movable {
   }
 
  public:
+  constexpr index_t capacity() const noexcept { return *capacity_; }
   constexpr index_t size() const noexcept {
     std::lock_guard lock(mutex_);
     return deque_.size();
   }
-  constexpr index_t capacity() const noexcept { return *capacity_; }
 
  public:
   const allocator_t get_allocator() const

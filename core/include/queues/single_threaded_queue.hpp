@@ -165,9 +165,8 @@ class single_threaded_queue final : public utils::non_copyable,
   }
 
  public:
-  constexpr bool empty() const noexcept { return size_ == 0; }
-  constexpr index_t size() const noexcept { return size_; }
   constexpr index_t capacity() const noexcept { return *capacity_; }
+  constexpr index_t size() const noexcept { return size_; }
 
  public:
   const allocator_t get_allocator() const noexcept { return allocator_; }
