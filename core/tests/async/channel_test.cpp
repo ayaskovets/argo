@@ -13,7 +13,7 @@
 
 namespace tests::async {
 
-TEST(async_channel, queues) {
+TEST(async_channel, concept) {
   static_assert(
       core::async::concepts::channel<core::queues::locked_mpmc_queue<int>>);
   static_assert(
