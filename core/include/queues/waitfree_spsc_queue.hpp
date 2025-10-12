@@ -187,7 +187,7 @@ class waitfree_spsc_queue final : public utils::non_copyable,
   }
 
  public:
-  const allocator_t& get_allocator() const noexcept { return allocator_; }
+  const allocator_t get_allocator() const noexcept { return allocator_; }
 
  private:
   allocator_value_t* ring_buffer_ = nullptr;

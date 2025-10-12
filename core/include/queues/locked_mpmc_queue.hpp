@@ -199,7 +199,7 @@ class locked_mpmc_queue final : public utils::non_copyable,
   }
 
  public:
-  const allocator_t& get_allocator() const noexcept { return allocator_; }
+  const allocator_t get_allocator() const noexcept { return allocator_; }
 
  private:
   mutable std::mutex mutex_;
