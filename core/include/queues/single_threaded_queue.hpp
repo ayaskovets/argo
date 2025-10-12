@@ -17,7 +17,6 @@ namespace concepts {
 template <typename T, typename Value>
 concept single_threaded_queue_entry = requires(T entry) {
   { entry.value() } -> std::same_as<Value&>;
-
   requires noexcept(entry.value());
 
   requires std::is_nothrow_destructible_v<Value>;
@@ -68,8 +67,10 @@ class single_threaded_queue final : public utils::non_copyable,
  public:
   constexpr explicit single_threaded_queue(
       const allocator_t& allocator = allocator_t()) noexcept(false)
-    requires(Capacity != utils::kDynamicExtent<index_t> && Capacity > 0)
+    requires(Capacity != utils::kDynamicExtent<index_t>)
       : allocator_(allocator) {
+    static_assert(Capacity > 0, "capacity must be greater than zero");
+
     if (!(ring_buffer_ = allocator_.allocate(*capacity_))) [[unlikely]] {
       throw std::runtime_error("failed to allocate memory");
     }

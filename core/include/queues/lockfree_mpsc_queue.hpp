@@ -23,9 +23,9 @@ namespace concepts {
 template <typename T, typename Value>
 concept lockfree_mpsc_queue_entry = requires(T entry) {
   { entry.value() } -> std::same_as<Value&>;
-  { entry.empty() } -> std::same_as<std::atomic<bool>&>;
-
   requires noexcept(entry.value());
+
+  { entry.empty() } -> std::same_as<std::atomic<bool>&>;
   requires noexcept(entry.empty());
 
   requires std::is_nothrow_destructible_v<Value>;
@@ -77,10 +77,12 @@ class lockfree_mpsc_queue final : public utils::non_copyable,
  public:
   constexpr explicit lockfree_mpsc_queue(
       const allocator_t& allocator = allocator_t()) noexcept(false)
-    requires(Capacity != utils::kDynamicExtent<index_t> &&
-             utils::is_power_of_two(Capacity) && Capacity > 1)
+    requires(Capacity != utils::kDynamicExtent<index_t>)
       : allocator_(allocator) {
-    if (!(ring_buffer_ = allocator_.allocate(Capacity))) [[unlikely]] {
+    static_assert(utils::is_power_of_two(Capacity) && Capacity > 1,
+                  "capacity must be a power of two greater than one");
+
+    if (!(ring_buffer_ = allocator_.allocate(*capacity_))) [[unlikely]] {
       throw std::runtime_error("failed to allocate memory");
     }
 

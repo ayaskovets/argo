@@ -22,9 +22,9 @@ namespace concepts {
 template <typename T, typename Value, typename Index>
 concept lockfree_mpmc_queue_entry = requires(T entry) {
   { entry.value() } -> std::same_as<Value&>;
-  { entry.seqnum() } -> std::same_as<Index&>;
-
   requires noexcept(entry.value());
+
+  { entry.seqnum() } -> std::same_as<Index&>;
   requires noexcept(entry.seqnum());
 
   requires std::is_nothrow_default_constructible_v<T>;
@@ -96,10 +96,12 @@ class lockfree_mpmc_queue final : public utils::non_copyable,
  public:
   constexpr explicit lockfree_mpmc_queue(
       const allocator_t& allocator = allocator_t()) noexcept(false)
-    requires(Capacity != utils::kDynamicExtent<index_t> &&
-             utils::is_power_of_two(Capacity) && Capacity >= 2)
+    requires(Capacity != utils::kDynamicExtent<index_t>)
       : allocator_(allocator) {
-    if (!(ring_buffer_ = allocator_.allocate(Capacity))) [[unlikely]] {
+    static_assert(utils::is_power_of_two(Capacity) && Capacity >= 2,
+                  "capacity must be a power of two greater than one");
+
+    if (!(ring_buffer_ = allocator_.allocate(*capacity_))) [[unlikely]] {
       throw std::runtime_error("failed to allocate memory");
     }
 

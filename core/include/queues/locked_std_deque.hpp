@@ -20,7 +20,6 @@ namespace concepts {
 template <typename T, typename Value>
 concept locked_std_deque_entry = requires(T entry) {
   { entry.value() } -> std::same_as<Value&>;
-
   requires noexcept(entry.value());
 
   requires std::is_nothrow_destructible_v<Value>;
@@ -73,8 +72,10 @@ class locked_std_deque : public utils::non_copyable, public utils::non_movable {
  public:
   constexpr explicit locked_std_deque(
       const allocator_t& allocator = allocator_t()) noexcept(false)
-    requires(Capacity != utils::kDynamicExtent<index_t> && Capacity > 0)
-      : deque_(allocator) {}
+    requires(Capacity != utils::kDynamicExtent<index_t>)
+      : deque_(allocator) {
+    static_assert(Capacity > 0, "capacity must be greater than zero");
+  }
 
   constexpr explicit locked_std_deque(
       index_t capacity,

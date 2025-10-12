@@ -20,7 +20,6 @@ namespace concepts {
 template <typename T, typename Value>
 concept locked_mpmc_queue_entry = requires(T entry) {
   { entry.value() } -> std::same_as<Value&>;
-
   requires noexcept(entry.value());
 
   requires std::is_nothrow_destructible_v<Value>;
@@ -74,8 +73,10 @@ class locked_mpmc_queue final : public utils::non_copyable,
  public:
   constexpr explicit locked_mpmc_queue(
       const allocator_t& allocator = allocator_t()) noexcept(false)
-    requires(Capacity != utils::kDynamicExtent<index_t> && Capacity > 0)
+    requires(Capacity != utils::kDynamicExtent<index_t>)
       : size_(0), allocator_(allocator) {
+    static_assert(Capacity > 0, "capacity must be greater than zero");
+
     if (!(ring_buffer_ = allocator_.allocate(*capacity_ + 1))) [[unlikely]] {
       throw std::runtime_error("failed to allocate memory");
     }
