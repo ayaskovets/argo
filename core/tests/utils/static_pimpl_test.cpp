@@ -77,4 +77,12 @@ TEST(utils_static_pimpl, move_assignment) {
   EXPECT_EQ(ptr.use_count(), 1);
 }
 
+TEST(utils_static_pimpl, emplace) {
+  core::utils::static_pimpl<std::string, 24, 8> pimpl("a string");
+  EXPECT_EQ(*pimpl, "a string");
+
+  pimpl.emplace("another string");
+  EXPECT_EQ(*pimpl, "another string");
+}
+
 }  // namespace tests::utils

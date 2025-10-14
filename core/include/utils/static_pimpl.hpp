@@ -1,5 +1,6 @@
 #pragma once
 
+#include <concepts>
 #include <cstddef>
 #include <memory>
 #include <new>
@@ -50,6 +51,17 @@ class static_pimpl final {
     static_assert(sizeof(T) == Size);
     static_assert(alignof(T) == Alignment);
     std::destroy_at(operator->());
+  }
+
+ public:
+  template <typename... Args>
+  constexpr void emplace(Args&&... args) noexcept(
+      std::is_nothrow_constructible_v<T, Args...>)
+    requires std::constructible_from<T, Args...> &&
+             std::is_nothrow_destructible_v<T>
+  {
+    std::destroy_at(operator->());
+    std::construct_at(operator->(), std::forward<Args>(args)...);
   }
 
  public:
