@@ -41,6 +41,9 @@ class base_sockaddr {
   bool operator!=(const base_sockaddr& that) const noexcept(false);
 
  public:
+  /**
+   * @brief Sockaddr size in bytes
+   */
   std::size_t get_length() const noexcept(false);
   net::sockets::family get_family() const noexcept(false);
 
