@@ -55,19 +55,12 @@ class fd {
    */
   void close() noexcept(false);
 
-  //  protected:
+ protected:
   int native_handle() const noexcept;
 
  private:
-  struct impl;
+  class impl;
   utils::static_pimpl<impl, 4, 4> pimpl_;
 };
 
 }  // namespace core::io
-
-// template <>
-// struct std::hash<core::io::fd> {
-//   std::size_t operator()(const core::io::fd& s) const noexcept {
-//     return std::hash<int>{}(s.hash());
-//   }
-// };
