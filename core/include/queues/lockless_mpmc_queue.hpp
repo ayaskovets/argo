@@ -121,11 +121,20 @@ class lockless_mpmc_queue final : public utils::non_copyable,
   }
 
   /**
-   * @warning Destructor is only safe when called while no other thread is doing
-   * operations on the queue
+   * @warning Destructor operations are not thread safe and it is assumed that
+   * there is only one thread doing any operations on the queue at the moment
+   * destruction occurs
    */
   constexpr ~lockless_mpmc_queue() noexcept {
-    clear();
+    const index_t push_to = push_to_.load(std::memory_order::relaxed);
+    index_t pop_from = pop_from_.load(std::memory_order::relaxed);
+    while (push_to != pop_from) {
+      std::destroy_at(&ring_buffer_[pop_from & (*capacity_ - 1)].value());
+
+      const index_t next_pop_from = pop_from + 1;
+      pop_from = next_pop_from;
+    }
+
     allocator_.deallocate(ring_buffer_, *capacity_);
   }
 
@@ -243,30 +252,6 @@ class lockless_mpmc_queue final : public utils::non_copyable,
   [[no_unique_address]] allocator_t allocator_;
   [[no_unique_address]] const utils::conditionally_runtime<
       index_t, Capacity == utils::kDynamicExtent<index_t>, Capacity> capacity_;
-
- private:
-  /**
-   * @brief Preserves queue invariants. Assumes that no other thread is doing
-   * any operations on the queue
-   */
-  constexpr void clear() noexcept {
-    while (true) {
-      index_t pop_from = pop_from_.load(std::memory_order::relaxed);
-      allocator_value_t& entry = ring_buffer_[pop_from & (*capacity_ - 1)];
-
-      if (pop_from + 1 != entry.seqnum().load(std::memory_order::acquire)) {
-        break;
-      }
-      if (!pop_from_.compare_exchange_strong(pop_from, pop_from + 1,
-                                             std::memory_order::relaxed)) {
-        break;
-      }
-
-      std::destroy_at(&entry.value());
-
-      entry.seqnum().store(pop_from + *capacity_, std::memory_order::release);
-    }
-  }
 };
 
 }  // namespace core::queues

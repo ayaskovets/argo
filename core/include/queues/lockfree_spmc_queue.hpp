@@ -113,11 +113,19 @@ class lockfree_spmc_queue final : public utils::non_copyable,
   }
 
   /**
-   * @warning Destructor is only safe when called while no other thread is doing
-   * operations on the queue
+   * @warning Destructor operations are not thread safe and it is assumed that
+   * there is only one thread doing any operations on the queue at the moment
+   * destruction occurs
    */
   constexpr ~lockfree_spmc_queue() noexcept {
-    clear();
+    index_t pop_from = pop_from_.load(std::memory_order::relaxed);
+    while (push_to_ != pop_from) {
+      std::destroy_at(&ring_buffer_[pop_from & (*capacity_ - 1)].value());
+
+      const index_t next_pop_from = pop_from + 1;
+      pop_from = next_pop_from;
+    }
+
     allocator_.deallocate(ring_buffer_, *capacity_);
   }
 
@@ -222,31 +230,6 @@ class lockfree_spmc_queue final : public utils::non_copyable,
   [[no_unique_address]] allocator_t allocator_;
   [[no_unique_address]] const utils::conditionally_runtime<
       index_t, Capacity == utils::kDynamicExtent<index_t>, Capacity> capacity_;
-
- private:
-  /**
-   * @brief Preserves queue invariants. Assumes that no other thread is doing
-   * any operations on the queue
-   */
-  constexpr void clear() noexcept {
-    while (true) {
-      const index_t available_to_push =
-          available_to_push_.fetch_add(1, std::memory_order::relaxed);
-      if (available_to_push >= *capacity_) {
-        available_to_push_.fetch_sub(1, std::memory_order::relaxed);
-        break;
-      }
-
-      const index_t pop_from =
-          pop_from_.fetch_add(1, std::memory_order::relaxed);
-      allocator_value_t& entry = ring_buffer_[pop_from & (*capacity_ - 1)];
-
-      std::destroy_at(&entry.value());
-
-      entry.empty().store(true, std::memory_order::release);
-      entry.empty().notify_one();
-    }
-  }
 };
 
 }  // namespace core::queues

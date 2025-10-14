@@ -91,11 +91,20 @@ class single_threaded_queue final : public utils::non_copyable,
   }
 
   /**
-   * @warning Destructor is only safe when called while no other thread is doing
-   * operations on the queue
+   * @warning Destructor operations are not thread safe and it is assumed that
+   * there is only one thread doing any operations on the queue at the moment
+   * destruction occurs
    */
   constexpr ~single_threaded_queue() noexcept {
-    clear();
+    while (size_ != 0) {
+      std::destroy_at(&ring_buffer_[pop_from_].value());
+
+      const index_t next_pop_from =
+          (pop_from_ == *capacity_ - 1) ? 0 : pop_from_ + 1;
+      pop_from_ = next_pop_from;
+      size_ -= 1;
+    }
+
     allocator_.deallocate(ring_buffer_, *capacity_);
   }
 
@@ -182,25 +191,6 @@ class single_threaded_queue final : public utils::non_copyable,
   [[no_unique_address]] allocator_t allocator_;
   [[no_unique_address]] const utils::conditionally_runtime<
       index_t, Capacity == utils::kDynamicExtent<index_t>, Capacity> capacity_;
-
- private:
-  /**
-   * @brief Preserves queue invariants
-   */
-  constexpr void clear() noexcept {
-    while (true) {
-      if (size_ == 0) {
-        break;
-      }
-
-      std::destroy_at(&ring_buffer_[pop_from_].value());
-
-      const index_t next_pop_from =
-          (pop_from_ == *capacity_ - 1) ? 0 : pop_from_ + 1;
-      pop_from_ = next_pop_from;
-      size_ -= 1;
-    }
-  }
 };
 
 }  // namespace core::queues

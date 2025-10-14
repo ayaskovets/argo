@@ -136,8 +136,9 @@ class lockfree_mpmc_queue final : public utils::non_copyable,
   }
 
   /**
-   * @warning Destructor is only safe when called while no other thread is doing
-   * operations on the queue
+   * @warning Destructor operations are not thread safe and it is assumed that
+   * there is only one thread doing any operations on the queue at the moment
+   * destruction occurs
    *
    * is_trivially_destructible_v allows not to call std::destroy_at on queue
    * elements

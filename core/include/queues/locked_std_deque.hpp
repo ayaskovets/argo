@@ -62,7 +62,8 @@ template <typename Value, std::unsigned_integral Index = std::size_t,
           Index Capacity = utils::kDynamicExtent<Index>,
           concepts::locked_std_deque_allocator<Value> Allocator =
               std::allocator<detail::locked_std_deque_entry<Value>>>
-class locked_std_deque : public utils::non_copyable, public utils::non_movable {
+class locked_std_deque final : public utils::non_copyable,
+                               public utils::non_movable {
  public:
   using value_t = Value;
   using index_t = Index;
@@ -87,7 +88,12 @@ class locked_std_deque : public utils::non_copyable, public utils::non_movable {
     }
   }
 
-  constexpr ~locked_std_deque() noexcept { clear(); }
+  /**
+   * @warning Destructor operations are not thread safe and it is assumed that
+   * there is only one thread doing any operations on the queue at the moment
+   * destruction occurs
+   */
+  constexpr ~locked_std_deque() noexcept = default;
 
  public:
   template <typename... Args>
@@ -179,18 +185,6 @@ class locked_std_deque : public utils::non_copyable, public utils::non_movable {
 
   [[no_unique_address]] const utils::conditionally_runtime<
       index_t, Capacity == utils::kDynamicExtent<index_t>, Capacity> capacity_;
-
- private:
-  /**
-   * @brief Preserves queue invariants. Assumes that no other thread is doing
-   * any operations on the queue
-   */
-  void clear() noexcept {
-    std::unique_lock lock(mutex_);
-    deque_.clear();
-
-    push_available_cv_.notify_all();
-  }
 };
 
 }  // namespace core::queues

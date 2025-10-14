@@ -95,11 +95,20 @@ class waitfree_spsc_queue final : public utils::non_copyable,
   }
 
   /**
-   * @warning Destructor is only safe when called while no other thread is doing
-   * operations on the queue
+   * @warning Destructor operations are not thread safe and it is assumed that
+   * there is only one thread doing any operations on the queue at the moment
+   * destruction occurs
    */
   constexpr ~waitfree_spsc_queue() noexcept {
-    clear();
+    const index_t push_to = push_to_.load(std::memory_order::relaxed);
+    index_t pop_from = pop_from_.load(std::memory_order::relaxed);
+    while (push_to != pop_from) {
+      std::destroy_at(&ring_buffer_[pop_from].value());
+
+      const index_t next_pop_from = (pop_from == *capacity_) ? 0 : pop_from + 1;
+      pop_from = next_pop_from;
+    }
+
     allocator_.deallocate(ring_buffer_, *capacity_ + 1);
   }
 
@@ -209,27 +218,6 @@ class waitfree_spsc_queue final : public utils::non_copyable,
   [[no_unique_address]] allocator_t allocator_;
   [[no_unique_address]] const utils::conditionally_runtime<
       index_t, Capacity == utils::kDynamicExtent<index_t>, Capacity> capacity_;
-
- private:
-  /**
-   * @brief Preserves queue invariants. Assumes that no other thread is doing
-   * any operations on the queue
-   */
-  constexpr void clear() noexcept {
-    while (true) {
-      const index_t pop_from = pop_from_.load(std::memory_order::relaxed);
-      if (pop_from == cached_push_to_ &&
-          (pop_from ==
-           (cached_push_to_ = push_to_.load(std::memory_order::acquire)))) {
-        break;
-      }
-
-      std::destroy_at(&ring_buffer_[pop_from].value());
-
-      const index_t next_pop_from = (pop_from == *capacity_) ? 0 : pop_from + 1;
-      pop_from_.store(next_pop_from, std::memory_order::release);
-    }
-  }
 };
 
 }  // namespace core::queues
