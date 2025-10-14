@@ -2,7 +2,7 @@
 
 #include <span>
 
-#include "io/fd.hpp"
+#include "io/base_fd.hpp"
 #include "net/base_sockaddr.hpp"
 #include "net/sockets/family.hpp"
 #include "net/sockets/protocol.hpp"
@@ -38,9 +38,9 @@ enum class accept_status : std::uint8_t {
 /**
  * @brief Socket base class
  */
-class base_socket : public io::fd {
+class base_socket : public io::base_fd {
  protected:
-  base_socket(io::fd::uninitialized_t) noexcept;
+  base_socket(io::uninitialized_t) noexcept;
   base_socket(net::sockets::family family, net::sockets::type type,
               net::sockets::protocol protocol) noexcept(false);
 

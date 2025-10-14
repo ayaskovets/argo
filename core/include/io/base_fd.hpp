@@ -1,5 +1,6 @@
 #pragma once
 
+#include "io/uninitialized.hpp"
 #include "utils/static_pimpl.hpp"
 
 namespace core::io {
@@ -10,28 +11,25 @@ namespace core::io {
  * The programmer is responsible for opening the native descriptor. The
  * constructor does still verifies whether the validity of a handed descriptor
  */
-class fd {
- public:
-  class uninitialized_t final {};
-
+class base_fd {
  private:
   friend class poller;  ///< Needed by poller to access native_handle()
 
  public:
-  static const fd& kStdin() noexcept;
-  static const fd& kStdout() noexcept;
-  static const fd& kStderr() noexcept;
+  static const base_fd& kStdin() noexcept;
+  static const base_fd& kStdout() noexcept;
+  static const base_fd& kStderr() noexcept;
 
  protected:
-  explicit fd(uninitialized_t) noexcept;
-  static fd adopt(int fd) noexcept(false);
+  explicit base_fd(uninitialized_t) noexcept;
+  static base_fd adopt(int base_fd) noexcept(false);
 
  public:
-  fd(const fd& that) noexcept(false);
-  fd& operator=(const fd& that) noexcept(false);
-  fd(fd&& that) noexcept;
-  fd& operator=(fd&& that) noexcept(false);
-  ~fd() noexcept;
+  base_fd(const base_fd& that) noexcept(false);
+  base_fd& operator=(const base_fd& that) noexcept(false);
+  base_fd(base_fd&& that) noexcept;
+  base_fd& operator=(base_fd&& that) noexcept(false);
+  ~base_fd() noexcept;
 
  public:
   /**
@@ -40,8 +38,8 @@ class fd {
    * File descriptor is only equal to itself i.e. operator== is the identity
    * comparison
    */
-  bool operator==(const fd& that) const noexcept;
-  bool operator!=(const fd& that) const noexcept;
+  bool operator==(const base_fd& that) const noexcept;
+  bool operator!=(const base_fd& that) const noexcept;
 
  public:
   /**

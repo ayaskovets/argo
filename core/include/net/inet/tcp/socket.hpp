@@ -9,7 +9,7 @@ namespace core::net::inet::tcp {
  */
 class socket final : public net::base_socket {
  public:
-  socket(io::fd::uninitialized_t) noexcept;
+  socket(io::uninitialized_t) noexcept;
   socket() noexcept(false);
 };
 

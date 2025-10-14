@@ -9,7 +9,7 @@ namespace core::net::unix::dgram {
  */
 class socket final : public net::unix::base_socket {
  public:
-  socket(io::fd::uninitialized_t) noexcept;
+  socket(io::uninitialized_t) noexcept;
   socket() noexcept(false);
 };
 

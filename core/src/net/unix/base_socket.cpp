@@ -10,15 +10,15 @@ constexpr int kSyscallError = -1;
 
 }  // namespace
 
-base_socket::base_socket(io::fd::uninitialized_t) noexcept
-    : net::base_socket(core::io::fd::uninitialized_t{}) {}
+base_socket::base_socket(io::uninitialized_t) noexcept
+    : net::base_socket(core::io::uninitialized_t{}) {}
 
 base_socket::base_socket(net::sockets::type type) noexcept(false)
     : net::base_socket(net::sockets::family::kUnix, type,
                        net::sockets::protocol::kUnspecified) {}
 
 base_socket::~base_socket() noexcept {
-  static const base_socket kUninitialized(io::fd::uninitialized_t{});
+  static const base_socket kUninitialized(io::uninitialized_t{});
   if (*this == kUninitialized) {
     return;
   }
@@ -32,7 +32,7 @@ base_socket::~base_socket() noexcept {
 }
 
 void base_socket::unlink_and_close() noexcept(false) {
-  static const base_socket kUninitialized(io::fd::uninitialized_t{});
+  static const base_socket kUninitialized(io::uninitialized_t{});
   if (*this == kUninitialized) {
     return;
   }

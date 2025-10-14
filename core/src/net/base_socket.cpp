@@ -85,19 +85,20 @@ constexpr int to_native_protocol(net::sockets::protocol protocol) noexcept {
 
 }  // namespace
 
-base_socket::base_socket(io::fd::uninitialized_t) noexcept
-    : io::fd(io::fd::uninitialized_t{}) {}
+base_socket::base_socket(io::uninitialized_t) noexcept
+    : io::base_fd(io::uninitialized_t{}) {}
 
 base_socket::base_socket(net::sockets::family family, net::sockets::type type,
                          net::sockets::protocol protocol) noexcept(false)
-    : io::fd(io::fd::adopt([family, type, protocol] {
-        const int fd = ::socket(to_native_family(family), to_native_type(type),
-                                to_native_protocol(protocol));
-        if (fd == kSyscallError) [[unlikely]] {
+    : io::base_fd(io::base_fd::adopt([family, type, protocol] {
+        const int base_fd =
+            ::socket(to_native_family(family), to_native_type(type),
+                     to_native_protocol(protocol));
+        if (base_fd == kSyscallError) [[unlikely]] {
           throw std::runtime_error(
               std::format("socket() failed: {}", std::strerror(errno)));
         }
-        return fd;
+        return base_fd;
       }())) {}
 
 void base_socket::set_nonblock(bool value) noexcept(false) {
@@ -297,7 +298,7 @@ accept_status base_socket::accept(base_socket &socket) const noexcept(false) {
     throw std::runtime_error(
         std::format("accept failed: {}", std::strerror(errno)));
   }
-  static_cast<io::fd &>(socket) = io::fd::adopt(accepted);
+  static_cast<io::base_fd &>(socket) = io::base_fd::adopt(accepted);
   return accept_status::kSuccess;
 }
 

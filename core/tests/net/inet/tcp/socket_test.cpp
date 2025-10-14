@@ -90,7 +90,7 @@ TEST(net_inet_tcp_socket, accept_error) {
   socket.set_reuseaddr(true);
   socket.set_reuseport(true);
 
-  core::net::inet::tcp::socket peer(core::io::fd::uninitialized_t{});
+  core::net::inet::tcp::socket peer(core::io::uninitialized_t{});
   EXPECT_ANY_THROW(socket.accept(peer));
   socket.listen(1);
   EXPECT_EQ(socket.accept(peer), core::net::accept_status::kEmptyQueue);
@@ -152,7 +152,7 @@ TEST(net_inet_tcp_socket, nonblocking_echo_handshake) {
   server.listen(1);
   EXPECT_EQ(client.connect(sockaddr), core::net::connect_status::kPending);
 
-  core::net::inet::tcp::socket peer(core::io::fd::uninitialized_t{});
+  core::net::inet::tcp::socket peer(core::io::uninitialized_t{});
   while (server.accept(peer) != core::net::accept_status::kSuccess);
 
   std::vector<std::byte> buffer(kBuffer.size());

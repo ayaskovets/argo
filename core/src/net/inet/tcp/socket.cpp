@@ -2,8 +2,8 @@
 
 namespace core::net::inet::tcp {
 
-socket::socket(io::fd::uninitialized_t) noexcept
-    : net::base_socket(io::fd::uninitialized_t{}) {}
+socket::socket(io::uninitialized_t) noexcept
+    : net::base_socket(io::uninitialized_t{}) {}
 
 socket::socket() noexcept(false)
     : net::base_socket(net::sockets::family::kInet, net::sockets::type::kStream,
