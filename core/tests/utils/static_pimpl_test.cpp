@@ -51,6 +51,14 @@ TEST(utils_static_pimpl, copy_assignment) {
   EXPECT_EQ(ptr.use_count(), 1);
 }
 
+TEST(utils_static_pimpl, value_copy_assignment) {
+  core::utils::static_pimpl<std::string, 24, 8> pimpl("a string");
+  EXPECT_EQ(*pimpl, "a string");
+  const std::string value("another string");
+  pimpl = value;
+  EXPECT_EQ(*pimpl, "another string");
+}
+
 TEST(utils_static_pimpl, move) {
   std::shared_ptr<int> ptr = std::make_shared<int>(1);
   {
@@ -75,6 +83,13 @@ TEST(utils_static_pimpl, move_assignment) {
     EXPECT_EQ(moved_to->get(), ptr.get());
   }
   EXPECT_EQ(ptr.use_count(), 1);
+}
+
+TEST(utils_static_pimpl, value_move_assignment) {
+  core::utils::static_pimpl<std::string, 24, 8> pimpl("a string");
+  EXPECT_EQ(*pimpl, "a string");
+  pimpl = std::string("another string");
+  EXPECT_EQ(*pimpl, "another string");
 }
 
 TEST(utils_static_pimpl, emplace) {

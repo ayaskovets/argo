@@ -36,6 +36,12 @@ class static_pimpl final {
     return *this;
   }
 
+  constexpr static_pimpl& operator=(const T& that) noexcept(
+      std::is_nothrow_copy_assignable_v<T>) {
+    operator*() = that;
+    return *this;
+  }
+
   constexpr static_pimpl(static_pimpl&& that) noexcept(
       std::is_nothrow_move_constructible_v<T>) {
     std::construct_at(operator->(), std::move(that.operator*()));
@@ -44,6 +50,12 @@ class static_pimpl final {
   constexpr static_pimpl& operator=(static_pimpl&& that) noexcept(
       std::is_nothrow_move_assignable_v<T>) {
     operator*() = std::move(that.operator*());
+    return *this;
+  }
+
+  constexpr static_pimpl& operator=(T&& that) noexcept(
+      std::is_nothrow_move_assignable_v<T>) {
+    operator*() = std::move(that);
     return *this;
   }
 
