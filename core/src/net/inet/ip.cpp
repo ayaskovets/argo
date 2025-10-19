@@ -4,6 +4,7 @@
 
 #include <cerrno>
 #include <format>
+#include <utils/syscall.hpp>
 
 namespace core::net::inet {
 
@@ -37,7 +38,8 @@ ip::ip(std::string_view string) noexcept(false) {
   if (string.size() > INET_ADDRSTRLEN) {
     throw std::invalid_argument(std::format("invalid ip: {}", string));
   }
-  if (::inet_pton(AF_INET, string.data(), &data_) != kInetPtonSuccess) {
+  if (SYSCALL(::inet_pton(AF_INET, string.data(), &data_)) != kInetPtonSuccess)
+      [[unlikely]] {
     throw std::invalid_argument(
         std::format("invalid ip {}: {}", string, std::strerror(errno)));
   }
@@ -55,7 +57,7 @@ std::string ip::to_string() const noexcept(false) {
   std::string string;
   string.resize(INET_ADDRSTRLEN);
 
-  if (::inet_ntop(AF_INET, &data_, string.data(), string.size()) !=
+  if (SYSCALL(::inet_ntop(AF_INET, &data_, string.data(), string.size())) !=
       kInetNtopError) [[likely]] {
     string.resize(string.find('\0'));
     return string;

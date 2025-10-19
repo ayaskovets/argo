@@ -16,13 +16,13 @@ class base_fd {
   friend class poller;  ///< Needed by poller to access native_handle()
 
  public:
-  static const base_fd& kStdin() noexcept;
-  static const base_fd& kStdout() noexcept;
-  static const base_fd& kStderr() noexcept;
+  static base_fd& kStdin() noexcept;
+  static base_fd& kStdout() noexcept;
+  static base_fd& kStderr() noexcept;
 
  protected:
   explicit base_fd(uninitialized_t) noexcept;
-  static base_fd adopt(int base_fd) noexcept(false);
+  static base_fd adopt(int native_handle) noexcept(false);
 
  public:
   base_fd(const base_fd& that) noexcept(false);
@@ -35,8 +35,11 @@ class base_fd {
   /**
    * @brief Identity comparison
    *
-   * File descriptor is only equal to itself i.e. operator== is the identity
+   * File descriptor is only equal to itself i.e. operator== is identity
    * comparison
+   *
+   * An uninitialized or moved-from descriptor is equal to any other descriptor
+   * in unitialized or moved-from state
    */
   bool operator==(const base_fd& that) const noexcept;
   bool operator!=(const base_fd& that) const noexcept;
@@ -54,6 +57,7 @@ class base_fd {
   void close() noexcept(false);
 
  protected:
+  // TODO: remove this
   int native_handle() const noexcept;
 
  private:

@@ -3,11 +3,13 @@
 #include <chrono>
 #include <functional>
 
-#include "io/fd.hpp"
+#include "io/base_fd.hpp"
 #include "utils/mixins.hpp"
 #include "utils/static_pimpl.hpp"
 
 namespace core::io {
+
+// TODO: rewrite poller interface and communication with base_fd
 
 /**
  * @brief File descriptor events poller
@@ -27,12 +29,10 @@ class poller final : public utils::non_copyable {
     kPollNval = 1 << 5,
   };
   using events_t = std::uint8_t;
-  using callback_t = std::function<void(const io::fd&, events_t)>;
+  using callback_t = std::function<void(const io::base_fd&, events_t)>;
 
  public:
   explicit poller(callback_t callback) noexcept;
-
-  // TODO: make default?
   poller(poller&&) noexcept;
   poller& operator=(poller&&) noexcept;
   ~poller() noexcept;
@@ -41,20 +41,21 @@ class poller final : public utils::non_copyable {
   /**
    * @brief Track events on the passed descriptor
    *
-   * Returns true if the fd was inserted
+   * Returns true if the base_fd was inserted
    *
    * Safe to call from the callback
    */
-  bool insert_or_assign(const io::fd& fd, events_t events) noexcept(false);
+  bool insert_or_assign(const io::base_fd& base_fd,
+                        events_t events) noexcept(false);
 
   /**
    * @brief Track events on the passed descriptor
    *
-   * Returns true if the fd was erased
+   * Returns true if the base_fd was erased
    *
    * Safe to call from the callback
    */
-  bool erase(const io::fd& fd) noexcept;
+  bool erase(const io::base_fd& base_fd) noexcept;
 
  public:
   /**

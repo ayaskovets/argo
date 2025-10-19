@@ -2,6 +2,8 @@
 
 #include <unistd.h>
 
+#include <utils/syscall.hpp>
+
 namespace core::net::unix {
 
 namespace {
@@ -26,7 +28,8 @@ base_socket::~base_socket() noexcept {
   net::unix::sockaddr sockaddr(net::unix::sockaddr::kEmpty());
   try {
     get_bind_sockaddr(sockaddr);
-    static_cast<void>(::unlink(sockaddr.get_path().data()));
+    [[maybe_unused]] const auto retval =
+        SYSCALL(::unlink(sockaddr.get_path().data()));
   } catch (...) {
   }
 }
@@ -40,7 +43,8 @@ void base_socket::unlink_and_close() noexcept(false) {
   net::unix::sockaddr sockaddr(net::unix::sockaddr::kEmpty());
   get_bind_sockaddr(sockaddr);
 
-  if (::unlink(sockaddr.get_path().data()) == kSyscallError) {
+  const auto retval = SYSCALL(::unlink(sockaddr.get_path().data()));
+  if (retval == kSyscallError) {
     if (errno != ENOENT) {
       throw std::runtime_error(
           std::format("unlink failed: {}", std::strerror(errno)));
@@ -51,7 +55,8 @@ void base_socket::unlink_and_close() noexcept(false) {
 
 net::bind_status base_socket::unlink_bind(
     const net::unix::sockaddr& sockaddr) noexcept(false) {
-  if (::unlink(sockaddr.get_path().data()) == kSyscallError) {
+  const auto retval = SYSCALL(::unlink(sockaddr.get_path().data()));
+  if (retval == kSyscallError) {
     if (errno != ENOENT) {
       throw std::runtime_error(
           std::format("unlink failed: {}", std::strerror(errno)));

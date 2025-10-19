@@ -5,13 +5,13 @@
 #include <chrono>
 #include <format>
 #include <unordered_map>
+#include <utils/syscall.hpp>
 #include <vector>
 
 namespace core::io {
 
 namespace {
 
-constexpr int kSyscallError = -1;
 constexpr short kEmptyEvents = 0;
 
 constexpr short to_native_events(poller::events_t events) noexcept {
@@ -55,7 +55,7 @@ poller& poller::operator=(poller&& that) noexcept {
 
 poller::~poller() noexcept = default;
 
-bool poller::insert_or_assign(const io::fd& fd,
+bool poller::insert_or_assign(const io::base_fd& fd,
                               events_t events) noexcept(false) {
   auto& [fds, fds_index_by_native_handle, fds_to_insert] = *pimpl_;
 
@@ -90,7 +90,7 @@ bool poller::insert_or_assign(const io::fd& fd,
   return true;
 }
 
-bool poller::erase(const io::fd& fd) noexcept {
+bool poller::erase(const io::base_fd& fd) noexcept {
   auto& [fds, fds_index_by_native_handle, fds_to_insert] = *pimpl_;
 
   auto it = fds_index_by_native_handle.find(fd.native_handle());
@@ -126,6 +126,8 @@ std::size_t poller::poll() noexcept(false) {
 }
 
 std::size_t poller::poll_for(std::size_t milliseconds) noexcept(false) {
+  constexpr int kSyscallError = -1;
+
   auto& [fds, fds_index_by_native_handle, fds_to_insert] = *pimpl_;
 
   if (!fds_to_insert.empty()) [[unlikely]] {
@@ -137,14 +139,14 @@ std::size_t poller::poll_for(std::size_t milliseconds) noexcept(false) {
     fds_to_insert.clear();
   }
 
-  int affected = ::poll(fds.data(), fds.size(), milliseconds);
-  if (affected == kSyscallError) [[unlikely]] {
+  auto retval = SYSCALL(::poll(fds.data(), fds.size(), milliseconds));
+  if (retval == kSyscallError) [[unlikely]] {
     throw std::runtime_error(
         std::format("poll() failed: {}", std::strerror(errno)));
   }
 
   std::size_t unhandled = 0;
-  for (std::size_t i = 0; i < fds.size() && affected > 0; ++i) {
+  for (std::size_t i = 0; i < fds.size() && retval > 0; ++i) {
     if (fds.at(i).fd < 0) [[unlikely]] {
       fds_index_by_native_handle.at(fds.back().fd) = i;
       fds.at(i) = fds.back();
@@ -162,13 +164,14 @@ std::size_t poller::poll_for(std::size_t milliseconds) noexcept(false) {
     } else {
       try {
         // TODO: remove reinterpret_cast
-        callback_(*std::launder(reinterpret_cast<const io::fd*>(&fds.at(i).fd)),
-                  from_native_events(fds.at(i).revents));
+        callback_(
+            *std::launder(reinterpret_cast<const io::base_fd*>(&fds.at(i).fd)),
+            from_native_events(fds.at(i).revents));
       } catch (...) {
         unhandled += 1;
       }
     }
-    affected -= 1;
+    retval -= 1;
   }
   return unhandled;
 }

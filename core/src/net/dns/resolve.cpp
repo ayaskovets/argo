@@ -5,6 +5,7 @@
 #include <cerrno>
 #include <format>
 #include <span>
+#include <utils/syscall.hpp>
 
 namespace core::net::dns {
 
@@ -71,8 +72,8 @@ std::variant<net::inet::sockaddr, net::inet6::sockaddr> to_sockaddr(
 std::vector<std::variant<net::inet::sockaddr, net::inet6::sockaddr>> resolve(
     std::string_view hostname, net::sockets::family family,
     net::sockets::protocol protocol) noexcept(false) {
-  std::unique_ptr<::addrinfo, decltype(&::freeaddrinfo)> results_raii(
-      nullptr, ::freeaddrinfo);
+  std::unique_ptr<::addrinfo, decltype(&SYSCALL(::freeaddrinfo))> results_raii(
+      nullptr, SYSCALL(::freeaddrinfo));
 
   const ::addrinfo hints{
       .ai_family = to_native_family(family),
@@ -80,8 +81,9 @@ std::vector<std::variant<net::inet::sockaddr, net::inet6::sockaddr>> resolve(
   };
 
   ::addrinfo *results = nullptr;
-  switch (const int error =
-              ::getaddrinfo(hostname.data(), nullptr, &hints, &results)) {
+  const auto retval =
+      SYSCALL(::getaddrinfo(hostname.data(), nullptr, &hints, &results));
+  switch (retval) {
     case 0:
       results_raii.reset(results);
       break;
@@ -92,7 +94,7 @@ std::vector<std::variant<net::inet::sockaddr, net::inet6::sockaddr>> resolve(
     default:
       throw std::runtime_error(
           std::format("failed to resolve any address at {}: {}", hostname,
-                      ::gai_strerror(error)));
+                      SYSCALL(::gai_strerror(retval))));
   }
 
   std::vector<std::variant<net::inet::sockaddr, net::inet6::sockaddr>>

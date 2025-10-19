@@ -4,6 +4,7 @@
 
 #include <cerrno>
 #include <format>
+#include <utils/syscall.hpp>
 
 namespace core::io {
 
@@ -31,18 +32,18 @@ class base_fd::impl final {
   int native_handle_;
 };
 
-const base_fd& base_fd::kStdin() noexcept {
-  static const base_fd base_fd = base_fd::adopt(STDIN_FILENO);
+base_fd& base_fd::kStdin() noexcept {
+  static base_fd base_fd = base_fd::adopt(STDIN_FILENO);
   return base_fd;
 }
 
-const base_fd& base_fd::kStdout() noexcept {
-  static const base_fd base_fd = base_fd::adopt(STDOUT_FILENO);
+base_fd& base_fd::kStdout() noexcept {
+  static base_fd base_fd = base_fd::adopt(STDOUT_FILENO);
   return base_fd;
 }
 
-const base_fd& base_fd::kStderr() noexcept {
-  static const base_fd base_fd = base_fd::adopt(STDERR_FILENO);
+base_fd& base_fd::kStderr() noexcept {
+  static base_fd base_fd = base_fd::adopt(STDERR_FILENO);
   return base_fd;
 }
 
@@ -62,42 +63,51 @@ base_fd base_fd::adopt(int native_handle) noexcept(false) {
 
 base_fd::base_fd(const base_fd& that) noexcept(false)
     : pimpl_(uninitialized_t{}) {
-  if (that.pimpl_->is_valid()) [[likely]] {
-    if (const int native_handle = ::dup(that.pimpl_->native_handle());
-        native_handle != kSyscallError) [[unlikely]] {
-      pimpl_.emplace(native_handle);
-    } else {
-      throw std::runtime_error(std::format(
-          "failed to clone file descriptor: {}", std::strerror(errno)));
-    }
+  if (!that.pimpl_->is_valid()) [[unlikely]] {
+    return;
   }
+
+  const auto retval = SYSCALL(::dup(that.pimpl_->native_handle()));
+  if (retval == kSyscallError) [[unlikely]] {
+    throw std::runtime_error(std::format("failed to clone file descriptor: {}",
+                                         std::strerror(errno)));
+  }
+
+  pimpl_.emplace(retval);
 }
 
 base_fd& base_fd::operator=(const base_fd& that) noexcept(false) {
-  if (pimpl_->native_handle() == that.pimpl_->native_handle()) {
+  if (pimpl_->native_handle() == that.pimpl_->native_handle()) [[unlikely]] {
     return *this;
   }
 
   if (pimpl_->is_valid() && that.pimpl_->is_valid()) {
-    if (::dup2(that.pimpl_->native_handle(), pimpl_->native_handle()) ==
-        kSyscallError) [[unlikely]] {
+    const auto retval =
+        SYSCALL(::dup2(that.pimpl_->native_handle(), pimpl_->native_handle()));
+    if (retval == kSyscallError) [[unlikely]] {
       throw std::runtime_error(std::format(
           "failed to clone file descriptor: {} ", std::strerror(errno)));
     }
-  } else if (pimpl_->is_valid()) {
-    if (::close(
-            std::exchange(pimpl_, impl(uninitialized_t{}))->native_handle()) ==
-        kSyscallError) [[unlikely]] {
+    return *this;
+  }
+
+  if (pimpl_->is_valid()) {
+    const auto retval = SYSCALL(::close(pimpl_->native_handle()));
+    pimpl_.emplace(uninitialized_t{});
+    if (retval == kSyscallError) [[unlikely]] {
       throw std::runtime_error(std::format(
           "failed to close file descriptor: {} ", std::strerror(errno)));
     }
-  } else if (const int native_handle = ::dup(that.pimpl_->native_handle());
-             native_handle != kSyscallError) [[likely]] {
-    pimpl_.emplace(native_handle);
-  } else [[unlikely]] {
+    return *this;
+  }
+
+  const auto retval = SYSCALL(::dup(that.pimpl_->native_handle()));
+  if (retval == kSyscallError) [[unlikely]] {
     throw std::runtime_error(std::format("failed to clone file descriptor: {} ",
                                          std::strerror(errno)));
   }
+
+  pimpl_.emplace(retval);
   return *this;
 }
 
@@ -105,16 +115,17 @@ base_fd::base_fd(base_fd&& that) noexcept
     : pimpl_(std::exchange(*that.pimpl_, impl(uninitialized_t{}))) {}
 
 base_fd& base_fd::operator=(base_fd&& that) noexcept(false) {
-  if (pimpl_->native_handle() == that.pimpl_->native_handle()) {
+  if (pimpl_->native_handle() == that.pimpl_->native_handle()) [[unlikely]] {
     return *this;
   }
 
-  if (pimpl_->is_valid() &&
-      ::close(
-          std::exchange(pimpl_, impl(uninitialized_t{}))->native_handle()) ==
-          kSyscallError) [[unlikely]] {
-    throw std::runtime_error(std::format("failed to close file descriptor: {} ",
-                                         std::strerror(errno)));
+  if (pimpl_->is_valid()) {
+    const auto retval = SYSCALL(::close(pimpl_->native_handle()));
+    pimpl_.emplace(uninitialized_t{});
+    if (retval == kSyscallError) [[unlikely]] {
+      throw std::runtime_error(std::format(
+          "failed to close file descriptor: {} ", std::strerror(errno)));
+    }
   }
 
   pimpl_ = std::exchange(that.pimpl_, impl(uninitialized_t{}));
@@ -122,10 +133,13 @@ base_fd& base_fd::operator=(base_fd&& that) noexcept(false) {
 }
 
 base_fd::~base_fd() noexcept {
-  if (pimpl_->is_valid()) [[unlikely]] {
-    [[maybe_unused]] const int _ = ::close(
-        std::exchange(pimpl_, impl(uninitialized_t{}))->native_handle());
+  if (!pimpl_->is_valid()) [[unlikely]] {
+    return;
   }
+
+  [[maybe_unused]] const auto retval =
+      SYSCALL(::close(pimpl_->native_handle()));
+  pimpl_.emplace(uninitialized_t{});
 }
 
 bool base_fd::operator==(const base_fd& that) const noexcept {
@@ -143,9 +157,9 @@ void base_fd::close() noexcept(false) {
                     std::strerror(errno)));
   }
 
-  if (::close(
-          std::exchange(pimpl_, impl(uninitialized_t{}))->native_handle()) ==
-      kSyscallError) [[unlikely]] {
+  const auto retval = SYSCALL(::close(pimpl_->native_handle()));
+  pimpl_.emplace(uninitialized_t{});
+  if (retval == kSyscallError) [[unlikely]] {
     throw std::runtime_error(std::format("failed to close file descriptor: {} ",
                                          std::strerror(errno)));
   }

@@ -5,6 +5,7 @@
 
 #include <cassert>
 #include <cerrno>
+#include <utils/syscall.hpp>
 
 namespace core::net {
 
@@ -44,6 +45,7 @@ bool base_sockaddr::operator==(const base_sockaddr& that) const
   if (storage_ == that.storage_) {
     return true;
   }
+
   switch (static_cast<const ::sockaddr*>(storage_.get())->sa_family) {
     case AF_INET: {
       const ::sockaddr_in* this_sockaddr =
@@ -110,6 +112,7 @@ std::string base_sockaddr::to_string() const noexcept(false) {
   constexpr std::size_t kPortStrlen = 6;
   constexpr std::size_t kColonStrlen = 1;
   constexpr std::size_t kBracketStrlen = 1;
+  constexpr const char* kInetNtopError = nullptr;
 
   std::string string;
   switch (static_cast<const ::sockaddr*>(storage_.get())->sa_family) {
@@ -118,8 +121,9 @@ std::string base_sockaddr::to_string() const noexcept(false) {
           static_cast<const ::sockaddr_in*>(storage_.get());
 
       string.resize(INET_ADDRSTRLEN + kColonStrlen + kPortStrlen);
-      if (!::inet_ntop(AF_INET, &sockaddr->sin_addr, string.data(),
-                       string.size())) [[unlikely]] {
+      const auto retval = SYSCALL(::inet_ntop(AF_INET, &sockaddr->sin_addr,
+                                              string.data(), string.size()));
+      if (retval == kInetNtopError) [[unlikely]] {
         throw std::runtime_error(
             std::format("inet_ntop failed: {}", std::strerror(errno)));
       }
@@ -135,9 +139,10 @@ std::string base_sockaddr::to_string() const noexcept(false) {
       string.resize(kBracketStrlen + INET6_ADDRSTRLEN + kBracketStrlen +
                     kColonStrlen + kPortStrlen);
       string.front() = '[';
-      if (!::inet_ntop(AF_INET6, &sockaddr->sin6_addr,
-                       string.data() + kBracketStrlen, string.size()))
-          [[unlikely]] {
+      const auto retval =
+          ::inet_ntop(AF_INET6, &sockaddr->sin6_addr,
+                      string.data() + kBracketStrlen, string.size());
+      if (retval == kInetNtopError) [[unlikely]] {
         throw std::runtime_error(
             std::format("inet_ntop failed: {}", std::strerror(errno)));
       }
