@@ -10,18 +10,28 @@ TEST(io_base_fd, size) {
 }
 
 TEST(io_base_fd, manual_close) {
-  core::io::base_fd base_fd(core::io::base_fd::kStdin());
-  EXPECT_NO_THROW(base_fd.close());
-  EXPECT_ANY_THROW(base_fd.close());
-  EXPECT_ANY_THROW(base_fd.close());
+  core::io::base_fd fd(core::io::base_fd::kStdin());
+  EXPECT_NO_THROW(fd.close());
+  EXPECT_ANY_THROW(fd.close());
+  EXPECT_ANY_THROW(fd.close());
 }
 
-TEST(io_base_fd, assign_to_itself) {
-  core::io::base_fd base_fd(core::io::base_fd::kStdin());
-  core::io::base_fd& fd_ref = base_fd;
-  base_fd = fd_ref;
-  EXPECT_NO_THROW(base_fd.close());
-  EXPECT_ANY_THROW(base_fd.close());
+TEST(io_base_fd, copy_assign_to_itself) {
+  core::io::base_fd fd(core::io::base_fd::kStdin());
+  core::io::base_fd& fd_ref = fd;
+  fd = fd_ref;
+  EXPECT_EQ(fd, fd_ref);
+  EXPECT_NO_THROW(fd.close());
+  EXPECT_ANY_THROW(fd.close());
+}
+
+TEST(io_base_fd, move_assign_to_itself) {
+  core::io::base_fd fd(core::io::base_fd::kStdin());
+  core::io::base_fd& fd_ref = fd;
+  fd = std::move(fd_ref);
+  EXPECT_EQ(fd, fd_ref);
+  EXPECT_NO_THROW(fd.close());
+  EXPECT_ANY_THROW(fd.close());
 }
 
 TEST(io_base_fd, transfer_ownership) {
