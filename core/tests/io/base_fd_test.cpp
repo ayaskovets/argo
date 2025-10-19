@@ -41,6 +41,10 @@ TEST(io_base_fd, duplicate) {
   EXPECT_NO_THROW(original.close());
   EXPECT_NO_THROW(copy.close());
   EXPECT_EQ(original, copy);
+
+  copy = core::io::base_fd::kStdout();
+  EXPECT_NE(copy, core::io::base_fd::kStdout());
+  EXPECT_NO_THROW(copy.close());
 }
 
 TEST(io_base_fd, equality) {

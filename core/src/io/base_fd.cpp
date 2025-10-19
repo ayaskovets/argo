@@ -1,9 +1,9 @@
+#include "io/base_fd.hpp"
+
 #include <unistd.h>
 
 #include <cerrno>
 #include <format>
-
-#include "io/base_fd.hpp"
 
 namespace core::io {
 
@@ -56,7 +56,7 @@ base_fd base_fd::adopt(int native_handle) noexcept(false) {
   }
 
   class base_fd adopter(uninitialized_t{});
-  adopter.pimpl_ = std::move(impl);
+  adopter.pimpl_.emplace(std::move(impl));
   return adopter;
 }
 
@@ -65,7 +65,7 @@ base_fd::base_fd(const base_fd& that) noexcept(false)
   if (that.pimpl_->is_valid()) [[likely]] {
     if (const int native_handle = ::dup(that.pimpl_->native_handle());
         native_handle != kSyscallError) [[unlikely]] {
-      pimpl_ = impl(native_handle);
+      pimpl_.emplace(native_handle);
     } else {
       throw std::runtime_error(std::format(
           "failed to clone file descriptor: {}", std::strerror(errno)));
@@ -78,20 +78,23 @@ base_fd& base_fd::operator=(const base_fd& that) noexcept(false) {
     return *this;
   }
 
-  if (pimpl_->is_valid() && that.pimpl_->is_valid() &&
-      ::dup2(that.pimpl_->native_handle(), pimpl_->native_handle()) ==
-          kSyscallError) {
-    throw std::runtime_error(std::format("failed to clone file descriptor: {} ",
-                                         std::strerror(errno)));
-  } else if (pimpl_->is_valid() &&
-             ::close(std::exchange(pimpl_, impl(uninitialized_t{}))
-                         ->native_handle()) == kSyscallError) {
-    throw std::runtime_error(std::format("failed to close file descriptor: {} ",
-                                         std::strerror(errno)));
+  if (pimpl_->is_valid() && that.pimpl_->is_valid()) {
+    if (::dup2(that.pimpl_->native_handle(), pimpl_->native_handle()) ==
+        kSyscallError) [[unlikely]] {
+      throw std::runtime_error(std::format(
+          "failed to clone file descriptor: {} ", std::strerror(errno)));
+    }
+  } else if (pimpl_->is_valid()) {
+    if (::close(
+            std::exchange(pimpl_, impl(uninitialized_t{}))->native_handle()) ==
+        kSyscallError) [[unlikely]] {
+      throw std::runtime_error(std::format(
+          "failed to close file descriptor: {} ", std::strerror(errno)));
+    }
   } else if (const int native_handle = ::dup(that.pimpl_->native_handle());
-             native_handle != kSyscallError) {
-    pimpl_ = impl(native_handle);
-  } else {
+             native_handle != kSyscallError) [[likely]] {
+    pimpl_.emplace(native_handle);
+  } else [[unlikely]] {
     throw std::runtime_error(std::format("failed to clone file descriptor: {} ",
                                          std::strerror(errno)));
   }
