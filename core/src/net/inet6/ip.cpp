@@ -19,7 +19,7 @@ const ip& ip::kAny() noexcept {
 }
 
 const ip& ip::kNonRoutable() noexcept {
-  static const ip ip("2001:db8::");
+  static const ip ip("2001:db8::");  ///< Reserved for documentation
   return ip;
 }
 

@@ -24,7 +24,7 @@ const ip& ip::kBroadcast() noexcept {
 }
 
 const ip& ip::kNonRoutable() noexcept {
-  static const ip ip("192.0.2.0");
+  static const ip ip("192.0.2.0");  ///< TEST-NET-1
   return ip;
 }
 
