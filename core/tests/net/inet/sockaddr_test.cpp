@@ -33,6 +33,10 @@ TEST(net_inet_sockaddr, get_parts) {
 }
 
 TEST(net_inet_sockaddr, to_string) {
+  EXPECT_EQ(core::net::inet::sockaddr(core::net::inet::ip::kBroadcast(),
+                                      core::net::inet::port(65110))
+                .to_string(),
+            "255.255.255.255:65110");
   EXPECT_EQ(core::net::inet::sockaddr(core::net::inet::ip::kLoopback(),
                                       core::net::inet::port(65110))
                 .to_string(),
