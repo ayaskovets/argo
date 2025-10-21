@@ -1,4 +1,4 @@
-#include "net/dns/resolve.hpp"
+#include "net/dns.hpp"
 
 #include <netdb.h>
 
@@ -7,17 +7,17 @@
 #include <span>
 #include <utils/syscall.hpp>
 
-namespace core::net::dns {
+namespace core::net {
 
 namespace {
 
-constexpr int to_native_family(net::sockets::family family) noexcept(false) {
+constexpr int to_native_family(net::family family) noexcept(false) {
   switch (family) {
-    case net::sockets::family::kUnspecified:
+    case net::family::kUnspecified:
       return AF_UNSPEC;
-    case net::sockets::family::kInet:
+    case net::family::kInet:
       return AF_INET;
-    case net::sockets::family::kInet6:
+    case net::family::kInet6:
       return AF_INET6;
     default:
       throw std::invalid_argument(
@@ -25,13 +25,13 @@ constexpr int to_native_family(net::sockets::family family) noexcept(false) {
   }
 }
 
-constexpr int to_native_type(net::sockets::protocol protocol) noexcept(false) {
+constexpr int to_native_type(net::protocol protocol) noexcept(false) {
   switch (protocol) {
-    case net::sockets::protocol::kUnspecified:
+    case net::protocol::kUnspecified:
       return 0;
-    case net::sockets::protocol::kTcp:
+    case net::protocol::kTcp:
       return SOCK_STREAM;
-    case net::sockets::protocol::kUdp:
+    case net::protocol::kUdp:
       return SOCK_DGRAM;
     default:
       throw std::invalid_argument(
@@ -70,8 +70,8 @@ std::variant<net::inet::sockaddr, net::inet6::sockaddr> to_sockaddr(
 }  // namespace
 
 std::vector<std::variant<net::inet::sockaddr, net::inet6::sockaddr>> resolve(
-    std::string_view hostname, net::sockets::family family,
-    net::sockets::protocol protocol) noexcept(false) {
+    std::string_view hostname, net::family family,
+    net::protocol protocol) noexcept(false) {
   std::unique_ptr<::addrinfo, decltype(&SYSCALL(::freeaddrinfo))> results_raii(
       nullptr, SYSCALL(::freeaddrinfo));
 
@@ -105,4 +105,4 @@ std::vector<std::variant<net::inet::sockaddr, net::inet6::sockaddr>> resolve(
   return sockaddrs;
 }
 
-}  // namespace core::net::dns
+}  // namespace core::net

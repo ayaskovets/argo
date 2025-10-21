@@ -4,14 +4,14 @@ add_library(${TARGET} STATIC)
 target_sources(${TARGET}
     PRIVATE
     src/datetime/iso8601.cpp
-    src/io/fd.cpp
+    src/io/base_fd.cpp
     src/io/poller.cpp
     src/logging/logger.cpp
     src/logging/renderer.cpp
     src/logging/writer.cpp
     src/net/base_sockaddr.cpp
     src/net/base_socket.cpp
-    src/net/dns/resolve.cpp
+    src/net/dns.cpp
     src/net/inet/ip.cpp
     src/net/inet/port.cpp
     src/net/inet/sockaddr.cpp

@@ -6,9 +6,8 @@ set(CMAKE_GTEST_DISCOVER_TESTS_DISCOVERY_MODE PRE_TEST)
 add_executable(${TARGET})
 target_sources(${TARGET}
     PRIVATE
-    async/channel_test.cpp
     datetime/iso8601_test.cpp
-    io/fd_test.cpp
+    io/base_fd_test.cpp
     io/poller_test.cpp
     logging/logger_test.cpp
     net/base_sockaddr_test.cpp
@@ -33,6 +32,7 @@ target_sources(${TARGET}
     queues/lockfree_mpsc_queue_test.cpp
     queues/lockfree_spmc_queue_test.cpp
     queues/lockless_mpmc_queue_test.cpp
+    queues/queue_test.cpp
     queues/single_threaded_queue_test.cpp
     queues/waitfree_spsc_queue_test.cpp
     utils/as_ref_test.cpp

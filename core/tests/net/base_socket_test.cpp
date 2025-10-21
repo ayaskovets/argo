@@ -8,8 +8,8 @@ namespace {
 
 class impl_socket final : public core::net::base_socket {
  public:
-  impl_socket(core::net::sockets::family family, core::net::sockets::type type,
-              core::net::sockets::protocol protocol)
+  impl_socket(core::net::family family, core::net::socktype type,
+              core::net::protocol protocol)
       : core::net::base_socket(family, type, protocol) {}
 };
 
@@ -21,9 +21,8 @@ TEST(net_sockets_base_socket, size) {
 }
 
 class net_sockets_base_socket
-    : public ::testing::TestWithParam<
-          std::tuple<core::net::sockets::family, core::net::sockets::type,
-                     core::net::sockets::protocol>> {};
+    : public ::testing::TestWithParam<std::tuple<
+          core::net::family, core::net::socktype, core::net::protocol>> {};
 
 TEST_P(net_sockets_base_socket, options) {
   const auto& [family, type, protocol] = GetParam();
@@ -91,19 +90,17 @@ TEST_P(net_sockets_base_socket, move) {
 
 INSTANTIATE_TEST_SUITE_P(
     net_sockets_base_socket, net_sockets_base_socket,
-    ::testing::Combine(::testing::Values<core::net::sockets::family>(
-                           core::net::sockets::family::kInet,
-                           core::net::sockets::family::kInet6,
-                           core::net::sockets::family::kUnix),
-                       ::testing::Values<core::net::sockets::type>(
-                           core::net::sockets::type::kStream,
-                           core::net::sockets::type::kDgram,
-                           core::net::sockets::type::kRaw,
-                           core::net::sockets::type::kRdm,
-                           core::net::sockets::type::kSeqpacket),
-                       ::testing::Values<core::net::sockets::protocol>(
-                           core::net::sockets::protocol::kUnspecified,
-                           core::net::sockets::protocol::kTcp,
-                           core::net::sockets::protocol::kUdp)));
+    ::testing::Combine(
+        ::testing::Values<core::net::family>(core::net::family::kInet,
+                                             core::net::family::kInet6,
+                                             core::net::family::kUnix),
+        ::testing::Values<core::net::socktype>(core::net::socktype::kStream,
+                                               core::net::socktype::kDgram,
+                                               core::net::socktype::kRaw,
+                                               core::net::socktype::kRdm,
+                                               core::net::socktype::kSeqpacket),
+        ::testing::Values<core::net::protocol>(
+            core::net::protocol::kUnspecified, core::net::protocol::kTcp,
+            core::net::protocol::kUdp)));
 
 }  // namespace tests::net

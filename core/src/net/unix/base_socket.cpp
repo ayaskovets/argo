@@ -15,9 +15,8 @@ constexpr int kSyscallError = -1;
 base_socket::base_socket(io::uninitialized_t) noexcept
     : net::base_socket(core::io::uninitialized_t{}) {}
 
-base_socket::base_socket(net::sockets::type type) noexcept(false)
-    : net::base_socket(net::sockets::family::kUnix, type,
-                       net::sockets::protocol::kUnspecified) {}
+base_socket::base_socket(net::socktype type) noexcept(false)
+    : net::base_socket(net::family::kUnix, type, net::protocol::kUnspecified) {}
 
 base_socket::~base_socket() noexcept {
   static const base_socket kUninitialized(io::uninitialized_t{});

@@ -3,7 +3,7 @@
 #include <cstdint>
 #include <format>
 
-namespace core::net::sockets {
+namespace core::net {
 
 /**
  * @brief Specific protocol
@@ -14,10 +14,10 @@ enum class protocol : std::uint8_t {
   kUdp,
 };
 
-}  // namespace core::net::sockets
+}  // namespace core::net
 
 template <>
-class std::formatter<core::net::sockets::protocol> {
+class std::formatter<core::net::protocol> {
  public:
   template <typename FormatContext>
   constexpr auto parse(FormatContext& ctx) const noexcept {
@@ -25,14 +25,14 @@ class std::formatter<core::net::sockets::protocol> {
   }
 
   template <typename FormatContext>
-  constexpr auto format(const core::net::sockets::protocol& protocol,
+  constexpr auto format(const core::net::protocol& protocol,
                         FormatContext& ctx) const noexcept {
     switch (protocol) {
-      case core::net::sockets::protocol::kUnspecified:
+      case core::net::protocol::kUnspecified:
         return std::format_to(ctx.out(), "UNSPECIFIED");
-      case core::net::sockets::protocol::kTcp:
+      case core::net::protocol::kTcp:
         return std::format_to(ctx.out(), "IPPROTO_TCP");
-      case core::net::sockets::protocol::kUdp:
+      case core::net::protocol::kUdp:
         return std::format_to(ctx.out(), "IPPROTO_UDP");
     }
   }

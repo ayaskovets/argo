@@ -4,9 +4,9 @@
 
 #include "io/base_fd.hpp"
 #include "net/base_sockaddr.hpp"
-#include "net/sockets/family.hpp"
-#include "net/sockets/protocol.hpp"
-#include "net/sockets/type.hpp"
+#include "net/family.hpp"
+#include "net/protocol.hpp"
+#include "net/socktype.hpp"
 
 namespace core::net {
 
@@ -41,8 +41,8 @@ enum class accept_status : std::uint8_t {
 class base_socket : public io::base_fd {
  protected:
   base_socket(io::uninitialized_t) noexcept;
-  base_socket(net::sockets::family family, net::sockets::type type,
-              net::sockets::protocol protocol) noexcept(false);
+  base_socket(net::family family, net::socktype type,
+              net::protocol protocol) noexcept(false);
 
  public:
   void set_nonblock(bool value) noexcept(false);
@@ -55,8 +55,8 @@ class base_socket : public io::base_fd {
   bool get_reuseaddr() const noexcept(false);
   bool get_reuseport() const noexcept(false);
   bool get_keepalive() const noexcept(false);
-  net::sockets::family get_family() const noexcept(false);
-  net::sockets::type get_type() const noexcept(false);
+  net::family get_family() const noexcept(false);
+  net::socktype get_type() const noexcept(false);
 
  public:
   bind_status bind(const net::base_sockaddr& sockaddr) noexcept(false);

@@ -1,13 +1,12 @@
-#include "net/dns/resolve.hpp"
-
 #include <gtest/gtest.h>
+
+#include "net/dns.hpp"
 
 namespace tests::net::dns {
 
 TEST(net_dns_resolve, localhost_udp_ip4) {
-  const auto results =
-      core::net::dns::resolve("localhost", core::net::sockets::family::kInet,
-                              core::net::sockets::protocol::kUdp);
+  const auto results = core::net::resolve("localhost", core::net::family::kInet,
+                                          core::net::protocol::kUdp);
   EXPECT_EQ(results.size(), 1);
 
   const auto& sockaddr = results.at(0);
@@ -16,9 +15,8 @@ TEST(net_dns_resolve, localhost_udp_ip4) {
 }
 
 TEST(net_dns_resolve, localhost_tcp_ip6) {
-  const auto results =
-      core::net::dns::resolve("localhost", core::net::sockets::family::kInet6,
-                              core::net::sockets::protocol::kTcp);
+  const auto results = core::net::resolve(
+      "localhost", core::net::family::kInet6, core::net::protocol::kTcp);
   EXPECT_EQ(results.size(), 1);
 
   const auto& sockaddr = results.at(0);
@@ -27,9 +25,9 @@ TEST(net_dns_resolve, localhost_tcp_ip6) {
 }
 
 TEST(net_dns_resolve, localhost_unspec) {
-  const auto results = core::net::dns::resolve(
-      "localhost", core::net::sockets::family::kUnspecified,
-      core::net::sockets::protocol::kUnspecified);
+  const auto results =
+      core::net::resolve("localhost", core::net::family::kUnspecified,
+                         core::net::protocol::kUnspecified);
   EXPECT_EQ(results.size(), 4);
 }
 

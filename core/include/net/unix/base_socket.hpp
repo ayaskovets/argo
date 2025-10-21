@@ -11,7 +11,7 @@ namespace core::net::unix {
 class base_socket : public net::base_socket {
  protected:
   explicit base_socket(io::uninitialized_t) noexcept;
-  explicit base_socket(core::net::sockets::type type) noexcept(false);
+  explicit base_socket(core::net::socktype type) noexcept(false);
   ~base_socket() noexcept;
 
  public:

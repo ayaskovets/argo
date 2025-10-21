@@ -9,22 +9,22 @@
 
 namespace core::net {
 
-base_sockaddr::base_sockaddr(net::sockets::family family) noexcept(false) {
+base_sockaddr::base_sockaddr(net::family family) noexcept(false) {
   switch (family) {
-    case net::sockets::family::kUnspecified:
+    case net::family::kUnspecified:
       throw std::invalid_argument(
           std::format("invalid sockaddr family: {}", family));
-    case net::sockets::family::kInet:
+    case net::family::kInet:
       storage_ = std::make_shared<::sockaddr_in>(::sockaddr_in{
           .sin_family = AF_INET,
       });
       break;
-    case net::sockets::family::kInet6:
+    case net::family::kInet6:
       storage_ = std::make_shared<::sockaddr_in6>(::sockaddr_in6{
           .sin6_family = AF_INET6,
       });
       break;
-    case net::sockets::family::kUnix:
+    case net::family::kUnix:
       storage_ = std::make_shared<::sockaddr_un>(::sockaddr_un{
           .sun_family = AF_UNIX,
       });
@@ -95,14 +95,14 @@ std::size_t base_sockaddr::get_length() const {
   }
 }
 
-net::sockets::family base_sockaddr::get_family() const noexcept(false) {
+net::family base_sockaddr::get_family() const noexcept(false) {
   switch (static_cast<const ::sockaddr*>(storage_.get())->sa_family) {
     case AF_INET:
-      return net::sockets::family::kInet;
+      return net::family::kInet;
     case AF_INET6:
-      return net::sockets::family::kInet6;
+      return net::family::kInet6;
     case AF_UNIX:
-      return net::sockets::family::kUnix;
+      return net::family::kUnix;
     [[unlikely]] default:
       throw std::runtime_error("unimplemented");
   }

@@ -6,7 +6,7 @@ socket::socket(io::uninitialized_t) noexcept
     : net::base_socket(io::uninitialized_t{}) {}
 
 socket::socket() noexcept(false)
-    : net::base_socket(net::sockets::family::kInet, net::sockets::type::kStream,
-                       net::sockets::protocol::kTcp) {}
+    : net::base_socket(net::family::kInet, net::socktype::kStream,
+                       net::protocol::kTcp) {}
 
 }  // namespace core::net::inet::tcp

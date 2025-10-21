@@ -6,9 +6,9 @@
 
 #include "net/inet/sockaddr.hpp"
 #include "net/inet6/sockaddr.hpp"
-#include "net/sockets/protocol.hpp"
+#include "net/protocol.hpp"
 
-namespace core::net::dns {
+namespace core::net {
 
 /**
  * @brief Resolve IPv4 or IPv6 address from a hostname
@@ -18,7 +18,7 @@ namespace core::net::dns {
  * Use protocol::kUnspecified to resolve all available protocols
  */
 std::vector<std::variant<net::inet::sockaddr, net::inet6::sockaddr>> resolve(
-    std::string_view hostname, net::sockets::family family,
-    net::sockets::protocol protocol) noexcept(false);
+    std::string_view hostname, net::family family,
+    net::protocol protocol) noexcept(false);
 
-}  // namespace core::net::dns
+}  // namespace core::net

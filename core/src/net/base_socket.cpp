@@ -14,72 +14,72 @@ namespace {
 
 constexpr int kSyscallError = -1;
 
-constexpr int to_native_family(net::sockets::family family) noexcept(false) {
+constexpr int to_native_family(net::family family) noexcept(false) {
   switch (family) {
-    case net::sockets::family::kUnspecified:
+    case net::family::kUnspecified:
       throw std::invalid_argument(
           std::format("invalid socket family: {}", family));
-    case net::sockets::family::kInet:
+    case net::family::kInet:
       return AF_INET;
-    case net::sockets::family::kInet6:
+    case net::family::kInet6:
       return AF_INET6;
-    case net::sockets::family::kUnix:
+    case net::family::kUnix:
       return AF_UNIX;
   }
 }
 
-constexpr net::sockets::family from_native_family(int family) noexcept(false) {
+constexpr net::family from_native_family(int family) noexcept(false) {
   switch (family) {
     case AF_INET:
-      return net::sockets::family::kInet;
+      return net::family::kInet;
     case AF_INET6:
-      return net::sockets::family::kInet6;
+      return net::family::kInet6;
     case AF_UNIX:
-      return net::sockets::family::kUnix;
+      return net::family::kUnix;
     [[unlikely]] default:
       throw std::runtime_error("unimplemented");
   }
 }
 
-constexpr int to_native_type(net::sockets::type type) noexcept {
+constexpr int to_native_type(net::socktype type) noexcept {
   switch (type) {
-    case net::sockets::type::kStream:
+    case net::socktype::kStream:
       return SOCK_STREAM;
-    case net::sockets::type::kDgram:
+    case net::socktype::kDgram:
       return SOCK_DGRAM;
-    case net::sockets::type::kRaw:
+    case net::socktype::kRaw:
       return SOCK_RAW;
-    case net::sockets::type::kRdm:
+    case net::socktype::kRdm:
       return SOCK_RDM;
-    case net::sockets::type::kSeqpacket:
+    case net::socktype::kSeqpacket:
       return SOCK_SEQPACKET;
   }
 }
 
-constexpr net::sockets::type from_native_type(int type) noexcept(false) {
+constexpr net::socktype from_native_type(int type) noexcept(false) {
   switch (type) {
     case SOCK_STREAM:
-      return net::sockets::type::kStream;
+      return net::socktype::kStream;
     case SOCK_DGRAM:
-      return net::sockets::type::kDgram;
+      return net::socktype::kDgram;
     case SOCK_RAW:
-      return net::sockets::type::kRaw;
+      return net::socktype::kRaw;
     case SOCK_RDM:
-      return net::sockets::type::kRdm;
+      return net::socktype::kRdm;
     case SOCK_SEQPACKET:
-      return net::sockets::type::kSeqpacket;
+      return net::socktype::kSeqpacket;
     [[unlikely]] default:
       throw std::runtime_error("unimplemented");
   }
 }
 
-constexpr int to_native_protocol(net::sockets::protocol protocol) noexcept {
+constexpr int to_native_protocol(net::protocol protocol) noexcept {
   switch (protocol) {
-    case net::sockets::protocol::kUnspecified:
+    case net::protocol::kUnspecified:
       return 0;
-    case net::sockets::protocol::kTcp:
+    case net::protocol::kTcp:
       return IPPROTO_TCP;
-    case net::sockets::protocol::kUdp:
+    case net::protocol::kUdp:
       return IPPROTO_UDP;
   }
 }
@@ -89,8 +89,8 @@ constexpr int to_native_protocol(net::sockets::protocol protocol) noexcept {
 base_socket::base_socket(io::uninitialized_t) noexcept
     : io::base_fd(io::uninitialized_t{}) {}
 
-base_socket::base_socket(net::sockets::family family, net::sockets::type type,
-                         net::sockets::protocol protocol) noexcept(false)
+base_socket::base_socket(net::family family, net::socktype type,
+                         net::protocol protocol) noexcept(false)
     : io::base_fd(io::base_fd::adopt([family, type, protocol] {
         const auto retval =
             SYSCALL(::socket(to_native_family(family), to_native_type(type),
@@ -147,7 +147,7 @@ void base_socket::set_keepalive(bool value) noexcept(false) {
   }
 }
 
-net::sockets::family base_socket::get_family() const noexcept(false) {
+net::family base_socket::get_family() const noexcept(false) {
 #ifdef SO_DOMAIN
   int optval;
   ::socklen_t optlen = sizeof(int);
@@ -171,7 +171,7 @@ net::sockets::family base_socket::get_family() const noexcept(false) {
 #endif
 }
 
-net::sockets::type base_socket::get_type() const noexcept(false) {
+net::socktype base_socket::get_type() const noexcept(false) {
   int optval;
   ::socklen_t optlen = sizeof(optval);
   const auto retval = SYSCALL(

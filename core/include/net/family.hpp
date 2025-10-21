@@ -3,7 +3,7 @@
 #include <cstdint>
 #include <format>
 
-namespace core::net::sockets {
+namespace core::net {
 
 /**
  * @brief Address family
@@ -15,10 +15,10 @@ enum class family : std::uint8_t {
   kUnix,
 };
 
-}  // namespace core::net::sockets
+}  // namespace core::net
 
 template <>
-class std::formatter<core::net::sockets::family> {
+class std::formatter<core::net::family> {
  public:
   template <typename FormatContext>
   constexpr auto parse(FormatContext& ctx) const noexcept {
@@ -26,16 +26,16 @@ class std::formatter<core::net::sockets::family> {
   }
 
   template <typename FormatContext>
-  constexpr auto format(const core::net::sockets::family& family,
+  constexpr auto format(const core::net::family& family,
                         FormatContext& ctx) const noexcept {
     switch (family) {
-      case core::net::sockets::family::kUnspecified:
+      case core::net::family::kUnspecified:
         return std::format_to(ctx.out(), "AF_UNSPEC");
-      case core::net::sockets::family::kInet:
+      case core::net::family::kInet:
         return std::format_to(ctx.out(), "AF_INET");
-      case core::net::sockets::family::kInet6:
+      case core::net::family::kInet6:
         return std::format_to(ctx.out(), "AF_INET6");
-      case core::net::sockets::family::kUnix:
+      case core::net::family::kUnix:
         return std::format_to(ctx.out(), "AF_UNIX");
     }
   }

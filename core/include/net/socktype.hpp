@@ -3,12 +3,12 @@
 #include <cstdint>
 #include <format>
 
-namespace core::net::sockets {
+namespace core::net {
 
 /**
  * @brief Protocol type
  */
-enum class type : std::uint8_t {
+enum class socktype : std::uint8_t {
   kStream,
   kDgram,
   kRaw,
@@ -16,10 +16,10 @@ enum class type : std::uint8_t {
   kSeqpacket,
 };
 
-}  // namespace core::net::sockets
+}  // namespace core::net
 
 template <>
-class std::formatter<core::net::sockets::type> {
+class std::formatter<core::net::socktype> {
  public:
   template <typename FormatContext>
   constexpr auto parse(FormatContext& ctx) const noexcept {
@@ -27,18 +27,18 @@ class std::formatter<core::net::sockets::type> {
   }
 
   template <typename FormatContext>
-  constexpr auto format(const core::net::sockets::type& type,
+  constexpr auto format(const core::net::socktype& type,
                         FormatContext& ctx) const noexcept {
     switch (type) {
-      case core::net::sockets::type::kStream:
+      case core::net::socktype::kStream:
         return std::format_to(ctx.out(), "SOCK_STREAM");
-      case core::net::sockets::type::kDgram:
+      case core::net::socktype::kDgram:
         return std::format_to(ctx.out(), "SOCK_DGRAM");
-      case core::net::sockets::type::kRaw:
+      case core::net::socktype::kRaw:
         return std::format_to(ctx.out(), "SOCK_RAW");
-      case core::net::sockets::type::kRdm:
+      case core::net::socktype::kRdm:
         return std::format_to(ctx.out(), "SOCK_RDM");
-      case core::net::sockets::type::kSeqpacket:
+      case core::net::socktype::kSeqpacket:
         return std::format_to(ctx.out(), "SOCK_SEQPACKET");
     }
   }

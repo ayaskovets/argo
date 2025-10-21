@@ -15,7 +15,7 @@ const sockaddr& sockaddr::kEmpty() noexcept {
 }
 
 sockaddr::sockaddr(std::string_view path) noexcept(false)
-    : net::base_sockaddr(net::sockets::family::kUnix) {
+    : net::base_sockaddr(net::family::kUnix) {
   constexpr std::size_t kMaxPathSize = sizeof(sockaddr_un{}.sun_path) - 1;
 
   if (path.size() >= kMaxPathSize) [[unlikely]] {

@@ -8,7 +8,7 @@ namespace {
 
 class impl_sockaddr final : public core::net::base_sockaddr {
  public:
-  explicit impl_sockaddr(core::net::sockets::family family)
+  explicit impl_sockaddr(core::net::family family)
       : core::net::base_sockaddr(family) {}
 
  public:
@@ -23,7 +23,7 @@ TEST(net_sockets_base_sockaddr, size) {
 }
 
 class net_sockets_base_sockaddr
-    : public ::testing::TestWithParam<core::net::sockets::family> {};
+    : public ::testing::TestWithParam<core::net::family> {};
 
 TEST_P(net_sockets_base_sockaddr, smoke) {
   const auto& family = GetParam();
@@ -58,8 +58,8 @@ TEST_P(net_sockets_base_sockaddr, move) {
 }
 
 INSTANTIATE_TEST_SUITE_P(net_sockets_base_sockaddr, net_sockets_base_sockaddr,
-                         ::testing::Values(core::net::sockets::family::kInet,
-                                           core::net::sockets::family::kInet6,
-                                           core::net::sockets::family::kUnix));
+                         ::testing::Values(core::net::family::kInet,
+                                           core::net::family::kInet6,
+                                           core::net::family::kUnix));
 
 }  // namespace tests::net
