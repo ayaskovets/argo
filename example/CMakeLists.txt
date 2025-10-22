@@ -1,4 +1,4 @@
-set(TARGET app)
+set(TARGET example)
 
 add_executable(${TARGET})
 target_sources(${TARGET}

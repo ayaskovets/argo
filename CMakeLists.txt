@@ -6,7 +6,7 @@ project(sandbox
 
 include(CTest)
 
-add_subdirectory(app)
+add_subdirectory(example)
 add_subdirectory(benchmarks)
 add_subdirectory(src)
 add_subdirectory(tests)
