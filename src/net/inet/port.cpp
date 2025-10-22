@@ -1,6 +1,6 @@
-#include <arpa/inet.h>
-
 #include <sandbox/net/inet/port.hpp>
+
+#include <arpa/inet.h>
 
 namespace sandbox::net::inet {
 

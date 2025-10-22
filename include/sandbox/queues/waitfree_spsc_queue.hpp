@@ -1,11 +1,12 @@
 #pragma once
 
-#include <atomic>
-#include <memory>
-#include <new>
 #include <sandbox/utils/conditionally_runtime.hpp>
 #include <sandbox/utils/dynamic_extent.hpp>
 #include <sandbox/utils/mixins.hpp>
+
+#include <atomic>
+#include <memory>
+#include <new>
 #include <stdexcept>
 
 namespace sandbox::queues {

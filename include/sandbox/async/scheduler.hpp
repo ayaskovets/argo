@@ -1,7 +1,8 @@
 #pragma once
 
-#include <concepts>
 #include <sandbox/async/channel.hpp>
+
+#include <concepts>
 #include <stop_token>
 
 namespace sandbox::async {

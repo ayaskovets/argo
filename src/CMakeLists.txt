@@ -3,6 +3,7 @@ set(TARGET sandbox)
 add_library(${TARGET} STATIC)
 target_sources(${TARGET}
     PRIVATE
+    async/executors/current_executor.cpp
     datetime/iso8601.cpp
     io/base_fd.cpp
     io/poller.cpp

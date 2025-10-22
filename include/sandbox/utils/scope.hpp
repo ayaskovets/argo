@@ -1,7 +1,8 @@
 #pragma once
 
-#include <concepts>
 #include <sandbox/utils/mixins.hpp>
+
+#include <concepts>
 #include <utility>
 
 namespace sandbox::utils {

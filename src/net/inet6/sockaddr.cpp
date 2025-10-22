@@ -1,6 +1,6 @@
-#include <arpa/inet.h>
-
 #include <sandbox/net/inet6/sockaddr.hpp>
+
+#include <arpa/inet.h>
 
 namespace sandbox::net::inet6 {
 

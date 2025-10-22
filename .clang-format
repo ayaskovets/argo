@@ -1,1 +1,22 @@
 BasedOnStyle: Google
+IncludeBlocks: Regroup
+IncludeCategories:
+  - Regex: '<sandbox/.*>'
+    Priority: 1
+    SortPriority: 1
+  - Regex: '^<.*\.h>'
+    Priority: 3
+    SortPriority: 3
+  - Regex: '^<.*>'
+    Priority: 2
+    SortPriority: 2
+  - Regex: '^[a-zA-Z].*'
+    Priority: 4
+    SortPriority: 4
+  - Regex: '\.\./.*'
+    Priority: 5
+    SortPriority: 5
+  - Regex: '.*'
+    Priority: 6
+    SortPriority: 6
+IncludeIsMainRegex: "(_test|_benchmark)?$"

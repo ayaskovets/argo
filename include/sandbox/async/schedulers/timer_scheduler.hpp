@@ -1,12 +1,13 @@
 #pragma once
 
-#include <concepts>
-#include <optional>
-#include <queue>
 #include <sandbox/async/channel.hpp>
 #include <sandbox/async/scheduler.hpp>
 #include <sandbox/utils/as_ref.hpp>
 #include <sandbox/utils/mixins.hpp>
+
+#include <concepts>
+#include <optional>
+#include <queue>
 
 namespace sandbox::async::schedulers {
 

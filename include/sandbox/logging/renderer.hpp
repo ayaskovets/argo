@@ -1,7 +1,8 @@
 #pragma once
 
-#include <format>
 #include <sandbox/logging/level.hpp>
+
+#include <format>
 #include <string_view>
 
 namespace sandbox::logging {

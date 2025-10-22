@@ -1,6 +1,6 @@
-#include <sys/un.h>
-
 #include <sandbox/net/unix/sockaddr.hpp>
+
+#include <sys/un.h>
 
 namespace sandbox::net::unix {
 

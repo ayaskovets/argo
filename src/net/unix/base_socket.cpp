@@ -1,7 +1,7 @@
-#include <unistd.h>
-
 #include <sandbox/net/unix/base_socket.hpp>
 #include <sandbox/utils/syscall.hpp>
+
+#include <unistd.h>
 
 namespace sandbox::net::unix {
 

@@ -1,10 +1,11 @@
-#include <netdb.h>
+#include <sandbox/net/dns.hpp>
+#include <sandbox/utils/syscall.hpp>
 
 #include <cerrno>
 #include <format>
-#include <sandbox/net/dns.hpp>
-#include <sandbox/utils/syscall.hpp>
 #include <span>
+
+#include <netdb.h>
 
 namespace sandbox::net {
 

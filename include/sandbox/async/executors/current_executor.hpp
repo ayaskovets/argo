@@ -1,9 +1,10 @@
 #pragma once
 
-#include <coroutine>
-#include <functional>
 #include <sandbox/async/channel.hpp>
 #include <sandbox/async/scheduler.hpp>
+
+#include <coroutine>
+#include <functional>
 
 namespace sandbox::async::executors::current_executor {
 

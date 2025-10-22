@@ -1,9 +1,10 @@
-#include <arpa/inet.h>
+#include <sandbox/net/inet6/ip.hpp>
+#include <sandbox/utils/syscall.hpp>
 
 #include <cerrno>
 #include <format>
-#include <sandbox/net/inet6/ip.hpp>
-#include <sandbox/utils/syscall.hpp>
+
+#include <arpa/inet.h>
 
 namespace sandbox::net::inet6 {
 

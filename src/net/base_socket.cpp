@@ -1,11 +1,12 @@
-#include <arpa/inet.h>
-#include <fcntl.h>
-#include <sys/socket.h>
+#include <sandbox/net/base_socket.hpp>
+#include <sandbox/utils/syscall.hpp>
 
 #include <cerrno>
 #include <format>
-#include <sandbox/net/base_socket.hpp>
-#include <sandbox/utils/syscall.hpp>
+
+#include <arpa/inet.h>
+#include <fcntl.h>
+#include <sys/socket.h>
 
 namespace sandbox::net {
 

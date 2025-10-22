@@ -2,6 +2,6 @@
 
 namespace sandbox::async::executirs {
 
-try_push = nullptr;
+std::function<bool(const base_scheduler_input&)> try_push = nullptr;
 
 }  // namespace sandbox::async::executirs

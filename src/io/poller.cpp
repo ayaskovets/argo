@@ -1,11 +1,12 @@
-#include <poll.h>
+#include <sandbox/io/poller.hpp>
+#include <sandbox/utils/syscall.hpp>
 
 #include <chrono>
 #include <format>
-#include <sandbox/io/poller.hpp>
-#include <sandbox/utils/syscall.hpp>
 #include <unordered_map>
 #include <vector>
+
+#include <poll.h>
 
 namespace sandbox::io {
 

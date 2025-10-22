@@ -1,6 +1,8 @@
+#include <sandbox/logging/level.hpp>
+#include <sandbox/logging/writer.hpp>
+
 #include <cstdio>
 #include <format>
-#include <sandbox/logging/writer.hpp>
 
 namespace sandbox::logging {
 

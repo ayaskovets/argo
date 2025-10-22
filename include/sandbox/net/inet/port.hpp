@@ -1,8 +1,9 @@
 #pragma once
 
+#include <sandbox/net/network_byte_order.hpp>
+
 #include <cstdint>
 #include <format>
-#include <sandbox/net/network_byte_order.hpp>
 
 namespace sandbox::net::inet {
 

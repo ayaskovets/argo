@@ -1,9 +1,10 @@
 #pragma once
 
-#include <format>
 #include <sandbox/logging/level.hpp>
 #include <sandbox/logging/renderer.hpp>
 #include <sandbox/logging/writer.hpp>
+
+#include <format>
 
 namespace sandbox::logging {
 

@@ -1,9 +1,10 @@
 #pragma once
 
-#include <coroutine>
 #include <sandbox/async/channel.hpp>
 #include <sandbox/async/executors/current_executor.hpp>
 #include <sandbox/utils/mixins.hpp>
+
+#include <coroutine>
 
 namespace sandbox::async::executors {
 

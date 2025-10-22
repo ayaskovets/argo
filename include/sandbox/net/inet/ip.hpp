@@ -1,7 +1,8 @@
 #pragma once
 
-#include <format>
 #include <sandbox/net/network_byte_order.hpp>
+
+#include <format>
 #include <string>
 
 namespace sandbox::net::inet {
