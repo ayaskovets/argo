@@ -6,9 +6,9 @@ project(sandbox
 
 include(CTest)
 
-# add_subdirectory(app)
-# add_subdirectory(benchmarks)
+add_subdirectory(app)
+add_subdirectory(benchmarks)
 add_subdirectory(src)
-# add_subdirectory(tests)
+add_subdirectory(tests)
 
 include(CPack)
