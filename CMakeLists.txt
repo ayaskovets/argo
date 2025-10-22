@@ -1,8 +1,14 @@
 cmake_minimum_required(VERSION 3.29.2)
 
-project(web)
+project(sandbox
+    LANGUAGES CXX
+)
 
 include(CTest)
 
-add_subdirectory(core)
-add_subdirectory(exec)
+# add_subdirectory(app)
+# add_subdirectory(benchmarks)
+add_subdirectory(src)
+# add_subdirectory(tests)
+
+include(CPack)
