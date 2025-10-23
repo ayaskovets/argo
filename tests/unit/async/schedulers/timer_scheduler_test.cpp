@@ -8,15 +8,17 @@
 
 namespace tests::async::schedulers {
 
+namespace async = sandbox::async;
+
 namespace {
 
 template <typename T>
 using channel_t = sandbox::queues::locked_std_deque<T>;
 
 template <typename T>
-using scheduler_t = sandbox::async::schedulers::timer_scheduler<
+using scheduler_t = async::schedulers::timer_scheduler<
     std::chrono::steady_clock,
-    channel_t<sandbox::async::schedulers::detail::timer_scheduler_input<
+    channel_t<async::schedulers::detail::timer_scheduler_input<
         std::chrono::steady_clock, T>>,
     channel_t<T>>;
 
@@ -42,7 +44,7 @@ TEST(tmp, tmp) {
 }
 
 TEST(async_schedulers_timer_scheduler, channels) {
-  channel_t<sandbox::async::schedulers::detail::timer_scheduler_input<
+  channel_t<async::schedulers::detail::timer_scheduler_input<
       std::chrono::steady_clock, int>>
       in_channel(1);
   channel_t<int> out_channel(1);
@@ -53,7 +55,7 @@ TEST(async_schedulers_timer_scheduler, channels) {
 }
 
 // using in_channel_value_t =
-//     sandbox::async::schedulers::detail::timer_scheduler_input<
+//     async::schedulers::detail::timer_scheduler_input<
 //         clock_t, std::coroutine_handle<>>;
 // using out_channel_value_t = std::coroutine_handle<>;
 
@@ -63,10 +65,10 @@ TEST(async_schedulers_timer_scheduler, channels) {
 // sandbox::queues::lockfree_mpmc_queue<out_channel_value_t>;
 
 // using scheduler_t =
-//     sandbox::async::schedulers::timer_scheduler<clock_t, timer_channel_t,
+//     async::schedulers::timer_scheduler<clock_t, timer_channel_t,
 //                                              handle_channel_t>;
 // using executor_t =
-//     sandbox::async::executors::thread_pool_executor<handle_channel_t,
+//     async::executors::thread_pool_executor<handle_channel_t,
 //                                                  timer_channel_t>;
 
 // TEST(async_task, timer_smoke) {
@@ -82,7 +84,7 @@ TEST(async_schedulers_timer_scheduler, channels) {
 //   executor_t executor(handle_channel, timer_channel);
 //   auto task = outer();
 
-//   static_assert(sandbox::async::concepts::executor<executor_t>);
+//   static_assert(async::concepts::executor<executor_t>);
 
 //   const in_channel_value_t value(clock_t::now(), task.get_handle());
 //   timer_channel.push(&value);

@@ -5,6 +5,8 @@
 
 namespace tests::async::schedulers {
 
+namespace async = sandbox::async;
+
 namespace {
 
 template <typename T>
@@ -12,7 +14,7 @@ using channel_t = sandbox::queues::locked_std_deque<T>;
 
 template <typename T>
 using scheduler_t =
-    sandbox::async::schedulers::yield_scheduler<channel_t<T>, channel_t<T>>;
+    async::schedulers::yield_scheduler<channel_t<T>, channel_t<T>>;
 
 }  // namespace
 
@@ -31,7 +33,7 @@ TEST(async_schedulers_yield_scheduler, channels) {
 }
 
 // using in_channel_value_t =
-//     sandbox::async::schedulers::detail::yield_scheduler_input<
+//     async::schedulers::detail::yield_scheduler_input<
 //         clock_t, std::coroutine_handle<>>;
 // using out_channel_value_t = std::coroutine_handle<>;
 
@@ -41,10 +43,10 @@ TEST(async_schedulers_yield_scheduler, channels) {
 // sandbox::queues::lockfree_mpmc_queue<out_channel_value_t>;
 
 // using scheduler_t =
-//     sandbox::async::schedulers::yield_scheduler<clock_t, yield_channel_t,
+//     async::schedulers::yield_scheduler<clock_t, yield_channel_t,
 //                                              handle_channel_t>;
 // using executor_t =
-//     sandbox::async::executors::thread_pool_executor<handle_channel_t,
+//     async::executors::thread_pool_executor<handle_channel_t,
 //                                                  yield_channel_t>;
 
 // TEST(async_task, yield_smoke) {
@@ -60,7 +62,7 @@ TEST(async_schedulers_yield_scheduler, channels) {
 //   executor_t executor(handle_channel, yield_channel);
 //   auto task = outer();
 
-//   static_assert(sandbox::async::concepts::executor<executor_t>);
+//   static_assert(async::concepts::executor<executor_t>);
 
 //   const in_channel_value_t value(clock_t::now(), task.get_handle());
 //   yield_channel.push(&value);

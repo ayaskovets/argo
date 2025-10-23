@@ -4,8 +4,10 @@
 
 namespace tests::utils {
 
+namespace utils = sandbox::utils;
+
 TEST(utils_leak_detector_allocator, smoke) {
-  sandbox::utils::leak_detector_allocator<int> allocator;
+  utils::leak_detector_allocator<int> allocator;
 
   {
     EXPECT_TRUE(allocator.is_clean());
@@ -29,7 +31,7 @@ TEST(utils_leak_detector_allocator, smoke) {
 }
 
 TEST(utils_leak_detector_allocator, shared) {
-  sandbox::utils::leak_detector_allocator<int, true> allocator;
+  utils::leak_detector_allocator<int, true> allocator;
 
   {
     std::vector<int, decltype(allocator)> vector(allocator);
@@ -38,10 +40,10 @@ TEST(utils_leak_detector_allocator, shared) {
     vector.push_back(1);
     EXPECT_FALSE(allocator.is_clean());
 
-    sandbox::utils::leak_detector_allocator<int, true> shared_copy;
+    utils::leak_detector_allocator<int, true> shared_copy;
     EXPECT_FALSE(shared_copy.is_clean());
 
-    sandbox::utils::leak_detector_allocator<int> copy;
+    utils::leak_detector_allocator<int> copy;
     EXPECT_TRUE(copy.is_clean());
   }
 

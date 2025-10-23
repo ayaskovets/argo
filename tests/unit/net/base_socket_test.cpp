@@ -4,26 +4,26 @@
 
 namespace tests::net {
 
+namespace net = sandbox::net;
+
 namespace {
 
-class impl_socket final : public sandbox::net::base_socket {
+class impl_socket final : public net::base_socket {
  public:
-  impl_socket(sandbox::net::family family, sandbox::net::socktype type,
-              sandbox::net::protocol protocol)
-      : sandbox::net::base_socket(family, type, protocol) {}
+  impl_socket(net::family family, net::socktype type, net::protocol protocol)
+      : net::base_socket(family, type, protocol) {}
 };
 
 }  // namespace
 
 TEST(net_sockets_base_socket, size) {
-  static_assert(sizeof(sandbox::net::base_socket) == 4);
-  static_assert(alignof(sandbox::net::base_socket) == 4);
+  static_assert(sizeof(net::base_socket) == 4);
+  static_assert(alignof(net::base_socket) == 4);
 }
 
 class net_sockets_base_socket
     : public ::testing::TestWithParam<
-          std::tuple<sandbox::net::family, sandbox::net::socktype,
-                     sandbox::net::protocol>> {};
+          std::tuple<net::family, net::socktype, net::protocol>> {};
 
 TEST_P(net_sockets_base_socket, options) {
   const auto& [family, type, protocol] = GetParam();
@@ -92,15 +92,13 @@ TEST_P(net_sockets_base_socket, move) {
 INSTANTIATE_TEST_SUITE_P(
     net_sockets_base_socket, net_sockets_base_socket,
     ::testing::Combine(
-        ::testing::Values<sandbox::net::family>(sandbox::net::family::kInet,
-                                                sandbox::net::family::kInet6,
-                                                sandbox::net::family::kUnix),
-        ::testing::Values<sandbox::net::socktype>(
-            sandbox::net::socktype::kStream, sandbox::net::socktype::kDgram,
-            sandbox::net::socktype::kRaw, sandbox::net::socktype::kRdm,
-            sandbox::net::socktype::kSeqpacket),
-        ::testing::Values<sandbox::net::protocol>(
-            sandbox::net::protocol::kUnspecified, sandbox::net::protocol::kTcp,
-            sandbox::net::protocol::kUdp)));
+        ::testing::Values<net::family>(net::family::kInet, net::family::kInet6,
+                                       net::family::kUnix),
+        ::testing::Values<net::socktype>(
+            net::socktype::kStream, net::socktype::kDgram, net::socktype::kRaw,
+            net::socktype::kRdm, net::socktype::kSeqpacket),
+        ::testing::Values<net::protocol>(net::protocol::kUnspecified,
+                                         net::protocol::kTcp,
+                                         net::protocol::kUdp)));
 
 }  // namespace tests::net

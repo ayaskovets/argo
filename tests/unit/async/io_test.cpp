@@ -15,9 +15,10 @@ using namespace std::chrono_literals;
 
 namespace tests::async {
 
+namespace async = sandbox::async;
+
 using in_channel_value_t =
-    sandbox::async::schedulers::detail::io_scheduler_input<
-        std::coroutine_handle<>>;
+    async::schedulers::detail::io_scheduler_input<std::coroutine_handle<>>;
 using out_channel_value_t = std::coroutine_handle<>;
 
 using io_channel_t =
@@ -26,11 +27,11 @@ using handle_channel_t =
     sandbox::queues::lockfree_mpmc_queue<out_channel_value_t>;
 
 using scheduler_t =
-    sandbox::async::schedulers::io_scheduler<io_channel_t, handle_channel_t>;
+    async::schedulers::io_scheduler<io_channel_t, handle_channel_t>;
 using executor_t =
-    sandbox::async::executors::inline_executor<handle_channel_t, io_channel_t>;
+    async::executors::inline_executor<handle_channel_t, io_channel_t>;
 
-sandbox::async::task<int> server(sandbox::net::inet::tcp::socket& srv) {
+async::task<int> server(sandbox::net::inet::tcp::socket& srv) {
   std::cerr << std::chrono::system_clock::now() << " - server() ENTER"
             << std::endl;
 
@@ -40,7 +41,7 @@ sandbox::async::task<int> server(sandbox::net::inet::tcp::socket& srv) {
     std::cerr << std::chrono::system_clock::now() << " - server() ITER"
               << std::endl;
 
-    co_await sandbox::async::awaiters::accept(srv, peers[i]);
+    co_await async::awaiters::accept(srv, peers[i]);
 
     std::cerr << std::chrono::system_clock::now() << " - server() ACCEPTED"
               << std::endl;
@@ -48,7 +49,7 @@ sandbox::async::task<int> server(sandbox::net::inet::tcp::socket& srv) {
     std::vector<std::byte> bytes;
     bytes.resize(4);
 
-    co_await sandbox::async::awaiters::send(peers[i], std::span(bytes));
+    co_await async::awaiters::send(peers[i], std::span(bytes));
 
     std::cerr << std::chrono::system_clock::now() << " - server() SENT"
               << std::endl;
@@ -57,9 +58,8 @@ sandbox::async::task<int> server(sandbox::net::inet::tcp::socket& srv) {
   co_return 0;
 }
 
-sandbox::async::task<int> client(
-    sandbox::net::inet::tcp::socket* cnt_ptr,
-    const sandbox::net::inet::sockaddr& server_sockaddr) {
+async::task<int> client(sandbox::net::inet::tcp::socket* cnt_ptr,
+                        const sandbox::net::inet::sockaddr& server_sockaddr) {
   std::cerr << std::chrono::system_clock::now() << " - client() ENTER"
             << std::endl;
 
@@ -76,7 +76,7 @@ sandbox::async::task<int> client(
     std::cerr << std::chrono::system_clock::now() << " - client() ITER"
               << std::endl;
 
-    co_await sandbox::async::awaiters::connect(*cnt_ptr, server_sockaddr);
+    co_await async::awaiters::connect(*cnt_ptr, server_sockaddr);
 
     std::cerr << std::chrono::system_clock::now() << " - client() CONNECTED"
               << std::endl;
@@ -84,7 +84,7 @@ sandbox::async::task<int> client(
     std::vector<std::byte> bytes{};
     bytes.resize(4);
 
-    co_await sandbox::async::awaiters::receive(*cnt_ptr, std::span(bytes));
+    co_await async::awaiters::receive(*cnt_ptr, std::span(bytes));
 
     cnt_ptr = nullptr;
 
@@ -102,7 +102,7 @@ TEST(async_task, io_smoke) {
   scheduler_t scheduler(io_channel, handle_channel);
   executor_t executor(handle_channel, io_channel);
 
-  static_assert(sandbox::async::concepts::executor<executor_t>);
+  static_assert(async::concepts::executor<executor_t>);
 
   const auto server_sockaddr = sandbox::net::inet::sockaddr(
       sandbox::net::inet::ip("127.0.0.1"), sandbox::net::inet::port(8081));

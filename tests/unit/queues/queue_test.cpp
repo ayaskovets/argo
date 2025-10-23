@@ -12,23 +12,23 @@
 
 namespace tests::queues {
 
+namespace queues = sandbox::queues;
+
 TEST(queues_queue, concept) {
-  static_assert(sandbox::queues::concepts::noexcept_queue<
-                sandbox::queues::locked_mpmc_queue<int>>);
   static_assert(
-      sandbox::queues::concepts::queue<sandbox::queues::locked_std_deque<int>>);
-  static_assert(sandbox::queues::concepts::noexcept_queue<
-                sandbox::queues::lockfree_mpmc_queue<int>>);
-  static_assert(sandbox::queues::concepts::noexcept_queue<
-                sandbox::queues::lockfree_mpsc_queue<int>>);
-  static_assert(sandbox::queues::concepts::noexcept_queue<
-                sandbox::queues::lockfree_spmc_queue<int>>);
-  static_assert(sandbox::queues::concepts::noexcept_queue<
-                sandbox::queues::lockless_mpmc_queue<int>>);
-  static_assert(sandbox::queues::concepts::queue<
-                sandbox::queues::single_threaded_queue<int>>);
-  static_assert(sandbox::queues::concepts::noexcept_queue<
-                sandbox::queues::waitfree_spsc_queue<int>>);
+      queues::concepts::noexcept_queue<queues::locked_mpmc_queue<int>>);
+  static_assert(queues::concepts::queue<queues::locked_std_deque<int>>);
+  static_assert(
+      queues::concepts::noexcept_queue<queues::lockfree_mpmc_queue<int>>);
+  static_assert(
+      queues::concepts::noexcept_queue<queues::lockfree_mpsc_queue<int>>);
+  static_assert(
+      queues::concepts::noexcept_queue<queues::lockfree_spmc_queue<int>>);
+  static_assert(
+      queues::concepts::noexcept_queue<queues::lockless_mpmc_queue<int>>);
+  static_assert(queues::concepts::queue<queues::single_threaded_queue<int>>);
+  static_assert(
+      queues::concepts::noexcept_queue<queues::waitfree_spsc_queue<int>>);
 }
 
 }  // namespace tests::queues

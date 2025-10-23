@@ -4,26 +4,27 @@
 
 namespace tests::net {
 
+namespace net = sandbox::net;
+
 namespace {
 
-class impl_sockaddr final : public sandbox::net::base_sockaddr {
+class impl_sockaddr final : public net::base_sockaddr {
  public:
-  explicit impl_sockaddr(sandbox::net::family family)
-      : sandbox::net::base_sockaddr(family) {}
+  explicit impl_sockaddr(net::family family) : net::base_sockaddr(family) {}
 
  public:
-  using sandbox::net::base_sockaddr::get_storage;
+  using net::base_sockaddr::get_storage;
 };
 
 }  // namespace
 
 TEST(net_sockets_base_sockaddr, size) {
-  static_assert(sizeof(sandbox::net::base_sockaddr) == 16);
-  static_assert(alignof(sandbox::net::base_sockaddr) == 8);
+  static_assert(sizeof(net::base_sockaddr) == 16);
+  static_assert(alignof(net::base_sockaddr) == 8);
 }
 
-class net_sockets_base_sockaddr
-    : public ::testing::TestWithParam<sandbox::net::family> {};
+class net_sockets_base_sockaddr : public ::testing::TestWithParam<net::family> {
+};
 
 TEST_P(net_sockets_base_sockaddr, smoke) {
   const auto& family = GetParam();
@@ -58,8 +59,8 @@ TEST_P(net_sockets_base_sockaddr, move) {
 }
 
 INSTANTIATE_TEST_SUITE_P(net_sockets_base_sockaddr, net_sockets_base_sockaddr,
-                         ::testing::Values(sandbox::net::family::kInet,
-                                           sandbox::net::family::kInet6,
-                                           sandbox::net::family::kUnix));
+                         ::testing::Values(net::family::kInet,
+                                           net::family::kInet6,
+                                           net::family::kUnix));
 
 }  // namespace tests::net

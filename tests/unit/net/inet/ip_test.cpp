@@ -4,31 +4,29 @@
 
 namespace tests::net::inet {
 
+namespace inet = sandbox::net::inet;
+
 TEST(net_inet_ip, size) {
-  static_assert(sizeof(sandbox::net::inet::ip) == 4);
-  static_assert(alignof(sandbox::net::inet::ip) == 4);
+  static_assert(sizeof(inet::ip) == 4);
+  static_assert(alignof(inet::ip) == 4);
 }
 
 TEST(net_inet_ip, loopback) {
-  EXPECT_EQ(sandbox::net::inet::ip("127.0.0.1"),
-            sandbox::net::inet::ip::kLoopback());
+  EXPECT_EQ(inet::ip("127.0.0.1"), inet::ip::kLoopback());
 }
 
-TEST(net_inet_ip, any) {
-  EXPECT_EQ(sandbox::net::inet::ip("0.0.0.0"), sandbox::net::inet::ip::kAny());
-}
+TEST(net_inet_ip, any) { EXPECT_EQ(inet::ip("0.0.0.0"), inet::ip::kAny()); }
 
 TEST(net_inet_ip, broadcast) {
-  EXPECT_EQ(sandbox::net::inet::ip("255.255.255.255"),
-            sandbox::net::inet::ip::kBroadcast());
+  EXPECT_EQ(inet::ip("255.255.255.255"), inet::ip::kBroadcast());
 }
 
 TEST(net_inet_ip, construction) {
   const std::uint32_t bytes{0xFFFFFF00};
   const std::string string("255.255.255.0");
 
-  const sandbox::net::inet::ip from_bytes(bytes);
-  const sandbox::net::inet::ip from_string(string);
+  const inet::ip from_bytes(bytes);
+  const inet::ip from_string(string);
 
   EXPECT_EQ(from_bytes, from_string);
   EXPECT_EQ(bytes, from_bytes.get_bytes());
@@ -40,9 +38,9 @@ TEST(net_inet_ip, construction) {
 TEST(net_inet_ip, network_order) {
   const std::uint32_t bytes{0xFFFFFF00};
 
-  const sandbox::net::inet::ip host_byte_order(bytes);
-  const sandbox::net::inet::ip network_byte_order(
-      bytes, sandbox::net::network_byte_order_t{});
+  const inet::ip host_byte_order(bytes);
+  const inet::ip network_byte_order(bytes,
+                                    sandbox::net::network_byte_order_t{});
 
   EXPECT_EQ(host_byte_order.get_bytes(), bytes);
   EXPECT_NE(host_byte_order.get_bytes(sandbox::net::network_byte_order_t{}),
@@ -53,20 +51,18 @@ TEST(net_inet_ip, network_order) {
 }
 
 TEST(net_inet_ip, invalid) {
-  EXPECT_ANY_THROW(sandbox::net::inet::ip(""));
-  EXPECT_ANY_THROW(sandbox::net::inet::ip("256.0.0.0"));
-  EXPECT_ANY_THROW(sandbox::net::inet::ip("11132123123abc"));
+  EXPECT_ANY_THROW(inet::ip(""));
+  EXPECT_ANY_THROW(inet::ip("256.0.0.0"));
+  EXPECT_ANY_THROW(inet::ip("11132123123abc"));
 }
 
 TEST(net_inet_ip, to_string) {
-  EXPECT_EQ(sandbox::net::inet::ip("255.255.255.0").to_string(),
-            "255.255.255.0");
-  EXPECT_EQ(sandbox::net::inet::ip("255.255.255.0").to_string(),
-            "255.255.255.0");
+  EXPECT_EQ(inet::ip("255.255.255.0").to_string(), "255.255.255.0");
+  EXPECT_EQ(inet::ip("255.255.255.0").to_string(), "255.255.255.0");
 }
 
 TEST(net_inet_ip, format) {
-  const sandbox::net::inet::ip ip(sandbox::net::inet::ip::kAny());
+  const inet::ip ip(inet::ip::kAny());
   EXPECT_EQ(std::format("{}", ip), ip.to_string());
 }
 

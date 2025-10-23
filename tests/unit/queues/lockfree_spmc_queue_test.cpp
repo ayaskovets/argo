@@ -8,65 +8,62 @@
 
 namespace tests::queues {
 
+namespace queues = sandbox::queues;
+namespace utils = sandbox::utils;
+
 TEST(queues_lockfree_spmc_queue, size) {
-  static_assert(
-      sizeof(sandbox::queues::lockfree_spmc_queue<int, std::size_t, 10>) ==
-      256);
-  static_assert(
-      alignof(sandbox::queues::lockfree_spmc_queue<int, std::size_t, 10>) ==
-      64);
-  static_assert(sizeof(sandbox::queues::lockfree_spmc_queue<int>) == 256);
-  static_assert(alignof(sandbox::queues::lockfree_spmc_queue<int>) == 64);
+  static_assert(sizeof(queues::lockfree_spmc_queue<int, std::size_t, 10>) ==
+                256);
+  static_assert(alignof(queues::lockfree_spmc_queue<int, std::size_t, 10>) ==
+                64);
+  static_assert(sizeof(queues::lockfree_spmc_queue<int>) == 256);
+  static_assert(alignof(queues::lockfree_spmc_queue<int>) == 64);
 }
 
 TEST(queues_lockfree_spmc_queue, capacity) {
   EXPECT_EQ(
-      (sandbox::queues::lockfree_spmc_queue<std::string, std::size_t, 128>()
-           .capacity()),
+      (queues::lockfree_spmc_queue<std::string, std::size_t, 128>().capacity()),
       128);
   EXPECT_EQ(
-      (sandbox::queues::lockfree_spmc_queue<std::string, std::size_t, 64>()
-           .capacity()),
+      (queues::lockfree_spmc_queue<std::string, std::size_t, 64>().capacity()),
       64);
-  EXPECT_EQ(sandbox::queues::lockfree_spmc_queue<std::string>(128).capacity(),
-            128);
-  EXPECT_EQ(sandbox::queues::lockfree_spmc_queue<std::string>(64).capacity(),
-            64);
+  EXPECT_EQ(queues::lockfree_spmc_queue<std::string>(128).capacity(), 128);
+  EXPECT_EQ(queues::lockfree_spmc_queue<std::string>(64).capacity(), 64);
 }
 
 TEST_T(queues_lockfree_spmc_queue, minimal_capacity,
-       sandbox::queues::lockfree_spmc_queue<int>, 2);
+       queues::lockfree_spmc_queue<int>, 2);
 
 TEST_T(queues_lockfree_spmc_queue, nonblocking_smoke,
-       sandbox::queues::lockfree_spmc_queue<int>);
+       queues::lockfree_spmc_queue<int>);
 
 TEST_T(queues_lockfree_spmc_queue, blocking_smoke,
-       sandbox::queues::lockfree_spmc_queue<int>);
+       queues::lockfree_spmc_queue<int>);
 
 TEST_T(queues_lockfree_spmc_queue, mixed_smoke,
-       sandbox::queues::lockfree_spmc_queue<int>);
+       queues::lockfree_spmc_queue<int>);
 
 TEST_T(queues_lockfree_spmc_queue, blocking_push,
-       sandbox::queues::lockfree_spmc_queue<int>);
+       queues::lockfree_spmc_queue<int>);
 
 TEST_T(queues_lockfree_spmc_queue, blocking_pop,
-       sandbox::queues::lockfree_spmc_queue<int>);
+       queues::lockfree_spmc_queue<int>);
 
 TEST(queues_lockfree_spmc_queue, capacity_one) { GTEST_SKIP(); }
 
 TEST_T(queues_lockfree_spmc_queue, queue_destructor,
-       sandbox::queues::lockfree_spmc_queue<std::shared_ptr<int>>);
+       queues::lockfree_spmc_queue<std::shared_ptr<int>>);
 
 TEST_T(queues_lockfree_spmc_queue, item_destructor,
-       sandbox::queues::lockfree_spmc_queue<std::shared_ptr<int>>);
+       queues::lockfree_spmc_queue<std::shared_ptr<int>>);
 
 TEST_T(queues_lockfree_spmc_queue, non_copyable_item_type,
-       sandbox::queues::lockfree_spmc_queue<std::unique_ptr<int>>);
+       queues::lockfree_spmc_queue<std::unique_ptr<int>>);
 
-using allocator_queue_t = sandbox::queues::lockfree_spmc_queue<
+using allocator_queue_t = queues::lockfree_spmc_queue<
     double, std::size_t, 2,
-    sandbox::utils::leak_detector_allocator<
-        sandbox::queues::detail::lockfree_spmc_queue_entry<double>, true>>;
+    utils::leak_detector_allocator<
+        queues::detail::lockfree_spmc_queue_entry<double>, true>>;
 TEST_T(queues_lockfree_spmc_queue, allocator, allocator_queue_t);
 
 class queues_lockfree_spmc_queue_workload
@@ -75,10 +72,10 @@ class queues_lockfree_spmc_queue_workload
           std::size_t /* producers */, std::size_t /* consumers */>> {};
 
 TEST_P_T(queues_lockfree_spmc_queue_workload, nonblocking,
-         sandbox::queues::lockfree_spmc_queue<int>);
+         queues::lockfree_spmc_queue<int>);
 
 TEST_P_T(queues_lockfree_spmc_queue_workload, blocking,
-         sandbox::queues::lockfree_spmc_queue<int>);
+         queues::lockfree_spmc_queue<int>);
 
 INSTANTIATE_TEST_SUITE_P(queues_lockfree_spmc_queue_workload,
                          queues_lockfree_spmc_queue_workload,
@@ -92,12 +89,11 @@ TEST(queues_lockfree_spmc_queue, queued_producers_nonblocking) { GTEST_SKIP(); }
 TEST(queues_lockfree_spmc_queue, queued_producers_blocking) { GTEST_SKIP(); }
 
 TEST_T(queues_lockfree_spmc_queue, queued_consumers_nonblocking,
-       sandbox::queues::lockfree_spmc_queue<int>);
+       queues::lockfree_spmc_queue<int>);
 
 TEST_T(queues_lockfree_spmc_queue, queued_consumers_blocking,
-       sandbox::queues::lockfree_spmc_queue<int>);
+       queues::lockfree_spmc_queue<int>);
 
-TEST_T(queues_lockfree_spmc_queue, rollover,
-       sandbox::queues::lockfree_spmc_queue<int>);
+TEST_T(queues_lockfree_spmc_queue, rollover, queues::lockfree_spmc_queue<int>);
 
 }  // namespace tests::queues
