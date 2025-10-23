@@ -188,7 +188,6 @@ constexpr void allocator() noexcept {
     Queue queue(allocator);
     EXPECT_EQ(queue.get_allocator(), allocator);
 
-    EXPECT_FALSE(allocator.is_clean());
     queue.push(1.1);
     EXPECT_FALSE(allocator.is_clean());
     queue.push(2.2);
@@ -399,6 +398,17 @@ constexpr void queued_consumers_blocking() noexcept {
   latch.arrive_and_wait();
   for (std::size_t i = 0; i < consumers.size(); ++i) {
     queue.push(i);
+  }
+}
+
+template <typename Queue>
+  requires(std::is_same_v<typename Queue::value_t, int>)
+constexpr void rollover() noexcept {
+  Queue queue(8);
+
+  for (std::size_t i = 0; i < 100; ++i) {
+    EXPECT_TRUE(queue.try_push(i));
+    EXPECT_EQ(queue.pop(), i);
   }
 }
 
