@@ -206,20 +206,12 @@ constexpr void nonblocking(const auto& param) noexcept {
   const auto& [items_size, queue_size, producers, consumers] = param;
 
   Queue queue(queue_size);
-
   std::latch latch(producers + consumers);
-  std::vector<std::thread> threads;
-  threads.reserve(producers + consumers);
 
   std::atomic<std::size_t> pushed_items_count = 0;
   std::vector<int> pushed_items(items_size);
   std::iota(pushed_items.begin(), pushed_items.end(), 0);
-
-  std::atomic<std::size_t> popped_items_count = 0;
-  std::vector<int> popped_items(items_size);
-
-  const auto producer = [items_size, &latch, &queue, &pushed_items,
-                         &pushed_items_count] {
+  const auto producer = [&] {
     latch.arrive_and_wait();
     while (true) {
       const std::size_t index = pushed_items_count.fetch_add(1);
@@ -230,8 +222,9 @@ constexpr void nonblocking(const auto& param) noexcept {
     }
   };
 
-  const auto consumer = [items_size, &latch, &queue, &popped_items,
-                         &popped_items_count] {
+  std::atomic<std::size_t> popped_items_count = 0;
+  std::vector<int> popped_items(items_size);
+  const auto consumer = [&] {
     latch.arrive_and_wait();
     while (true) {
       const std::size_t index = popped_items_count.fetch_add(1);
@@ -242,14 +235,14 @@ constexpr void nonblocking(const auto& param) noexcept {
     }
   };
 
+  std::vector<std::thread> threads;
+  threads.reserve(producers + consumers);
   for (std::size_t i = 0; i < producers; ++i) {
     threads.emplace_back(producer);
   }
-
   for (std::size_t i = 0; i < consumers; ++i) {
     threads.emplace_back(consumer);
   }
-
   for (auto& thread : threads) {
     thread.join();
   }
@@ -264,20 +257,12 @@ constexpr void blocking(const auto& param) noexcept {
   const auto& [items_size, queue_size, producers, consumers] = param;
 
   Queue queue(queue_size);
-
   std::latch latch(producers + consumers);
-  std::vector<std::thread> threads;
-  threads.reserve(producers + consumers);
 
   std::atomic<std::size_t> pushed_items_count = 0;
   std::vector<int> pushed_items(items_size);
   std::iota(pushed_items.begin(), pushed_items.end(), 0);
-
-  std::atomic<std::size_t> popped_items_count = 0;
-  std::vector<int> popped_items(items_size);
-
-  const auto producer = [items_size, &latch, &queue, &pushed_items,
-                         &pushed_items_count] {
+  const auto producer = [&] {
     latch.arrive_and_wait();
     while (true) {
       const std::size_t index = pushed_items_count.fetch_add(1);
@@ -288,8 +273,9 @@ constexpr void blocking(const auto& param) noexcept {
     }
   };
 
-  const auto consumer = [items_size, &latch, &queue, &popped_items,
-                         &popped_items_count] {
+  std::atomic<std::size_t> popped_items_count = 0;
+  std::vector<int> popped_items(items_size);
+  const auto consumer = [&] {
     latch.arrive_and_wait();
     while (true) {
       const std::size_t index = popped_items_count.fetch_add(1);
@@ -300,14 +286,14 @@ constexpr void blocking(const auto& param) noexcept {
     }
   };
 
+  std::vector<std::thread> threads;
+  threads.reserve(producers + consumers);
   for (std::size_t i = 0; i < producers; ++i) {
     threads.emplace_back(producer);
   }
-
   for (std::size_t i = 0; i < consumers; ++i) {
     threads.emplace_back(consumer);
   }
-
   for (auto& thread : threads) {
     thread.join();
   }
@@ -326,7 +312,7 @@ constexpr void queued_producers_nonblocking() noexcept {
   std::vector<std::jthread> producers(16);
   std::latch latch(producers.size() + 1);
   for (std::size_t i = 0; i < producers.size(); ++i) {
-    producers[i] = std::jthread([&queue, &latch, i] {
+    producers[i] = std::jthread([&] {
       latch.count_down();
       queue.push(i + queue.capacity());
     });
@@ -349,7 +335,7 @@ constexpr void queued_producers_blocking() noexcept {
   std::vector<std::jthread> producers(16);
   std::latch latch(producers.size() + 1);
   for (std::size_t i = 0; i < producers.size(); ++i) {
-    producers[i] = std::jthread([&queue, &latch, i] {
+    producers[i] = std::jthread([&] {
       latch.count_down();
       queue.push(i + queue.capacity());
     });
@@ -369,7 +355,7 @@ constexpr void queued_consumers_nonblocking() noexcept {
   std::vector<std::jthread> consumers(16);
   std::latch latch(consumers.size() + 1);
   for (std::size_t i = 0; i < consumers.size(); ++i) {
-    consumers[i] = std::jthread([&queue, &latch] {
+    consumers[i] = std::jthread([&] {
       latch.count_down();
       queue.pop();
     });
@@ -389,7 +375,7 @@ constexpr void queued_consumers_blocking() noexcept {
   std::vector<std::jthread> consumers(16);
   std::latch latch(consumers.size() + 1);
   for (std::size_t i = 0; i < consumers.size(); ++i) {
-    consumers[i] = std::jthread([&queue, &latch] {
+    consumers[i] = std::jthread([&] {
       latch.count_down();
       queue.pop();
     });
