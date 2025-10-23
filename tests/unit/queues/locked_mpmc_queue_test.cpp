@@ -30,7 +30,7 @@ TEST(queues_locked_mpmc_queue, capacity) {
 }
 
 TEST_T(queues_locked_mpmc_queue, minimal_capacity,
-       sandbox::queues::locked_mpmc_queue<int>, 0);
+       sandbox::queues::locked_mpmc_queue<int>, 1);
 
 TEST_T(queues_locked_mpmc_queue, nonblocking_smoke,
        sandbox::queues::locked_mpmc_queue<int>);

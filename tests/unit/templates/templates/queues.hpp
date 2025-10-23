@@ -17,7 +17,7 @@ constexpr void minimal_capacity(std::size_t capacity) noexcept {
   for (std::size_t i = 0; i < capacity; ++i) {
     EXPECT_ANY_THROW((Queue(i)));
   }
-  EXPECT_NO_THROW(Queue(capacity + 1));
+  EXPECT_NO_THROW((Queue(capacity)));
 }
 
 template <typename Queue>

@@ -32,7 +32,7 @@ TEST(queues_locked_std_deque, capacity) {
 }
 
 TEST_T(queues_locked_std_deque, minimal_capacity,
-       sandbox::queues::locked_std_deque<int>, 0);
+       sandbox::queues::locked_std_deque<int>, 1);
 
 TEST_T(queues_locked_std_deque, nonblocking_smoke,
        sandbox::queues::locked_std_deque<int>);
