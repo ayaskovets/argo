@@ -68,9 +68,9 @@ using allocator_queue_t = sandbox::queues::locked_mpmc_queue<
 TEST_T(queues_locked_mpmc_queue, allocator, allocator_queue_t);
 
 class queues_locked_mpmc_queue_workload
-    : public ::testing::TestWithParam<
-          std::tuple<std::size_t /* items_size */, std::size_t /* queue_size*/,
-                     std::size_t /* producers*/, std::size_t /*consumers*/>> {};
+    : public ::testing::TestWithParam<std::tuple<
+          std::size_t /* items_size */, std::size_t /* queue_size */,
+          std::size_t /* producers */, std::size_t /* consumers */>> {};
 
 TEST_P_T(queues_locked_mpmc_queue_workload, nonblocking,
          sandbox::queues::locked_mpmc_queue<int>);
@@ -97,5 +97,7 @@ TEST_T(queues_locked_mpmc_queue, queued_consumers_nonblocking,
 
 TEST_T(queues_locked_mpmc_queue, queued_consumers_blocking,
        sandbox::queues::locked_mpmc_queue<int>);
+
+TEST(queues_locked_mpmc_queue, rollover) { GTEST_SKIP(); }
 
 }  // namespace tests::queues

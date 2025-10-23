@@ -71,8 +71,9 @@ TEST_T(queues_locked_std_deque, allocator, allocator_queue_t);
 
 class queues_locked_std_deque_workload
     : public ::testing::TestWithParam<
-          std::tuple<std::size_t /* items_size */, std::size_t /* queue_size*/,
-                     std::size_t /* producers*/, std::size_t /*consumers*/>> {};
+          std::tuple<std::size_t /* items_size */, std::size_t /* queue_size */,
+                     std::size_t /* producers */, std::size_t /*consumers */>> {
+};
 
 TEST_P_T(queues_locked_std_deque_workload, nonblocking,
          sandbox::queues::locked_std_deque<int>);
@@ -99,5 +100,7 @@ TEST_T(queues_locked_std_deque, queued_consumers_nonblocking,
 
 TEST_T(queues_locked_std_deque, queued_consumers_blocking,
        sandbox::queues::locked_std_deque<int>);
+
+TEST(queues_locked_std_deque, rollover) { GTEST_SKIP(); }
 
 }  // namespace tests::queues
