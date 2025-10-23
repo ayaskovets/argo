@@ -12,7 +12,6 @@ target_sources(${TARGET}
     logging/logger_test.cpp
     net/base_sockaddr_test.cpp
     net/base_socket_test.cpp
-    net/dns/resolve_test.cpp
     net/inet/ip_test.cpp
     net/inet/port_test.cpp
     net/inet/sockaddr_test.cpp
@@ -23,6 +22,7 @@ target_sources(${TARGET}
     net/inet6/sockaddr_test.cpp
     net/inet6/tcp/socket_test.cpp
     net/inet6/udp/socket_test.cpp
+    net/resolve_test.cpp
     net/unix/dgram/socket_test.cpp
     net/unix/sockaddr_test.cpp
     net/unix/stream/socket_test.cpp

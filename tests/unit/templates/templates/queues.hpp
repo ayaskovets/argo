@@ -90,7 +90,7 @@ constexpr void blocking_push() noexcept {
   queue.push(1);
   queue.push(2);
 
-  std::jthread consumer([&queue] {
+  const std::jthread consumer([&queue] {
     int value;
     EXPECT_TRUE(queue.try_pop(value));
     EXPECT_EQ(value, 1);
@@ -105,7 +105,7 @@ template <typename Queue>
 constexpr void blocking_pop() noexcept {
   Queue queue(2);
 
-  std::jthread producer([&queue] { EXPECT_TRUE(queue.try_push(42)); });
+  const std::jthread producer([&queue] { EXPECT_TRUE(queue.try_push(42)); });
 
   EXPECT_EQ(queue.pop(), 42);
 }
