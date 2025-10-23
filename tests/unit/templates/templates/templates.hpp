@@ -1,5 +1,7 @@
 #pragma once
 
+#include <gtest/gtest.h>
+
 #define TEST_T(test_suite_name, test_name, type, ...) \
   TEST(test_suite_name, test_name) { templates::test_name<type>(__VA_ARGS__); }
 

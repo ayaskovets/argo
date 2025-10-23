@@ -7,13 +7,13 @@ target_sources(${TARGET}
     PRIVATE
     datetime/iso8601_benchmark.cpp
     logging/logger_benchmark.cpp
-    net/dns/resolve_benchmark.cpp
     net/inet/sockaddr_benchmark.cpp
     net/inet/tcp/socket_benchmark.cpp
     net/inet/udp/socket_benchmark.cpp
     net/inet6/sockaddr_benchmark.cpp
     net/inet6/tcp/socket_benchmark.cpp
     net/inet6/udp/socket_benchmark.cpp
+    net/resolve_benchmark.cpp
     net/unix/dgram/socket_benchmark.cpp
     net/unix/sockaddr_benchmark.cpp
     net/unix/stream/socket_benchmark.cpp
@@ -31,7 +31,7 @@ target_compile_features(${TARGET}
     PRIVATE cxx_std_23
 )
 target_include_directories(${TARGET}
-    PUBLIC benchmark
+    PUBLIC benchmark templates
 )
 target_link_libraries(${TARGET}
     PRIVATE sandbox benchmark::benchmark
