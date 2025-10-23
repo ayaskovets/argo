@@ -43,6 +43,9 @@ target_sources(${TARGET}
 target_compile_features(${TARGET}
     PRIVATE cxx_std_23
 )
+target_include_directories(${TARGET}
+    PRIVATE templates
+)
 target_link_libraries(${TARGET}
     PRIVATE sandbox GTest::gtest_main
 )
