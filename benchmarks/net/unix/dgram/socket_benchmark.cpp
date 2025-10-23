@@ -5,16 +5,17 @@
 
 namespace benchmarks::net::unix::dgram {
 
+namespace unix = sandbox::net::unix;
+
 void BM_net_unix_dgram_throughput(benchmark::State& state) {
   static std::atomic_bool sender_done;
 
   const std::size_t data_size = state.range(0);
   const std::size_t buffer_size = state.range(1);
 
-  const sandbox::net::unix::sockaddr sockaddr(
-      "BM_net_unix_dgram_throughput_sockaddr");
+  const unix::sockaddr sockaddr("BM_net_unix_dgram_throughput_sockaddr");
 
-  sandbox::net::unix::dgram::socket socket;
+  unix::dgram::socket socket;
   socket.set_nonblock(true);
 
   std::vector<std::byte> buffer(buffer_size);

@@ -4,11 +4,12 @@
 
 namespace benchmarks::net::inet {
 
+namespace inet = sandbox::net::inet;
+
 void BM_net_inet_sockaddr_from_bytes(benchmark::State& state) {
   const std::uint32_t bytes(0x7f000001);
   for (const auto _ : state) {
-    benchmark::DoNotOptimize(sandbox::net::inet::sockaddr(
-        sandbox::net::inet::ip(bytes), sandbox::net::inet::port(0)));
+    benchmark::DoNotOptimize(inet::sockaddr(inet::ip(bytes), inet::port(0)));
   }
 }
 BENCHMARK(BM_net_inet_sockaddr_from_bytes);
@@ -16,15 +17,13 @@ BENCHMARK(BM_net_inet_sockaddr_from_bytes);
 void BM_net_inet_sockaddr_from_string(benchmark::State& state) {
   const std::string string("127.0.0.1");
   for (const auto _ : state) {
-    benchmark::DoNotOptimize(sandbox::net::inet::sockaddr(
-        sandbox::net::inet::ip(string), sandbox::net::inet::port(0)));
+    benchmark::DoNotOptimize(inet::sockaddr(inet::ip(string), inet::port(0)));
   }
 }
 BENCHMARK(BM_net_inet_sockaddr_from_string);
 
 void BM_net_inet_sockaddr_to_string(benchmark::State& state) {
-  const sandbox::net::inet::sockaddr sockaddr(
-      sandbox::net::inet::ip("127.0.0.1"), sandbox::net::inet::port(0));
+  const inet::sockaddr sockaddr(inet::ip("127.0.0.1"), inet::port(0));
   for (const auto _ : state) {
     benchmark::DoNotOptimize(sockaddr.to_string());
   }

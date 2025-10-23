@@ -4,21 +4,22 @@
 
 namespace benchmarks::logging {
 
+namespace logging = sandbox::logging;
+
 void BM_logging_default(benchmark::State& state) {
   (void)std::format("{}", 42);
   for (const auto _ : state) {
-    benchmark::DoNotOptimize((sandbox::logging::info("{}\n", 42), 42));
+    benchmark::DoNotOptimize((logging::info("{}\n", 42), 42));
   }
 }
 BENCHMARK(BM_logging_default);
 
 void BM_logging_transparent(benchmark::State& state) {
-  const sandbox::logging::logger logger(sandbox::logging::level::kInfo,
-                                        sandbox::logging::renderer::kNoop(),
-                                        sandbox::logging::writer::kStderr());
+  const logging::logger logger(logging::level::kInfo,
+                               logging::renderer::kNoop(),
+                               logging::writer::kStderr());
   for (const auto _ : state) {
-    benchmark::DoNotOptimize(
-        (logger(sandbox::logging::level::kInfo, "{}\n", 42), 42));
+    benchmark::DoNotOptimize((logger(logging::level::kInfo, "{}\n", 42), 42));
   }
 }
 BENCHMARK(BM_logging_transparent);

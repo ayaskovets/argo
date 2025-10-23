@@ -5,16 +5,17 @@
 
 namespace benchmarks::net::inet::udp {
 
+namespace inet = sandbox::net::inet;
+
 void BM_net_inet_udp_throughput(benchmark::State& state) {
   static std::atomic_bool sender_done;
 
   const std::size_t data_size = state.range(0);
   const std::size_t buffer_size = state.range(1);
 
-  const sandbox::net::inet::sockaddr sockaddr(
-      sandbox::net::inet::ip::kLoopback(), sandbox::net::inet::port(8000));
+  const inet::sockaddr sockaddr(inet::ip::kLoopback(), inet::port(8000));
 
-  sandbox::net::inet::udp::socket socket;
+  inet::udp::socket socket;
   socket.set_nonblock(true);
   socket.set_reuseaddr(true);
   socket.set_reuseport(true);

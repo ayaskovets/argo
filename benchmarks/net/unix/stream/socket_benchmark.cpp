@@ -5,25 +5,26 @@
 
 namespace benchmarks::net::unix::stream {
 
+namespace unix = sandbox::net::unix;
+
 void BM_net_unix_stream_nonblock_handshake(benchmark::State& state) {
-  const sandbox::net::unix::sockaddr sockaddr(
-      "BM_net_unix_stream_nonblock_handshake");
+  const unix::sockaddr sockaddr("BM_net_unix_stream_nonblock_handshake");
 
   for (const auto _ : state) {
-    sandbox::net::unix::stream::socket server;
+    unix::stream::socket server;
     server.set_nonblock(true);
     server.set_reuseaddr(true);
     server.set_reuseport(true);
     server.unlink_bind(sockaddr);
     server.listen(1);
 
-    sandbox::net::unix::stream::socket client;
+    unix::stream::socket client;
     client.set_nonblock(true);
     client.set_reuseaddr(true);
     client.set_reuseport(true);
 
     while (client.connect(sockaddr) == sandbox::net::connect_status::kRefused);
-    sandbox::net::unix::stream::socket peer(sandbox::io::uninitialized_t{});
+    unix::stream::socket peer(sandbox::io::uninitialized_t{});
     while (server.accept(peer) != sandbox::net::accept_status::kSuccess);
   }
 }
@@ -34,10 +35,9 @@ void BM_net_unix_stream_throughput(benchmark::State& state) {
   const std::size_t data_size = state.range(0);
   const std::size_t buffer_size = state.range(1);
 
-  const sandbox::net::unix::sockaddr sockaddr(
-      "BM_net_unix_stream_throughput_sockaddr");
+  const unix::sockaddr sockaddr("BM_net_unix_stream_throughput_sockaddr");
 
-  sandbox::net::unix::stream::socket socket;
+  unix::stream::socket socket;
   socket.set_nonblock(true);
 
   std::vector<std::byte> buffer(buffer_size);
@@ -45,7 +45,7 @@ void BM_net_unix_stream_throughput(benchmark::State& state) {
     socket.unlink_bind(sockaddr);
     socket.listen(1);
 
-    sandbox::net::unix::stream::socket peer(sandbox::io::uninitialized_t{});
+    unix::stream::socket peer(sandbox::io::uninitialized_t{});
     while (socket.accept(peer) != sandbox::net::accept_status::kSuccess);
 
     for (const auto _ : state) {
