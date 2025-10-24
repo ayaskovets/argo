@@ -140,7 +140,7 @@ TEST(net_unix_stream_socket, get_unknown_bind_address) {
   EXPECT_NO_THROW(server.get_bind_sockaddr(out_sockaddr));
 }
 
-TEST(net_unix_dgram_socket, unlink_and_close) {
+TEST(net_unix_dgram_socket, unlink_close) {
   const unix::sockaddr sockaddr(
       unix::sockaddr("net_unix_dgram_socket_close_unlink"));
 
@@ -150,7 +150,7 @@ TEST(net_unix_dgram_socket, unlink_and_close) {
   unix::dgram::socket other;
   EXPECT_EQ(other.bind(sockaddr), sandbox::net::bind_status::kInUse);
 
-  socket.unlink_and_close();
+  socket.unlink_close();
   EXPECT_EQ(other.bind(sockaddr), sandbox::net::bind_status::kSuccess);
 }
 

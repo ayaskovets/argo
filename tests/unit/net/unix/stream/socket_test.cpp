@@ -126,7 +126,7 @@ TEST(net_unix_stream_socket, nonblocking_handshake) {
   EXPECT_EQ(buffer, data);
 }
 
-TEST(net_unix_stream_socket, unlink_and_close) {
+TEST(net_unix_stream_socket, unlink_close) {
   const unix::sockaddr sockaddr(
       unix::sockaddr("net_unix_stream_socket_close_unlink"));
 
@@ -136,7 +136,7 @@ TEST(net_unix_stream_socket, unlink_and_close) {
   unix::stream::socket other;
   EXPECT_EQ(other.bind(sockaddr), sandbox::net::bind_status::kInUse);
 
-  socket.unlink_and_close();
+  socket.unlink_close();
   EXPECT_EQ(other.bind(sockaddr), sandbox::net::bind_status::kSuccess);
 }
 
