@@ -6,7 +6,7 @@ namespace benchmarks::net::inet6 {
 
 namespace inet6 = sandbox::net::inet6;
 
-void BM_net_inet6_from_bytes(benchmark::State& state) {
+constexpr void BM_net_inet6_from_bytes(benchmark::State& state) noexcept {
   const std::array<std::byte, 16> bytes{
       std::byte(255), std::byte(255), std::byte(255), std::byte(255),
       std::byte(255), std::byte(255), std::byte(255), std::byte(255),
@@ -20,7 +20,7 @@ void BM_net_inet6_from_bytes(benchmark::State& state) {
 }
 BENCHMARK(BM_net_inet6_from_bytes);
 
-void BM_net_inet6_from_string(benchmark::State& state) {
+constexpr void BM_net_inet6_from_string(benchmark::State& state) noexcept {
   const std::string string("ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff");
   for (const auto _ : state) {
     benchmark::DoNotOptimize(
@@ -29,7 +29,7 @@ void BM_net_inet6_from_string(benchmark::State& state) {
 }
 BENCHMARK(BM_net_inet6_from_string);
 
-void BM_net_inet6_to_string(benchmark::State& state) {
+constexpr void BM_net_inet6_to_string(benchmark::State& state) noexcept {
   const inet6::sockaddr sockaddr(
       inet6::ip("ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff"),
       sandbox::net::inet::port(0));

@@ -6,7 +6,7 @@ namespace benchmarks::net {
 
 namespace net = sandbox::net;
 
-void BM_net_dns_resolve_localhost(benchmark::State& state) {
+constexpr void BM_net_dns_resolve_localhost(benchmark::State& state) noexcept {
   for (const auto _ : state) {
     benchmark::DoNotOptimize(net::resolve(
         "localhost", net::family::kUnspecified, net::protocol::kTcp));
@@ -14,7 +14,7 @@ void BM_net_dns_resolve_localhost(benchmark::State& state) {
 }
 BENCHMARK(BM_net_dns_resolve_localhost)->Unit(benchmark::kMicrosecond);
 
-void BM_net_dns_resolve_google(benchmark::State& state) {
+constexpr void BM_net_dns_resolve_google(benchmark::State& state) noexcept {
   try {
     net::resolve("google.com", net::family::kUnspecified, net::protocol::kTcp);
   } catch (const std::exception& e) {

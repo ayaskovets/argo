@@ -6,7 +6,7 @@ namespace benchmarks::datetime {
 
 namespace datetime = sandbox::datetime;
 
-void BM_datetime_to_iso8601(benchmark::State& state) {
+constexpr void BM_datetime_to_iso8601(benchmark::State& state) noexcept {
   const auto now = std::chrono::system_clock::now();
   for (const auto _ : state) {
     benchmark::DoNotOptimize(datetime::to_iso8601(now));
@@ -14,7 +14,8 @@ void BM_datetime_to_iso8601(benchmark::State& state) {
 }
 BENCHMARK(BM_datetime_to_iso8601);
 
-void BM_datetime_serialize_chrono_with_std_format(benchmark::State& state) {
+constexpr void BM_datetime_serialize_chrono_with_std_format(
+    benchmark::State& state) noexcept {
   const auto now = std::chrono::system_clock::now();
   for (const auto _ : state) {
     benchmark::DoNotOptimize(std::format("{}", now));
