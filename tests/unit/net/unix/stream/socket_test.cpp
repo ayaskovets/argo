@@ -26,8 +26,7 @@ TEST(net_inet_tcp_socket, unconnected_send_receive) {
 }
 
 TEST(net_unix_stream_socket, bind) {
-  const unix::sockaddr sockaddr(
-      unix::sockaddr("net_unix_stream_socket_unlink_bind"));
+  const unix::sockaddr sockaddr("net_unix_stream_socket_bind");
 
   unix::stream::socket socket;
   EXPECT_EQ(socket.unlink_bind(sockaddr), sandbox::net::bind_status::kSuccess);
@@ -36,6 +35,18 @@ TEST(net_unix_stream_socket, bind) {
   unix::stream::socket other;
   EXPECT_EQ(other.unlink_bind(sockaddr), sandbox::net::bind_status::kSuccess);
   EXPECT_ANY_THROW(other.unlink_bind(sockaddr));
+}
+
+TEST(net_unix_stream_socket, connect) {
+  const unix::sockaddr sockaddr(
+      unix::sockaddr("net_unix_stream_socket_connect"));
+
+  unix::stream::socket socket;
+  socket.set_reuseaddr(true);
+  socket.set_reuseport(true);
+
+  EXPECT_EQ(socket.connect(sockaddr), sandbox::net::connect_status::kRefused);
+  EXPECT_EQ(socket.connect(sockaddr), sandbox::net::connect_status::kRefused);
 }
 
 TEST(net_unix_stream_socket, sockaddrs) {
@@ -68,7 +79,7 @@ TEST(net_unix_stream_socket, unconnected_accept) {
   EXPECT_ANY_THROW(socket.listen(1));
   EXPECT_ANY_THROW(socket.accept(peer));
 
-  const unix::sockaddr sockaddr("net_unix_stream_socket_accept_error");
+  const unix::sockaddr sockaddr("net_unix_stream_socket_unconnected_accept");
   socket.unlink_bind(sockaddr);
 
   EXPECT_NO_THROW(socket.listen(1));
@@ -77,8 +88,7 @@ TEST(net_unix_stream_socket, unconnected_accept) {
 
 TEST(net_unix_stream_socket, blocking_handshake) {
   const std::vector<std::byte> data{std::byte(1), std::byte(2), std::byte(3)};
-  const unix::sockaddr sockaddr(
-      "net_unix_stream_socket_blocking_echo_handshake");
+  const unix::sockaddr sockaddr("net_unix_stream_socket_blocking_handshake");
 
   unix::stream::socket server;
   server.unlink_bind(sockaddr);
@@ -105,8 +115,7 @@ TEST(net_unix_stream_socket, blocking_handshake) {
 
 TEST(net_unix_stream_socket, nonblocking_handshake) {
   const std::vector<std::byte> data{std::byte(1), std::byte(2), std::byte(3)};
-  const unix::sockaddr sockaddr(
-      "net_unix_stream_socket_nonblocking_echo_handshake");
+  const unix::sockaddr sockaddr("net_unix_stream_socket_nonblocking_handshake");
 
   unix::stream::socket server;
   server.set_nonblock(true);
@@ -128,7 +137,7 @@ TEST(net_unix_stream_socket, nonblocking_handshake) {
 
 TEST(net_unix_stream_socket, unlink_close) {
   const unix::sockaddr sockaddr(
-      unix::sockaddr("net_unix_stream_socket_close_unlink"));
+      unix::sockaddr("net_unix_stream_socket_unlink_close"));
 
   unix::stream::socket socket;
   EXPECT_EQ(socket.unlink_bind(sockaddr), sandbox::net::bind_status::kSuccess);

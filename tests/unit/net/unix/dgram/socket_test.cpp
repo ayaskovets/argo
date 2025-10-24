@@ -25,8 +25,7 @@ TEST(net_unix_dgram_socket, unconnected_send_receive) {
 }
 
 TEST(net_unix_dgram_socket, bind) {
-  const unix::sockaddr sockaddr(
-      unix::sockaddr("net_unix_dgram_socket_unlink_bind"));
+  const unix::sockaddr sockaddr("net_unix_dgram_socket_bind");
 
   unix::dgram::socket socket;
   EXPECT_EQ(socket.unlink_bind(sockaddr), sandbox::net::bind_status::kSuccess);
@@ -37,10 +36,18 @@ TEST(net_unix_dgram_socket, bind) {
   EXPECT_ANY_THROW(other.unlink_bind(sockaddr));
 }
 
+TEST(net_unix_dgram_socket, connect) {
+  const unix::sockaddr sockaddr("net_unix_dgram_socket_connect");
+
+  unix::dgram::socket socket;
+
+  EXPECT_EQ(socket.connect(sockaddr), sandbox::net::connect_status::kRefused);
+  EXPECT_EQ(socket.connect(sockaddr), sandbox::net::connect_status::kRefused);
+}
+
 TEST(net_unix_dgram_socket, sockaddrs) {
   unix::sockaddr out_sockaddr(unix::sockaddr::kEmpty());
-  const unix::sockaddr sockaddr(
-      unix::sockaddr("net_unix_dgram_socket_sockaddrs"));
+  const unix::sockaddr sockaddr("net_unix_dgram_socket_sockaddrs");
 
   unix::dgram::socket server;
   server.unlink_bind(sockaddr);
@@ -58,9 +65,9 @@ TEST(net_unix_dgram_socket, unconnected_accept) { GTEST_SKIP(); }
 TEST(net_unix_dgram_socket, blocking_handshake) {
   const std::vector<std::byte> data{std::byte(1), std::byte(2), std::byte(3)};
   const unix::sockaddr server_sockaddr(
-      unix::sockaddr("net_unix_dgram_socket_blocking_echo_handshake_server"));
+      unix::sockaddr("net_unix_dgram_socket_blocking_handshake_server"));
   const unix::sockaddr client_sockaddr(
-      unix::sockaddr("net_unix_dgram_socket_blocking_echo_handshake_client"));
+      unix::sockaddr("net_unix_dgram_socket_blocking_handshake_client"));
 
   unix::dgram::socket server;
   EXPECT_EQ(server.unlink_bind(server_sockaddr),
@@ -101,10 +108,10 @@ TEST(net_unix_dgram_socket, blocking_handshake) {
 TEST(net_unix_dgram_socket, nonblocking_handshake) {
   const std::vector<std::byte> data{std::byte(1), std::byte(2), std::byte(3)};
 
-  const unix::sockaddr server_sockaddr(unix::sockaddr(
-      "net_unix_dgram_socket_nonblocking_echo_handshake_server"));
-  const unix::sockaddr client_sockaddr(unix::sockaddr(
-      "net_unix_dgram_socket_nonblocking_echo_handshake_client"));
+  const unix::sockaddr server_sockaddr(
+      unix::sockaddr("net_unix_dgram_socket_nonblocking_handshake_server"));
+  const unix::sockaddr client_sockaddr(
+      unix::sockaddr("net_unix_dgram_socket_nonblocking_handshake_client"));
 
   unix::dgram::socket server;
   server.set_nonblock(true);
@@ -142,7 +149,7 @@ TEST(net_unix_stream_socket, get_unknown_bind_address) {
 
 TEST(net_unix_dgram_socket, unlink_close) {
   const unix::sockaddr sockaddr(
-      unix::sockaddr("net_unix_dgram_socket_close_unlink"));
+      unix::sockaddr("net_unix_dgram_socket_unlink_close"));
 
   unix::dgram::socket socket;
   EXPECT_EQ(socket.unlink_bind(sockaddr), sandbox::net::bind_status::kSuccess);
