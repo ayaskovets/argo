@@ -26,8 +26,10 @@ base_socket::~base_socket() noexcept {
   net::unix::sockaddr sockaddr(net::unix::sockaddr::kEmpty());
   try {
     get_bind_sockaddr(sockaddr);
-    [[maybe_unused]] const auto retval =
-        SYSCALL(::unlink(sockaddr.get_path().data()));
+    if (sockaddr != net::unix::sockaddr::kEmpty()) {
+      [[maybe_unused]] const auto retval =
+          SYSCALL(::unlink(sockaddr.get_path().data()));
+    }
   } catch (...) {
   }
 }
@@ -40,14 +42,16 @@ void base_socket::unlink_close() noexcept(false) {
 
   net::unix::sockaddr sockaddr(net::unix::sockaddr::kEmpty());
   get_bind_sockaddr(sockaddr);
-
-  const auto retval = SYSCALL(::unlink(sockaddr.get_path().data()));
-  if (retval == kSyscallError) {
-    if (errno != ENOENT) {
-      throw std::runtime_error(
-          std::format("unlink failed: {}", std::strerror(errno)));
+  if (sockaddr != net::unix::sockaddr::kEmpty()) {
+    const auto retval = SYSCALL(::unlink(sockaddr.get_path().data()));
+    if (retval == kSyscallError) {
+      if (errno != ENOENT) {
+        throw std::runtime_error(
+            std::format("unlink failed: {}", std::strerror(errno)));
+      }
     }
   }
+
   net::base_socket::close();
 }
 
