@@ -312,7 +312,7 @@ constexpr void queued_producers_nonblocking() noexcept {
   std::vector<std::jthread> producers(16);
   std::latch latch(producers.size() + 1);
   for (std::size_t i = 0; i < producers.size(); ++i) {
-    producers[i] = std::jthread([&] {
+    producers[i] = std::jthread([&, i] {
       latch.count_down();
       queue.push(i + queue.capacity());
     });
@@ -335,7 +335,7 @@ constexpr void queued_producers_blocking() noexcept {
   std::vector<std::jthread> producers(16);
   std::latch latch(producers.size() + 1);
   for (std::size_t i = 0; i < producers.size(); ++i) {
-    producers[i] = std::jthread([&] {
+    producers[i] = std::jthread([&, i] {
       latch.count_down();
       queue.push(i + queue.capacity());
     });
