@@ -55,6 +55,7 @@ TEST(net_unix_dgram_socket, sockaddrs) {
   unix::dgram::socket client;
   client.connect(sockaddr);
 
+  EXPECT_NE(out_sockaddr, sockaddr);
   EXPECT_EQ((server.get_bind_sockaddr(out_sockaddr), out_sockaddr), sockaddr);
   EXPECT_EQ((client.get_connect_sockaddr(out_sockaddr), out_sockaddr),
             sockaddr);

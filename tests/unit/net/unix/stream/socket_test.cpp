@@ -64,6 +64,7 @@ TEST(net_unix_stream_socket, sockaddrs) {
   EXPECT_EQ(server.accept(peer), sandbox::net::accept_status::kSuccess);
 
   unix::sockaddr out_sockaddr(unix::sockaddr::kEmpty());
+  EXPECT_NE(out_sockaddr, sockaddr);
   EXPECT_EQ((server.get_bind_sockaddr(out_sockaddr), out_sockaddr), sockaddr);
   EXPECT_EQ((client.get_connect_sockaddr(out_sockaddr), out_sockaddr),
             sockaddr);

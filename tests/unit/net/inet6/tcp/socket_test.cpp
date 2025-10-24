@@ -75,6 +75,7 @@ TEST(net_inet6_tcp_socket, sockaddrs) {
             bind_sockaddr);
   EXPECT_ANY_THROW(socket.get_connect_sockaddr(out_sockaddr));
 
+  EXPECT_NE(out_sockaddr, connect_sockaddr);
   EXPECT_EQ(socket.connect(connect_sockaddr),
             sandbox::net::connect_status::kPending);
   EXPECT_ANY_THROW(socket.get_connect_sockaddr(out_sockaddr));
