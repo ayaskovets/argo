@@ -1,6 +1,10 @@
 #pragma once
 
 #include <sandbox/net/base_socket.hpp>
+#include <sandbox/net/unix/dgram/socket.hpp>
+#include <sandbox/net/unix/stream/socket.hpp>
+
+#include <atomic>
 
 #include <benchmark/benchmark.h>
 
@@ -16,7 +20,12 @@ constexpr void nonblock_handshake(benchmark::State& state,
     server.set_nonblock(true);
     server.set_reuseaddr(true);
     server.set_reuseport(true);
-    server.bind(sockaddr);
+    if constexpr (std::is_same_v<Socket, net::unix::stream::socket> ||
+                  std::is_same_v<Socket, net::unix::dgram::socket>) {
+      server.unlink_bind(sockaddr);
+    } else {
+      server.bind(sockaddr);
+    }
     server.listen(1);
 
     Socket client;
@@ -43,7 +52,12 @@ constexpr void stream_throughput(benchmark::State& state,
 
   std::vector<std::byte> buffer(buffer_size);
   if (state.thread_index() == 0) {
-    socket.bind(sockaddr);
+    if constexpr (std::is_same_v<Socket, net::unix::stream::socket> ||
+                  std::is_same_v<Socket, net::unix::dgram::socket>) {
+      socket.unlink_bind(sockaddr);
+    } else {
+      socket.bind(sockaddr);
+    }
     socket.listen(1);
 
     Socket peer(sandbox::io::uninitialized_t{});
@@ -82,14 +96,19 @@ constexpr void dgram_throughput(benchmark::State& state,
 
   std::vector<std::byte> buffer(buffer_size);
   if (state.thread_index() == 0) {
-    socket.bind(sockaddr);
+    if constexpr (std::is_same_v<Socket, net::unix::stream::socket> ||
+                  std::is_same_v<Socket, net::unix::dgram::socket>) {
+      socket.unlink_bind(sockaddr);
+    } else {
+      socket.bind(sockaddr);
+    }
 
     std::size_t loss = 0;
     for (const auto _ : state) {
       std::size_t received = 0;
       while (received < data_size) {
         const std::size_t _received = socket.receive(buffer);
-        if (_received == 0 && sender_done.load(std::memory_order::relaxed)) {
+        if (_received == 0 && sender_done.load(std::memory_order::acquire)) {
           break;
         }
         received += _received;
@@ -102,14 +121,16 @@ constexpr void dgram_throughput(benchmark::State& state,
     while (socket.connect(sockaddr) != net::connect_status::kSuccess);
 
     for (const auto _ : state) {
-      sender_done = false;
+      sender_done.store(false, std::memory_order::release);
       std::size_t sent = 0;
       while (sent < data_size) {
         sent += socket.send(buffer);
       }
-      sender_done = true;
+      sender_done.store(true, std::memory_order::release);
     }
   }
+
+  sender_done.store(false, std::memory_order::release);
 }
 
 }  // namespace benchmarks::net::templates

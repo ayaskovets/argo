@@ -15,7 +15,7 @@ BENCHMARK_T(net_unix_stream, nonblock_handshake, unix::stream::socket,
     ->Unit(benchmark::TimeUnit::kMicrosecond);
 
 BENCHMARK_T(net_unix_stream, stream_throughput, unix::stream::socket,
-            unix::sockaddr("BM_net_unix_stream_stream_throughput"))
+            unix::sockaddr("BM_net_unix_stream_throughput"))
     ->Threads(2)
     ->Args({1048576, 512})
     ->Args({1048576, 128})
