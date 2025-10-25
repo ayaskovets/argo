@@ -17,8 +17,8 @@ TEST(io_poller, move) {
 }
 
 TEST(io_poller, insert_or_assign_erase) {
-  io::base_fd fd_stdin(io::base_fd::kStdin());
-  io::base_fd fd_stdout(io::base_fd::kStdout());
+  io::fd fd_stdin(io::fd::kStdin());
+  io::fd fd_stdout(io::fd::kStdout());
 
   io::poller poller(io::poller::callback_t{});
   EXPECT_FALSE(poller.erase(fd_stdin));

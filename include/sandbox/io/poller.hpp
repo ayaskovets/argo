@@ -1,6 +1,6 @@
 #pragma once
 
-#include <sandbox/io/base_fd.hpp>
+#include <sandbox/io/fd.hpp>
 #include <sandbox/utils/mixins.hpp>
 #include <sandbox/utils/static_pimpl.hpp>
 
@@ -9,7 +9,7 @@
 
 namespace sandbox::io {
 
-// TODO: rewrite poller interface and communication with base_fd
+// TODO: rewrite poller interface and communication with fd
 
 /**
  * @brief File descriptor events poller
@@ -29,7 +29,7 @@ class poller final : public utils::non_copyable {
     kPollNval = 1 << 5,
   };
   using events_t = std::uint8_t;
-  using callback_t = std::function<void(const io::base_fd&, events_t)>;
+  using callback_t = std::function<void(const io::fd&, events_t)>;
 
  public:
   explicit poller(callback_t callback) noexcept;
@@ -41,21 +41,20 @@ class poller final : public utils::non_copyable {
   /**
    * @brief Track events on the passed descriptor
    *
-   * Returns true if the base_fd was inserted
+   * Returns true if the fd was inserted
    *
    * Safe to call from the callback
    */
-  bool insert_or_assign(const io::base_fd& base_fd,
-                        events_t events) noexcept(false);
+  bool insert_or_assign(const io::fd& fd, events_t events) noexcept(false);
 
   /**
    * @brief Track events on the passed descriptor
    *
-   * Returns true if the base_fd was erased
+   * Returns true if the fd was erased
    *
    * Safe to call from the callback
    */
-  bool erase(const io::base_fd& base_fd) noexcept;
+  bool erase(const io::fd& fd) noexcept;
 
  public:
   /**

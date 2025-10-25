@@ -1,4 +1,4 @@
-#include <sandbox/io/base_fd.hpp>
+#include <sandbox/io/fd.hpp>
 #include <sandbox/utils/syscall.hpp>
 
 #include <cerrno>
@@ -14,7 +14,7 @@ constexpr int kSyscallError = -1;
 
 }  // namespace
 
-class base_fd::impl final {
+class fd::impl final {
  private:
   constexpr static inline int kUninitializedFd = -1;
 
@@ -32,37 +32,36 @@ class base_fd::impl final {
   int native_handle_;
 };
 
-base_fd& base_fd::kStdin() noexcept {
-  static base_fd base_fd = base_fd::adopt(STDIN_FILENO);
-  return base_fd;
+fd& fd::kStdin() noexcept {
+  static fd fd = fd::adopt(STDIN_FILENO);
+  return fd;
 }
 
-base_fd& base_fd::kStdout() noexcept {
-  static base_fd base_fd = base_fd::adopt(STDOUT_FILENO);
-  return base_fd;
+fd& fd::kStdout() noexcept {
+  static fd fd = fd::adopt(STDOUT_FILENO);
+  return fd;
 }
 
-base_fd& base_fd::kStderr() noexcept {
-  static base_fd base_fd = base_fd::adopt(STDERR_FILENO);
-  return base_fd;
+fd& fd::kStderr() noexcept {
+  static fd fd = fd::adopt(STDERR_FILENO);
+  return fd;
 }
 
-base_fd::base_fd(uninitialized_t) noexcept : pimpl_(uninitialized_t{}) {}
+fd::fd(uninitialized_t) noexcept : pimpl_(uninitialized_t{}) {}
 
-base_fd base_fd::adopt(int native_handle) noexcept(false) {
+fd fd::adopt(int native_handle) noexcept(false) {
   impl impl(native_handle);
   if (!impl.is_valid()) [[unlikely]] {
     throw std::invalid_argument(
         std::format("invalid file descriptor: {}", native_handle));
   }
 
-  class base_fd adopter(uninitialized_t{});
+  class fd adopter(uninitialized_t{});
   adopter.pimpl_.emplace(std::move(impl));
   return adopter;
 }
 
-base_fd::base_fd(const base_fd& that) noexcept(false)
-    : pimpl_(uninitialized_t{}) {
+fd::fd(const fd& that) noexcept(false) : pimpl_(uninitialized_t{}) {
   if (!that.pimpl_->is_valid()) [[unlikely]] {
     return;
   }
@@ -76,7 +75,7 @@ base_fd::base_fd(const base_fd& that) noexcept(false)
   pimpl_.emplace(retval);
 }
 
-base_fd& base_fd::operator=(const base_fd& that) noexcept(false) {
+fd& fd::operator=(const fd& that) noexcept(false) {
   if (pimpl_->native_handle() == that.pimpl_->native_handle()) [[unlikely]] {
     return *this;
   }
@@ -111,10 +110,10 @@ base_fd& base_fd::operator=(const base_fd& that) noexcept(false) {
   return *this;
 }
 
-base_fd::base_fd(base_fd&& that) noexcept
+fd::fd(fd&& that) noexcept
     : pimpl_(std::exchange(*that.pimpl_, impl(uninitialized_t{}))) {}
 
-base_fd& base_fd::operator=(base_fd&& that) noexcept(false) {
+fd& fd::operator=(fd&& that) noexcept(false) {
   if (pimpl_->native_handle() == that.pimpl_->native_handle()) [[unlikely]] {
     return *this;
   }
@@ -132,7 +131,7 @@ base_fd& base_fd::operator=(base_fd&& that) noexcept(false) {
   return *this;
 }
 
-base_fd::~base_fd() noexcept {
+fd::~fd() noexcept {
   if (!pimpl_->is_valid()) [[unlikely]] {
     return;
   }
@@ -142,15 +141,13 @@ base_fd::~base_fd() noexcept {
   pimpl_.emplace(uninitialized_t{});
 }
 
-bool base_fd::operator==(const base_fd& that) const noexcept {
+bool fd::operator==(const fd& that) const noexcept {
   return pimpl_->native_handle() == that.pimpl_->native_handle();
 }
 
-bool base_fd::operator!=(const base_fd& that) const noexcept {
-  return !operator==(that);
-}
+bool fd::operator!=(const fd& that) const noexcept { return !operator==(that); }
 
-void base_fd::close() noexcept(false) {
+void fd::close() noexcept(false) {
   if (!pimpl_->is_valid()) [[unlikely]] {
     throw std::runtime_error(
         std::format("close() called on already closed file descriptor: {}",
@@ -165,6 +162,6 @@ void base_fd::close() noexcept(false) {
   }
 }
 
-int base_fd::native_handle() const noexcept { return pimpl_->native_handle(); }
+int fd::native_handle() const noexcept { return pimpl_->native_handle(); }
 
 }  // namespace sandbox::io

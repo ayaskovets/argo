@@ -77,17 +77,17 @@ int server() try {
 }
 
 int poll() try {
-  sandbox::io::poller poller([&poller](const sandbox::io::base_fd& base_fd,
+  sandbox::io::poller poller([&poller](const sandbox::io::fd& fd,
                                        sandbox::io::poller::events_t events) {
     const auto& socket =
-        reinterpret_cast<const sandbox::net::inet::tcp::socket&>(base_fd);
+        reinterpret_cast<const sandbox::net::inet::tcp::socket&>(fd);
     sandbox::net::inet::sockaddr peer_sockaddr(sandbox::net::inet::ip::kAny(),
                                                sandbox::net::inet::port(0));
     socket.get_connect_sockaddr(peer_sockaddr);
     sandbox::logging::info("poller: event from {}: {}", peer_sockaddr, events);
 
     if (events & sandbox::io::poller::event::kPollHup) {
-      poller.erase(base_fd);
+      poller.erase(fd);
     }
   });
 

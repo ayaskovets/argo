@@ -1,6 +1,6 @@
 #pragma once
 
-#include <sandbox/io/base_fd.hpp>
+#include <sandbox/io/fd.hpp>
 #include <sandbox/net/base_sockaddr.hpp>
 #include <sandbox/net/family.hpp>
 #include <sandbox/net/protocol.hpp>
@@ -38,7 +38,7 @@ enum class accept_status : std::uint8_t {
 /**
  * @brief Socket base class
  */
-class base_socket : public io::base_fd {
+class base_socket : public io::fd {
  protected:
   base_socket(io::uninitialized_t) noexcept;
   base_socket(net::family family, net::socktype type,

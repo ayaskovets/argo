@@ -11,25 +11,27 @@ namespace sandbox::io {
  * The programmer is responsible for opening the native descriptor. The
  * constructor does still verifies whether the validity of a handed descriptor
  */
-class base_fd {
+class fd {
  private:
   friend class poller;  ///< Needed by poller to access native_handle()
 
  public:
-  static base_fd& kStdin() noexcept;
-  static base_fd& kStdout() noexcept;
-  static base_fd& kStderr() noexcept;
+  static fd& kStdin() noexcept;
+  static fd& kStdout() noexcept;
+  static fd& kStderr() noexcept;
 
  protected:
-  explicit base_fd(uninitialized_t) noexcept;
-  static base_fd adopt(int native_handle) noexcept(false);
+  explicit fd(uninitialized_t) noexcept;
+  static fd adopt(int native_handle) noexcept(false);
+
+  // TODO: add set/get nonblock, write, read, other fcntl attributes
 
  public:
-  base_fd(const base_fd& that) noexcept(false);
-  base_fd& operator=(const base_fd& that) noexcept(false);
-  base_fd(base_fd&& that) noexcept;
-  base_fd& operator=(base_fd&& that) noexcept(false);
-  ~base_fd() noexcept;
+  fd(const fd& that) noexcept(false);
+  fd& operator=(const fd& that) noexcept(false);
+  fd(fd&& that) noexcept;
+  fd& operator=(fd&& that) noexcept(false);
+  ~fd() noexcept;
 
  public:
   /**
@@ -41,8 +43,8 @@ class base_fd {
    * An uninitialized or moved-from descriptor is equal to any other descriptor
    * in unitialized or moved-from state
    */
-  bool operator==(const base_fd& that) const noexcept;
-  bool operator!=(const base_fd& that) const noexcept;
+  bool operator==(const fd& that) const noexcept;
+  bool operator!=(const fd& that) const noexcept;
 
  public:
   /**

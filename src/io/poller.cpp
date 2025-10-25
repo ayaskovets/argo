@@ -55,7 +55,7 @@ poller& poller::operator=(poller&& that) noexcept {
 
 poller::~poller() noexcept = default;
 
-bool poller::insert_or_assign(const io::base_fd& fd,
+bool poller::insert_or_assign(const io::fd& fd,
                               events_t events) noexcept(false) {
   auto& [fds, fds_index_by_native_handle, fds_to_insert] = *pimpl_;
 
@@ -90,7 +90,7 @@ bool poller::insert_or_assign(const io::base_fd& fd,
   return true;
 }
 
-bool poller::erase(const io::base_fd& fd) noexcept {
+bool poller::erase(const io::fd& fd) noexcept {
   auto& [fds, fds_index_by_native_handle, fds_to_insert] = *pimpl_;
 
   auto it = fds_index_by_native_handle.find(fd.native_handle());
@@ -164,9 +164,8 @@ std::size_t poller::poll_for(std::size_t milliseconds) noexcept(false) {
     } else {
       try {
         // TODO: remove reinterpret_cast
-        callback_(
-            *std::launder(reinterpret_cast<const io::base_fd*>(&fds.at(i).fd)),
-            from_native_events(fds.at(i).revents));
+        callback_(*std::launder(reinterpret_cast<const io::fd*>(&fds.at(i).fd)),
+                  from_native_events(fds.at(i).revents));
       } catch (...) {
         unhandled += 1;
       }

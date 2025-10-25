@@ -87,11 +87,11 @@ constexpr int to_native_protocol(net::protocol protocol) noexcept {
 }  // namespace
 
 base_socket::base_socket(io::uninitialized_t) noexcept
-    : io::base_fd(io::uninitialized_t{}) {}
+    : io::fd(io::uninitialized_t{}) {}
 
 base_socket::base_socket(net::family family, net::socktype type,
                          net::protocol protocol) noexcept(false)
-    : io::base_fd(io::base_fd::adopt([family, type, protocol] {
+    : io::fd(io::fd::adopt([family, type, protocol] {
         const auto retval =
             SYSCALL(::socket(to_native_family(family), to_native_type(type),
                              to_native_protocol(protocol)));
@@ -312,7 +312,7 @@ accept_status base_socket::accept(base_socket &socket) const noexcept(false) {
     throw std::runtime_error(
         std::format("accept failed: {}", std::strerror(errno)));
   }
-  static_cast<io::base_fd &>(socket) = io::base_fd::adopt(retval);
+  static_cast<io::fd &>(socket) = io::fd::adopt(retval);
   return accept_status::kSuccess;
 }
 
