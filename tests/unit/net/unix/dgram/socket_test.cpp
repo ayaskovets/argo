@@ -160,6 +160,12 @@ TEST(net_unix_dgram_socket, unlink_close) {
 
   socket.unlink_close();
   EXPECT_EQ(other.bind(sockaddr), sandbox::net::bind_status::kSuccess);
+
+  unix::dgram::socket reuseaddr_socket;
+  EXPECT_EQ(reuseaddr_socket.bind(sockaddr), sandbox::net::bind_status::kInUse);
+  reuseaddr_socket.set_reuseaddr(true);
+  EXPECT_EQ(reuseaddr_socket.bind(sockaddr),
+            sandbox::net::bind_status::kSuccess);
 }
 
 }  // namespace tests::net::unix::dgram

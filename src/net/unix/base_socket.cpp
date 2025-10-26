@@ -26,7 +26,7 @@ base_socket::~base_socket() noexcept {
   net::unix::sockaddr sockaddr(net::unix::sockaddr::kEmpty());
   try {
     get_bind_sockaddr(sockaddr);
-    if (sockaddr != net::unix::sockaddr::kEmpty()) {
+    if (!sockaddr.get_path().empty()) {
       [[maybe_unused]] const auto retval =
           SYSCALL(::unlink(sockaddr.get_path().data()));
     }
@@ -42,7 +42,7 @@ void base_socket::unlink_close() noexcept(false) {
 
   net::unix::sockaddr sockaddr(net::unix::sockaddr::kEmpty());
   get_bind_sockaddr(sockaddr);
-  if (sockaddr != net::unix::sockaddr::kEmpty()) {
+  if (!sockaddr.get_path().empty()) {
     const auto retval = SYSCALL(::unlink(sockaddr.get_path().data()));
     if (retval == kSyscallError) {
       if (errno != ENOENT) {
