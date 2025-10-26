@@ -18,6 +18,11 @@ class base_socket : public net::base_socket {
   void unlink_close() noexcept(false);
 
  public:
+  /**
+   * @warning Bind for unix socket with SO_REUSEADDR enabled does smart unlink
+   * in case address is already in use
+   */
+  net::bind_status bind(const net::unix::sockaddr& sockaddr) noexcept(false);
   net::bind_status unlink_bind(const net::unix::sockaddr& sockaddr) noexcept(
       false);
 };

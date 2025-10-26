@@ -1,8 +1,6 @@
 #pragma once
 
 #include <sandbox/net/base_socket.hpp>
-#include <sandbox/net/unix/dgram/socket.hpp>
-#include <sandbox/net/unix/stream/socket.hpp>
 
 #include <atomic>
 
@@ -20,12 +18,7 @@ constexpr void nonblock_handshake(benchmark::State& state,
     server.set_nonblock(true);
     server.set_reuseaddr(true);
     server.set_reuseport(true);
-    if constexpr (std::is_same_v<Socket, net::unix::stream::socket> ||
-                  std::is_same_v<Socket, net::unix::dgram::socket>) {
-      server.unlink_bind(sockaddr);
-    } else {
-      server.bind(sockaddr);
-    }
+    server.bind(sockaddr);
     server.listen(1);
 
     Socket client;
@@ -52,12 +45,7 @@ constexpr void stream_throughput(benchmark::State& state,
 
   std::vector<std::byte> buffer(buffer_size);
   if (state.thread_index() == 0) {
-    if constexpr (std::is_same_v<Socket, net::unix::stream::socket> ||
-                  std::is_same_v<Socket, net::unix::dgram::socket>) {
-      socket.unlink_bind(sockaddr);
-    } else {
-      socket.bind(sockaddr);
-    }
+    socket.bind(sockaddr);
     socket.listen(1);
 
     Socket peer(sandbox::io::uninitialized_t{});
@@ -96,12 +84,7 @@ constexpr void dgram_throughput(benchmark::State& state,
 
   std::vector<std::byte> buffer(buffer_size);
   if (state.thread_index() == 0) {
-    if constexpr (std::is_same_v<Socket, net::unix::stream::socket> ||
-                  std::is_same_v<Socket, net::unix::dgram::socket>) {
-      socket.unlink_bind(sockaddr);
-    } else {
-      socket.bind(sockaddr);
-    }
+    socket.bind(sockaddr);
 
     std::size_t loss = 0;
     for (const auto _ : state) {

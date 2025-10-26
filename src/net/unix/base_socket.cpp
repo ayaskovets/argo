@@ -55,6 +55,19 @@ void base_socket::unlink_close() noexcept(false) {
   net::base_socket::close();
 }
 
+net::bind_status base_socket::bind(
+    const net::unix::sockaddr& sockaddr) noexcept(false) {
+  switch (net::base_socket::bind(sockaddr)) {
+    case net::bind_status::kInUse:
+      if (get_reuseaddr()) {
+        return unlink_bind(sockaddr);
+      }
+      return net::bind_status::kInUse;
+    case net::bind_status::kSuccess:
+      return net::bind_status::kSuccess;
+  }
+}
+
 net::bind_status base_socket::unlink_bind(
     const net::unix::sockaddr& sockaddr) noexcept(false) {
   const auto retval = SYSCALL(::unlink(sockaddr.get_path().data()));
