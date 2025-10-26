@@ -6,6 +6,7 @@
 
 #include <chrono>
 #include <functional>
+#include <type_traits>
 
 namespace sandbox::io {
 
@@ -28,7 +29,7 @@ class poller final : public utils::non_copyable {
     kPollHup = 1 << 4,
     kPollNval = 1 << 5,
   };
-  using events_t = std::uint8_t;
+  using events_t = std::underlying_type_t<event>;
   using callback_t = std::function<void(const io::fd&, events_t)>;
 
  public:

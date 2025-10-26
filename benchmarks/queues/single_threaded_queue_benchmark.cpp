@@ -17,14 +17,14 @@ using queue_t = queues::single_threaded_queue<
         queues::detail::single_threaded_queue_entry<Value, alignof(Value)>>>;
 
 BENCHMARK_TEMPLATE_T(queues_single_threaded_queue_entry,
-                     single_threaded_nonblocking_throughput, int, queue_t<int>)
+                     single_threaded_throughput, int, queue_t<int>)
     ->Args({1024, 1048576})  ///< capacity, items
     ->MeasureProcessCPUTime()
     ->UseRealTime()
     ->Unit(benchmark::kMillisecond);
 
 BENCHMARK_TEMPLATE_T(queues_single_threaded_queue_entry,
-                     single_threaded_nonblocking_throughput, shared_ptr_int,
+                     single_threaded_throughput, shared_ptr_int,
                      queue_t<std::shared_ptr<int>>)
     ->Args({1024, 1048576})  ///< capacity, items
     ->MeasureProcessCPUTime()

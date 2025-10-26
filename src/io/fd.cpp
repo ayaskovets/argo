@@ -4,6 +4,7 @@
 #include <cerrno>
 #include <format>
 
+#include <fcntl.h>
 #include <unistd.h>
 
 namespace sandbox::io {
@@ -139,6 +140,30 @@ fd::~fd() noexcept {
   [[maybe_unused]] const auto retval =
       SYSCALL(::close(pimpl_->native_handle()));
   pimpl_.emplace(uninitialized_t{});
+}
+
+void fd::set_nonblock(bool value) noexcept(false) {
+  const auto retval = SYSCALL(::fcntl(native_handle(), F_GETFL));
+  if (retval == kSyscallError) [[unlikely]] {
+    throw std::runtime_error(std::format("failed to get F_GETFL on socket: {}",
+                                         std::strerror(errno)));
+  }
+
+  const auto flags = value ? (retval | O_NONBLOCK) : (retval & ~O_NONBLOCK);
+  if (SYSCALL(::fcntl(native_handle(), F_SETFL, flags) == kSyscallError))
+      [[unlikely]] {
+    throw std::runtime_error(std::format(
+        "failed to set O_NONBLOCK on socket: {}", std::strerror(errno)));
+  }
+}
+
+bool fd::get_nonblock() const noexcept(false) {
+  const auto retval = SYSCALL(::fcntl(native_handle(), F_GETFL));
+  if (retval == kSyscallError) [[unlikely]] {
+    throw std::runtime_error(std::format(
+        "failed to get O_NONBLOCK on socket: {}", std::strerror(errno)));
+  }
+  return (retval & O_NONBLOCK);
 }
 
 bool fd::operator==(const fd& that) const noexcept {

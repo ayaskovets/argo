@@ -19,7 +19,7 @@ constexpr int to_native_family(net::family family) noexcept(false) {
       return AF_INET;
     case net::family::kInet6:
       return AF_INET6;
-    default:
+    case net::family::kUnix:
       throw std::invalid_argument(
           std::format("unsupported family: {}", family));
   }
@@ -33,9 +33,6 @@ constexpr int to_native_type(net::protocol protocol) noexcept(false) {
       return SOCK_STREAM;
     case net::protocol::kUdp:
       return SOCK_DGRAM;
-    default:
-      throw std::invalid_argument(
-          std::format("unsupported protocol: {}", protocol));
   }
 }
 

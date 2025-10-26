@@ -5,7 +5,6 @@
 #include <format>
 
 #include <arpa/inet.h>
-#include <fcntl.h>
 #include <sys/socket.h>
 
 namespace sandbox::net {
@@ -102,21 +101,6 @@ base_socket::base_socket(net::family family, net::socktype type,
         return retval;
       }())) {}
 
-void base_socket::set_nonblock(bool value) noexcept(false) {
-  auto retval = SYSCALL(::fcntl(native_handle(), F_GETFL));
-  if (retval == kSyscallError) [[unlikely]] {
-    throw std::runtime_error(std::format("failed to get F_GETFL on socket: {}",
-                                         std::strerror(errno)));
-  }
-
-  retval = value ? (retval | O_NONBLOCK) : (retval & ~O_NONBLOCK);
-  if (SYSCALL(::fcntl(native_handle(), F_SETFL, retval) == kSyscallError))
-      [[unlikely]] {
-    throw std::runtime_error(std::format(
-        "failed to set O_NONBLOCK on socket: {}", std::strerror(errno)));
-  }
-}
-
 void base_socket::set_reuseaddr(bool value) noexcept(false) {
   const int optval = (value ? 1 : 0);
   const auto retval = SYSCALL(::setsockopt(
@@ -183,15 +167,6 @@ net::socktype base_socket::get_type() const noexcept(false) {
   return from_native_type(optval);
 }
 
-bool base_socket::get_nonblock() const noexcept(false) {
-  const auto retval = SYSCALL(::fcntl(native_handle(), F_GETFL));
-  if (retval == kSyscallError) [[unlikely]] {
-    throw std::runtime_error(std::format(
-        "failed to get O_NONBLOCK on socket: {}", std::strerror(errno)));
-  }
-  return (retval & O_NONBLOCK);
-}
-
 bool base_socket::get_reuseaddr() const noexcept(false) {
   int optval;
   ::socklen_t optlen = sizeof(optval);
@@ -235,13 +210,11 @@ bind_status base_socket::bind(const net::base_sockaddr &sockaddr) noexcept(
              reinterpret_cast<const ::sockaddr *>(sockaddr.get_storage()),
              sockaddr.get_length()));
   if (retval == kSyscallError) [[unlikely]] {
-    switch (errno) {
-      case EADDRINUSE:
-        return bind_status::kInUse;
-      default:
-        throw std::runtime_error(
-            std::format("failed to bind socket: {}", std::strerror(errno)));
+    if (errno == EADDRINUSE) {
+      return bind_status::kInUse;
     }
+    throw std::runtime_error(
+        std::format("failed to bind socket: {}", std::strerror(errno)));
   }
   return bind_status::kSuccess;
 }

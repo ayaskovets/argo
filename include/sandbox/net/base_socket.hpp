@@ -45,13 +45,11 @@ class base_socket : public io::fd {
               net::protocol protocol) noexcept(false);
 
  public:
-  void set_nonblock(bool value) noexcept(false);
   void set_reuseaddr(bool value) noexcept(false);
   void set_reuseport(bool value) noexcept(false);
   void set_keepalive(bool value) noexcept(false);
 
  public:
-  bool get_nonblock() const noexcept(false);
   bool get_reuseaddr() const noexcept(false);
   bool get_reuseport() const noexcept(false);
   bool get_keepalive() const noexcept(false);

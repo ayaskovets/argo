@@ -30,7 +30,7 @@ class thread_pool_executor final : public utils::non_copyable,
 
  public:
   constexpr void run_detached(std::stop_token stop_token) {
-    const auto worker_task = [this, stop_token]() noexcept {
+    const auto worker_task = [this, stop_token] {
       while (!stop_token.stop_requested()) {
         std::coroutine_handle<> handle;
         if (!in_channel_.try_pop(handle)) {

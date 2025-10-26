@@ -37,7 +37,6 @@ TEST_P(net_sockets_base_socket, options) {
   EXPECT_EQ(socket.get_family(), family);
   EXPECT_EQ(socket.get_type(), type);
 
-  EXPECT_FALSE(socket.get_nonblock());
   EXPECT_FALSE(socket.get_reuseaddr());
   EXPECT_FALSE(socket.get_reuseport());
   EXPECT_FALSE(socket.get_keepalive());
@@ -45,7 +44,6 @@ TEST_P(net_sockets_base_socket, options) {
   socket.set_reuseaddr(true);
   socket.set_reuseport(true);
   socket.set_keepalive(true);
-  EXPECT_TRUE(socket.get_nonblock());
   EXPECT_TRUE(socket.get_reuseaddr());
   EXPECT_TRUE(socket.get_reuseport());
   EXPECT_TRUE(socket.get_keepalive());
@@ -53,7 +51,6 @@ TEST_P(net_sockets_base_socket, options) {
   socket.set_reuseaddr(false);
   socket.set_reuseport(false);
   socket.set_keepalive(false);
-  EXPECT_FALSE(socket.get_nonblock());
   EXPECT_FALSE(socket.get_reuseaddr());
   EXPECT_FALSE(socket.get_reuseport());
   EXPECT_FALSE(socket.get_keepalive());

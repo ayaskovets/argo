@@ -6,7 +6,7 @@
 namespace sandbox::io {
 
 /**
- * @brief Copy-featured RAII wrapper for a file descriptor
+ * @brief Copy-featured RAII wrapper for a file descriptor/handle
  *
  * The programmer is responsible for opening the native descriptor. The
  * constructor does still verifies whether the validity of a handed descriptor
@@ -24,14 +24,23 @@ class fd {
   explicit fd(uninitialized_t) noexcept;
   static fd adopt(int native_handle) noexcept(false);
 
-  // TODO: add set/get nonblock, write, read, other fcntl attributes
-
  public:
   fd(const fd& that) noexcept(false);
   fd& operator=(const fd& that) noexcept(false);
   fd(fd&& that) noexcept;
   fd& operator=(fd&& that) noexcept(false);
   ~fd() noexcept;
+
+  // TODO: add set/get nonblock, write, read, other fcntl attributes
+ public:
+  void set_nonblock(bool value) noexcept(false);
+
+ public:
+  bool get_nonblock() const noexcept(false);
+
+ public:
+  void write();
+  void read();
 
  public:
   /**
@@ -40,8 +49,8 @@ class fd {
    * File descriptor is only equal to itself i.e. operator== is identity
    * comparison
    *
-   * An uninitialized or moved-from descriptor is equal to any other descriptor
-   * in unitialized or moved-from state
+   * An uninitialized or moved-from descriptor is equal to any other
+   * descriptor in unitialized or moved-from state
    */
   bool operator==(const fd& that) const noexcept;
   bool operator!=(const fd& that) const noexcept;

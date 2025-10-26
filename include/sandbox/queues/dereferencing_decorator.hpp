@@ -6,6 +6,7 @@
 
 namespace sandbox::queues {
 
+// TODO: remove this
 template <concepts::queue Queue>
 class dereferencing_decorator : public Queue {
  public:

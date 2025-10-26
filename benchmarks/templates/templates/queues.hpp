@@ -25,18 +25,17 @@ constexpr void nonblocking_throughput(benchmark::State& state) noexcept {
     Queue queue(capacity);
     std::latch latch(producers + consumers + 1);
 
-    std::atomic<std::size_t> pushed_items_count = 0;
+    std::atomic<std::size_t> pushed_items = 0;
     const auto producer = [&] {
+      latch.arrive_and_wait();
+
       if (producers == 1) {
-        latch.arrive_and_wait();
-        for (std::size_t pushed_items_count = 0; pushed_items_count < items;) {
+        for (std::size_t i = 0; i < items;) {
           try_push_times.fetch_add(1, std::memory_order::relaxed);
-          pushed_items_count += queue.try_push(value);
+          i += queue.try_push(value);
         }
       } else {
-        latch.arrive_and_wait();
-        while (pushed_items_count.fetch_add(1, std::memory_order::relaxed) <
-               items) {
+        while (pushed_items.fetch_add(1, std::memory_order::relaxed) < items) {
           do {
             try_push_times.fetch_add(1, std::memory_order::relaxed);
           } while (!queue.try_push(value));
@@ -44,23 +43,22 @@ constexpr void nonblocking_throughput(benchmark::State& state) noexcept {
       }
     };
 
-    std::atomic<std::size_t> popped_items_count = 0;
+    std::atomic<std::size_t> popped_items = 0;
     const auto consumer = [&] {
+      latch.arrive_and_wait();
+
       if (consumers == 1) {
-        latch.arrive_and_wait();
-        for (std::size_t popped_items_count = 0; popped_items_count < items;) {
-          typename Queue::value_t value;
+        for (std::size_t i = 0; i < items;) {
+          typename Queue::value_t out_value;
           try_pop_times.fetch_add(1, std::memory_order::relaxed);
-          popped_items_count += queue.try_pop(value);
+          i += queue.try_pop(out_value);
         }
       } else {
-        latch.arrive_and_wait();
-        while (popped_items_count.fetch_add(1, std::memory_order::relaxed) <
-               items) {
-          typename Queue::value_t value{};
+        while (popped_items.fetch_add(1, std::memory_order::relaxed) < items) {
+          typename Queue::value_t out_value{};
           do {
             try_pop_times.fetch_add(1, std::memory_order::relaxed);
-          } while (!queue.try_pop(value));
+          } while (!queue.try_pop(out_value));
         }
       }
     };
@@ -102,35 +100,31 @@ constexpr void blocking_throughput(benchmark::State& state) {
     Queue queue(capacity);
     std::latch latch(producers + consumers + 1);
 
-    std::atomic<std::size_t> pushed_items_count = 0;
+    std::atomic<std::size_t> pushed_items = 0;
     const auto producer = [&] {
+      latch.arrive_and_wait();
+
       if (producers == 1) {
-        latch.arrive_and_wait();
-        for (std::size_t pushed_items_count = 0; pushed_items_count < items;
-             ++pushed_items_count) {
+        for (std::size_t i = 0; i < items; ++i) {
           queue.push(value);
         }
       } else {
-        latch.arrive_and_wait();
-        while (pushed_items_count.fetch_add(1, std::memory_order::relaxed) <
-               items) {
+        while (pushed_items.fetch_add(1, std::memory_order::relaxed) < items) {
           queue.push(value);
         }
       }
     };
 
-    std::atomic<std::size_t> popped_items_count = 0;
+    std::atomic<std::size_t> popped_items = 0;
     const auto consumer = [&] {
+      latch.arrive_and_wait();
+
       if (consumers == 1) {
-        latch.arrive_and_wait();
-        for (std::size_t popped_items_count = 0; popped_items_count < items;
-             ++popped_items_count) {
+        for (std::size_t i = 0; i < items; ++i) {
           queue.pop();
         }
       } else {
-        latch.arrive_and_wait();
-        while (popped_items_count.fetch_add(1, std::memory_order::relaxed) <
-               items) {
+        while (popped_items.fetch_add(1, std::memory_order::relaxed) < items) {
           queue.pop();
         }
       }
@@ -151,8 +145,7 @@ constexpr void blocking_throughput(benchmark::State& state) {
 }
 
 template <typename Queue>
-constexpr void single_threaded_nonblocking_throughput(
-    benchmark::State& state) noexcept {
+constexpr void single_threaded_throughput(benchmark::State& state) noexcept {
   const std::size_t capacity = state.range(0);
   const std::size_t items = state.range(1);
   const typename Queue::value_t value{};
@@ -164,14 +157,17 @@ constexpr void single_threaded_nonblocking_throughput(
 
     state.ResumeTiming();
 
-    for (std::size_t pushed_items_count = 0; pushed_items_count < items;) {
-      for (std::size_t i = 0; i < capacity && pushed_items_count < items;
-           ++i, ++pushed_items_count) {
+    std::size_t pushed_items = 0;
+    while (pushed_items < items) {
+      const std::size_t available_slots_in_queue =
+          std::min(capacity, items - pushed_items);
+      for (std::size_t i = 0; i < available_slots_in_queue; ++i) {
         queue.push(value);
       }
       for (std::size_t i = 0; i < capacity; ++i) {
         queue.pop();
       }
+      pushed_items += available_slots_in_queue;
     }
   }
 }
