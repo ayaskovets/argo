@@ -145,15 +145,15 @@ fd::~fd() noexcept {
 void fd::set_nonblock(bool value) noexcept(false) {
   const auto retval = SYSCALL(::fcntl(native_handle(), F_GETFL));
   if (retval == kSyscallError) [[unlikely]] {
-    throw std::runtime_error(std::format("failed to get F_GETFL on socket: {}",
-                                         std::strerror(errno)));
+    throw std::runtime_error(
+        std::format("failed to get F_GETFL on fd: {}", std::strerror(errno)));
   }
 
   const auto flags = value ? (retval | O_NONBLOCK) : (retval & ~O_NONBLOCK);
   if (SYSCALL(::fcntl(native_handle(), F_SETFL, flags) == kSyscallError))
       [[unlikely]] {
-    throw std::runtime_error(std::format(
-        "failed to set O_NONBLOCK on socket: {}", std::strerror(errno)));
+    throw std::runtime_error(std::format("failed to set O_NONBLOCK on fd: {}",
+                                         std::strerror(errno)));
   }
 }
 
@@ -164,6 +164,32 @@ bool fd::get_nonblock() const noexcept(false) {
         "failed to get O_NONBLOCK on socket: {}", std::strerror(errno)));
   }
   return (retval & O_NONBLOCK);
+}
+
+std::size_t fd::write(std::span<const std::byte> bytes) noexcept(false) {
+  const auto retval =
+      SYSCALL(::write(pimpl_->native_handle(), bytes.data(), bytes.size()));
+  if (retval == kSyscallError) {
+    if (errno == EAGAIN || errno == EWOULDBLOCK || errno == ENOBUFS) {
+      return 0;
+    }
+    throw std::runtime_error(
+        std::format("failed to write to fd: {}", std::strerror(errno)));
+  }
+  return retval;
+}
+
+std::size_t fd::read(std::span<std::byte> bytes) noexcept(false) {
+  const auto retval =
+      SYSCALL(::read(pimpl_->native_handle(), bytes.data(), bytes.size()));
+  if (retval == kSyscallError) {
+    if (errno == EAGAIN || errno == EWOULDBLOCK || errno == ENOBUFS) {
+      return 0;
+    }
+    throw std::runtime_error(
+        std::format("failed to read from fd: {}", std::strerror(errno)));
+  }
+  return retval;
 }
 
 bool fd::operator==(const fd& that) const noexcept {

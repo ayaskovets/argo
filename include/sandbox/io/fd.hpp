@@ -3,6 +3,8 @@
 #include <sandbox/io/uninitialized.hpp>
 #include <sandbox/utils/static_pimpl.hpp>
 
+#include <span>
+
 namespace sandbox::io {
 
 /**
@@ -31,7 +33,6 @@ class fd {
   fd& operator=(fd&& that) noexcept(false);
   ~fd() noexcept;
 
-  // TODO: add set/get nonblock, write, read, other fcntl attributes
  public:
   void set_nonblock(bool value) noexcept(false);
 
@@ -39,8 +40,8 @@ class fd {
   bool get_nonblock() const noexcept(false);
 
  public:
-  void write();
-  void read();
+  std::size_t write(std::span<const std::byte> bytes) noexcept(false);
+  std::size_t read(std::span<std::byte> bytes) noexcept(false);
 
  public:
   /**
@@ -68,7 +69,7 @@ class fd {
   void close() noexcept(false);
 
  protected:
-  // TODO: remove this
+  // TODO: remove this or make type opaque
   int native_handle() const noexcept;
 
  private:
