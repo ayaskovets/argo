@@ -1,3 +1,4 @@
+#include <sandbox/io/fd_impl.hpp>
 #include <sandbox/net/base_socket.hpp>
 #include <sandbox/utils/syscall.hpp>
 
@@ -90,7 +91,7 @@ base_socket::base_socket(io::uninitialized_t) noexcept
 
 base_socket::base_socket(net::family family, net::socktype type,
                          net::protocol protocol) noexcept(false)
-    : io::fd(io::fd::adopt([family, type, protocol] {
+    : io::fd(io::fd::adopt(fd::impl([family, type, protocol] {
         const auto retval =
             SYSCALL(::socket(to_native_family(family), to_native_type(type),
                              to_native_protocol(protocol)));
@@ -99,12 +100,12 @@ base_socket::base_socket(net::family family, net::socktype type,
               std::format("socket() failed: {}", std::strerror(errno)));
         }
         return retval;
-      }())) {}
+      }()))) {}
 
 void base_socket::set_reuseaddr(bool value) noexcept(false) {
   const int optval = (value ? 1 : 0);
   const auto retval = SYSCALL(::setsockopt(
-      native_handle(), SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval)));
+      *native_handle(), SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval)));
   if (retval == kSyscallError) [[unlikely]] {
     throw std::runtime_error(std::format(
         "failed to set SO_REUSEADDR on socket: {}", std::strerror(errno)));
@@ -114,7 +115,7 @@ void base_socket::set_reuseaddr(bool value) noexcept(false) {
 void base_socket::set_reuseport(bool value) noexcept(false) {
   const int optval = (value ? 1 : 0);
   const auto retval = SYSCALL(::setsockopt(
-      native_handle(), SOL_SOCKET, SO_REUSEPORT, &optval, sizeof(optval)));
+      *native_handle(), SOL_SOCKET, SO_REUSEPORT, &optval, sizeof(optval)));
   if (retval == kSyscallError) [[unlikely]] {
     throw std::runtime_error(std::format(
         "failed to set SO_REUSEPORT on socket: {}", std::strerror(errno)));
@@ -124,7 +125,7 @@ void base_socket::set_reuseport(bool value) noexcept(false) {
 void base_socket::set_keepalive(bool value) noexcept(false) {
   const int optval = (value ? 1 : 0);
   const auto retval = SYSCALL(::setsockopt(
-      native_handle(), SOL_SOCKET, SO_KEEPALIVE, &optval, sizeof(optval)));
+      *native_handle(), SOL_SOCKET, SO_KEEPALIVE, &optval, sizeof(optval)));
   if (retval == kSyscallError) [[unlikely]] {
     throw std::runtime_error(std::format(
         "failed to set SO_KEEPALIVE on socket: {}", std::strerror(errno)));
@@ -136,7 +137,7 @@ net::family base_socket::get_family() const noexcept(false) {
   int optval;
   ::socklen_t optlen = sizeof(int);
   const auto retval = SYSCALL(
-      ::getsockopt(native_handle(), SOL_SOCKET, SO_DOMAIN, &optval, &optlen));
+      ::getsockopt(*native_handle(), SOL_SOCKET, SO_DOMAIN, &optval, &optlen));
   if (retval == kSyscallError || optlen != sizeof(optval)) [[unlikely]] {
     throw std::runtime_error(std::format(
         "failed to get SO_DOMAIN on socket: {}", std::strerror(errno)));
@@ -146,7 +147,7 @@ net::family base_socket::get_family() const noexcept(false) {
   ::sockaddr_storage storage;
   ::socklen_t socklen = sizeof(storage);
   const auto retval = SYSCALL(::getsockname(
-      native_handle(), reinterpret_cast<::sockaddr *>(&storage), &socklen));
+      *native_handle(), reinterpret_cast<::sockaddr *>(&storage), &socklen));
   if (retval == kSyscallError) {
     throw std::runtime_error(std::format(
         "failed to get SO_DOMAIN on socket: {}", std::strerror(errno)));
@@ -159,7 +160,7 @@ net::socktype base_socket::get_type() const noexcept(false) {
   int optval;
   ::socklen_t optlen = sizeof(optval);
   const auto retval = SYSCALL(
-      ::getsockopt(native_handle(), SOL_SOCKET, SO_TYPE, &optval, &optlen));
+      ::getsockopt(*native_handle(), SOL_SOCKET, SO_TYPE, &optval, &optlen));
   if (retval == kSyscallError || optlen != sizeof(optval)) [[unlikely]] {
     throw std::runtime_error(std::format("failed to get SO_TYPE on socket: {}",
                                          std::strerror(errno)));
@@ -170,7 +171,7 @@ net::socktype base_socket::get_type() const noexcept(false) {
 bool base_socket::get_reuseaddr() const noexcept(false) {
   int optval;
   ::socklen_t optlen = sizeof(optval);
-  const auto retval = SYSCALL(::getsockopt(native_handle(), SOL_SOCKET,
+  const auto retval = SYSCALL(::getsockopt(*native_handle(), SOL_SOCKET,
                                            SO_REUSEADDR, &optval, &optlen));
   if (retval == kSyscallError || optlen != sizeof(optval)) [[unlikely]] {
     throw std::runtime_error(std::format(
@@ -182,7 +183,7 @@ bool base_socket::get_reuseaddr() const noexcept(false) {
 bool base_socket::get_reuseport() const noexcept(false) {
   int optval;
   ::socklen_t optlen = sizeof(optval);
-  const auto retval = SYSCALL(::getsockopt(native_handle(), SOL_SOCKET,
+  const auto retval = SYSCALL(::getsockopt(*native_handle(), SOL_SOCKET,
                                            SO_REUSEPORT, &optval, &optlen));
   if (retval == kSyscallError || optlen != sizeof(optval)) [[unlikely]] {
     throw std::runtime_error(std::format(
@@ -194,7 +195,7 @@ bool base_socket::get_reuseport() const noexcept(false) {
 bool base_socket::get_keepalive() const noexcept(false) {
   int optval;
   ::socklen_t optlen = sizeof(optval);
-  const auto retval = SYSCALL(::getsockopt(native_handle(), SOL_SOCKET,
+  const auto retval = SYSCALL(::getsockopt(*native_handle(), SOL_SOCKET,
                                            SO_KEEPALIVE, &optval, &optlen));
   if (retval == kSyscallError || optlen != sizeof(optval)) [[unlikely]] {
     throw std::runtime_error(std::format(
@@ -206,7 +207,7 @@ bool base_socket::get_keepalive() const noexcept(false) {
 bind_status base_socket::bind(const net::base_sockaddr &sockaddr) noexcept(
     false) {
   const auto retval = SYSCALL(
-      ::bind(native_handle(),
+      ::bind(*native_handle(),
              reinterpret_cast<const ::sockaddr *>(sockaddr.get_storage()),
              sockaddr.get_length()));
   if (retval == kSyscallError) [[unlikely]] {
@@ -222,7 +223,7 @@ bind_status base_socket::bind(const net::base_sockaddr &sockaddr) noexcept(
 connect_status base_socket::connect(
     const net::base_sockaddr &sockaddr) noexcept(false) {
   const auto retval = SYSCALL(
-      ::connect(native_handle(),
+      ::connect(*native_handle(),
                 reinterpret_cast<const ::sockaddr *>(sockaddr.get_storage()),
                 sockaddr.get_length()));
   if (retval == kSyscallError) {
@@ -248,7 +249,7 @@ void base_socket::get_bind_sockaddr(net::base_sockaddr &sockaddr) const
     noexcept(false) {
   ::socklen_t socklen = static_cast<::socklen_t>(sockaddr.get_length());
   const auto retval = SYSCALL(::getsockname(
-      native_handle(), reinterpret_cast<::sockaddr *>(sockaddr.get_storage()),
+      *native_handle(), reinterpret_cast<::sockaddr *>(sockaddr.get_storage()),
       &socklen));
   if (retval == kSyscallError) [[unlikely]] {
     throw std::runtime_error(
@@ -259,7 +260,7 @@ void base_socket::get_bind_sockaddr(net::base_sockaddr &sockaddr) const
 void base_socket::get_connect_sockaddr(net::base_sockaddr &sockaddr) const {
   ::socklen_t socklen = static_cast<::socklen_t>(sockaddr.get_length());
   const auto retval = SYSCALL(::getpeername(
-      native_handle(), reinterpret_cast<::sockaddr *>(sockaddr.get_storage()),
+      *native_handle(), reinterpret_cast<::sockaddr *>(sockaddr.get_storage()),
       &socklen));
   if (retval == kSyscallError) [[unlikely]] {
     throw std::runtime_error(
@@ -269,7 +270,7 @@ void base_socket::get_connect_sockaddr(net::base_sockaddr &sockaddr) const {
 
 void base_socket::listen(std::size_t backlog) noexcept(false) {
   const auto retval =
-      SYSCALL(::listen(native_handle(), static_cast<int>(backlog)));
+      SYSCALL(::listen(*native_handle(), static_cast<int>(backlog)));
   if (retval == kSyscallError) {
     throw std::runtime_error(
         std::format("listen failed: {}", std::strerror(errno)));
@@ -277,7 +278,7 @@ void base_socket::listen(std::size_t backlog) noexcept(false) {
 }
 
 accept_status base_socket::accept(base_socket &socket) const noexcept(false) {
-  const auto retval = SYSCALL(::accept(native_handle(), nullptr, nullptr));
+  const auto retval = SYSCALL(::accept(*native_handle(), nullptr, nullptr));
   if (retval == kSyscallError) {
     if (errno == EAGAIN || errno == EWOULDBLOCK) {
       return accept_status::kEmptyQueue;
@@ -285,14 +286,14 @@ accept_status base_socket::accept(base_socket &socket) const noexcept(false) {
     throw std::runtime_error(
         std::format("accept failed: {}", std::strerror(errno)));
   }
-  static_cast<io::fd &>(socket) = io::fd::adopt(retval);
+  static_cast<io::fd &>(socket) = io::fd::adopt(fd::impl(retval));
   return accept_status::kSuccess;
 }
 
 std::size_t base_socket::send(std::span<const std::byte> bytes) const
     noexcept(false) {
   const auto retval =
-      SYSCALL(::send(native_handle(), bytes.data(), bytes.size(), 0));
+      SYSCALL(::send(*native_handle(), bytes.data(), bytes.size(), 0));
   if (retval == kSyscallError) {
     if (errno == EAGAIN || errno == EWOULDBLOCK || errno == ENOBUFS) {
       return 0;
@@ -307,7 +308,7 @@ std::size_t base_socket::send_to(std::span<const std::byte> bytes,
                                  const net::base_sockaddr &sockaddr) const
     noexcept(false) {
   const auto retval = SYSCALL(
-      ::sendto(native_handle(), bytes.data(), bytes.size(), 0,
+      ::sendto(*native_handle(), bytes.data(), bytes.size(), 0,
                reinterpret_cast<const ::sockaddr *>(sockaddr.get_storage()),
                sockaddr.get_length()));
   if (retval == kSyscallError) {
@@ -323,7 +324,7 @@ std::size_t base_socket::send_to(std::span<const std::byte> bytes,
 std::size_t base_socket::receive(std::span<std::byte> bytes) const
     noexcept(false) {
   const auto retval =
-      SYSCALL(::recv(native_handle(), bytes.data(), bytes.size(), 0));
+      SYSCALL(::recv(*native_handle(), bytes.data(), bytes.size(), 0));
   if (retval == kSyscallError) {
     if (errno == EAGAIN || errno == EWOULDBLOCK) {
       return 0;
@@ -339,7 +340,7 @@ std::size_t base_socket::receive_from(std::span<std::byte> bytes,
     noexcept(false) {
   ::socklen_t socklen = static_cast<::socklen_t>(sockaddr.get_length());
   const auto retval = SYSCALL(::recvfrom(
-      native_handle(), bytes.data(), bytes.size(), 0,
+      *native_handle(), bytes.data(), bytes.size(), 0,
       reinterpret_cast<::sockaddr *>(sockaddr.get_storage()), &socklen));
   if (retval == kSyscallError) {
     if (errno == EAGAIN || errno == EWOULDBLOCK) {

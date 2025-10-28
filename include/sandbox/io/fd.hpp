@@ -23,8 +23,12 @@ class fd {
   static fd& kStderr() noexcept;
 
  protected:
+  class impl;
+  const impl& native_handle() const noexcept;
+
+ protected:
   explicit fd(uninitialized_t) noexcept;
-  static fd adopt(int native_handle) noexcept(false);
+  static fd adopt(const impl& native_handle) noexcept(false);
 
  public:
   fd(const fd& that) noexcept(false);
@@ -68,12 +72,7 @@ class fd {
    */
   void close() noexcept(false);
 
- protected:
-  // TODO: remove this or make type opaque
-  int native_handle() const noexcept;
-
  private:
-  class impl;
   utils::static_pimpl<impl, 4, 4> pimpl_;
 };
 

@@ -1,3 +1,4 @@
+#include <sandbox/io/fd_impl.hpp>
 #include <sandbox/io/poller.hpp>
 #include <sandbox/utils/syscall.hpp>
 
@@ -59,7 +60,7 @@ bool poller::insert_or_assign(const io::fd& fd,
                               events_t events) noexcept(false) {
   auto& [fds, fds_index_by_native_handle, fds_to_insert] = *pimpl_;
 
-  auto fds_it = fds_index_by_native_handle.find(fd.native_handle());
+  auto fds_it = fds_index_by_native_handle.find(*fd.native_handle());
   if (fds_it != fds_index_by_native_handle.end()) [[unlikely]] {
     fds.at(fds_it->second).events = to_native_events(events);
     return false;
@@ -68,7 +69,7 @@ bool poller::insert_or_assign(const io::fd& fd,
   auto fds_to_insert_it =
       std::find_if(fds_to_insert.begin(), fds_to_insert.end(),
                    [&fd](const ::pollfd& pollfd) {
-                     return pollfd.fd == fd.native_handle();
+                     return pollfd.fd == *fd.native_handle();
                    });
   if (fds_to_insert_it != fds_to_insert.end()) [[unlikely]] {
     fds_to_insert_it->events = to_native_events(events);
@@ -76,7 +77,7 @@ bool poller::insert_or_assign(const io::fd& fd,
   }
 
   ::pollfd pollfd{
-      .fd = fd.native_handle(),
+      .fd = *fd.native_handle(),
       .events = to_native_events(events),
       .revents = kEmptyEvents,
   };
@@ -93,7 +94,7 @@ bool poller::insert_or_assign(const io::fd& fd,
 bool poller::erase(const io::fd& fd) noexcept {
   auto& [fds, fds_index_by_native_handle, fds_to_insert] = *pimpl_;
 
-  auto it = fds_index_by_native_handle.find(fd.native_handle());
+  auto it = fds_index_by_native_handle.find(*fd.native_handle());
   if (it != fds_index_by_native_handle.end()) [[likely]] {
     fds.at(it->second).fd = -fds.at(it->second).fd;
     fds_index_by_native_handle.erase(it);
@@ -103,7 +104,7 @@ bool poller::erase(const io::fd& fd) noexcept {
   auto fds_to_insert_it =
       std::find_if(fds_to_insert.begin(), fds_to_insert.end(),
                    [&fd](const ::pollfd& pollfd) {
-                     return pollfd.fd == fd.native_handle();
+                     return pollfd.fd == *fd.native_handle();
                    });
   if (fds_to_insert_it != fds_to_insert.end()) [[unlikely]] {
     fds_to_insert_it->fd = -fds_to_insert_it->fd;
