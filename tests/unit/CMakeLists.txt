@@ -39,6 +39,7 @@ target_sources(${TARGET}
     utils/leak_detector_allocator_test.cpp
     utils/predicates_test.cpp
     utils/static_pimpl_test.cpp
+    utils/strong_typedef_test.cpp
 )
 target_compile_features(${TARGET}
     PRIVATE cxx_std_23
