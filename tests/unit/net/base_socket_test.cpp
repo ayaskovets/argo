@@ -5,6 +5,7 @@
 namespace tests::net {
 
 namespace net = sandbox::net;
+namespace io = sandbox::io;
 
 namespace {
 
@@ -40,14 +41,14 @@ TEST_P(net_sockets_base_socket, options) {
   EXPECT_FALSE(socket.get_reuseaddr());
   EXPECT_FALSE(socket.get_reuseport());
   EXPECT_FALSE(socket.get_keepalive());
-  socket.set_nonblock(true);
+  socket.set_flags(io::fd::flag::kNonblock);
   socket.set_reuseaddr(true);
   socket.set_reuseport(true);
   socket.set_keepalive(true);
   EXPECT_TRUE(socket.get_reuseaddr());
   EXPECT_TRUE(socket.get_reuseport());
   EXPECT_TRUE(socket.get_keepalive());
-  socket.set_nonblock(false);
+  socket.set_flags(io::fd::flags_t{});
   socket.set_reuseaddr(false);
   socket.set_reuseport(false);
   socket.set_keepalive(false);

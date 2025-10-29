@@ -7,6 +7,7 @@
 namespace tests::net::unix::dgram {
 
 namespace unix = sandbox::net::unix;
+namespace io = sandbox::io;
 
 TEST(net_unix_dgram_socket, size) {
   static_assert(sizeof(unix::dgram::socket) == 4);
@@ -17,7 +18,7 @@ TEST(net_unix_dgram_socket, unconnected_send_receive) {
   const std::vector<std::byte> data{std::byte(1), std::byte(2), std::byte(3)};
 
   unix::dgram::socket socket;
-  socket.set_nonblock(true);
+  socket.set_flags(io::fd::flag::kNonblock);
 
   EXPECT_ANY_THROW(socket.send(data));
   std::vector<std::byte> buffer(data.size());
@@ -115,12 +116,12 @@ TEST(net_unix_dgram_socket, nonblocking_handshake) {
       unix::sockaddr("net_unix_dgram_socket_nonblocking_handshake_client"));
 
   unix::dgram::socket server;
-  server.set_nonblock(true);
+  server.set_flags(io::fd::flag::kNonblock);
   EXPECT_EQ(server.unlink_bind(server_sockaddr),
             sandbox::net::bind_status::kSuccess);
 
   unix::dgram::socket client;
-  client.set_nonblock(true);
+  client.set_flags(io::fd::flag::kNonblock);
   EXPECT_EQ(client.unlink_bind(client_sockaddr),
             sandbox::net::bind_status::kSuccess);
 

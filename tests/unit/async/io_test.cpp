@@ -65,7 +65,7 @@ async::task<int> client(sandbox::net::inet::tcp::socket* cnt_ptr,
 
   for (std::size_t i = 0; i < 4; ++i) {
     sandbox::net::inet::tcp::socket cnt;
-    cnt.set_nonblock(true);
+    cnt.set_flags(io::fd::flag::kNonblock);
     cnt.set_reuseaddr(true);
     cnt.set_reuseport(true);
 
@@ -108,14 +108,14 @@ TEST(async_task, io_smoke) {
       sandbox::net::inet::ip("127.0.0.1"), sandbox::net::inet::port(8081));
 
   sandbox::net::inet::tcp::socket srv;
-  srv.set_nonblock(true);
+  srv.set_flags(io::fd::flag::kNonblock);
   srv.set_reuseaddr(true);
   srv.set_reuseport(true);
   srv.bind(server_sockaddr);
   srv.listen(1);
 
   sandbox::net::inet::tcp::socket cnt;
-  cnt.set_nonblock(true);
+  cnt.set_flags(io::fd::flag::kNonblock);
   cnt.set_reuseaddr(true);
   cnt.set_reuseport(true);
 

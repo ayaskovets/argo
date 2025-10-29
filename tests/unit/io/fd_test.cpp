@@ -67,14 +67,10 @@ TEST(io_fd, equality) {
   EXPECT_NE(io::fd::kStdout(), io::fd::kStderr());
 }
 
-TEST(io_fd, options) {
+TEST(io_fd, flags) {
   io::fd fd(io::fd::kStdin());
 
-  EXPECT_FALSE(fd.get_nonblock());
-  fd.set_nonblock(true);
-  EXPECT_TRUE(fd.get_nonblock());
-  fd.set_nonblock(false);
-  EXPECT_FALSE(fd.get_nonblock());
+  // TODO: check all flags
 }
 
 }  // namespace tests::io

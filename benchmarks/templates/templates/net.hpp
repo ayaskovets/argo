@@ -9,20 +9,21 @@
 namespace benchmarks::net::templates {
 
 namespace net = sandbox::net;
+namespace io = sandbox::io;
 
 template <typename Socket>
 constexpr void nonblock_handshake(benchmark::State& state,
                                   const auto& sockaddr) noexcept {
   for (const auto _ : state) {
     Socket server;
-    server.set_nonblock(true);
+    server.set_flags(io::fd::flag::kNonblock);
     server.set_reuseaddr(true);
     server.set_reuseport(true);
     server.bind(sockaddr);
     server.listen(1);
 
     Socket client;
-    client.set_nonblock(true);
+    client.set_flags(io::fd::flag::kNonblock);
     client.set_reuseaddr(true);
     client.set_reuseport(true);
 
@@ -39,7 +40,7 @@ constexpr void stream_throughput(benchmark::State& state,
   const std::size_t buffer_size = state.range(1);
 
   Socket socket;
-  socket.set_nonblock(true);
+  socket.set_flags(io::fd::flag::kNonblock);
   socket.set_reuseaddr(true);
   socket.set_reuseport(true);
 
@@ -78,7 +79,7 @@ constexpr void dgram_throughput(benchmark::State& state,
   const std::size_t buffer_size = state.range(1);
 
   Socket socket;
-  socket.set_nonblock(true);
+  socket.set_flags(io::fd::flag::kNonblock);
   socket.set_reuseaddr(true);
   socket.set_reuseport(true);
 

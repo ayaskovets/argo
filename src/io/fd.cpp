@@ -19,6 +19,20 @@ constexpr bool is_valid(int native_handle) noexcept {
   return native_handle >= 0;
 }
 
+constexpr int to_native_flags(fd::flags_t flags) noexcept {
+  int native_flags{};
+  native_flags |= (flags & fd::flag::kAppend) ? O_APPEND : 0;
+  native_flags |= (flags & fd::flag::kNonblock) ? O_NONBLOCK : 0;
+  return native_flags;
+}
+
+constexpr fd::flags_t from_native_flags(int native_flags) noexcept {
+  int flags{};
+  flags |= (native_flags & O_APPEND) ? fd::flag::kAppend : 0;
+  flags |= (native_flags & O_NONBLOCK) ? fd::flag::kNonblock : 0;
+  return flags;
+}
+
 }  // namespace
 
 fd& fd::kStdin() noexcept {
@@ -41,7 +55,7 @@ fd::fd(uninitialized_t) noexcept : pimpl_(kUninitializedNativeHandle) {}
 fd fd::adopt(const impl& native_handle) noexcept(false) {
   if (!is_valid(*native_handle)) [[unlikely]] {
     throw std::invalid_argument(
-        std::format("invalid file descriptor: {}", *native_handle));
+        std::format("invalid fd descriptor: {}", *native_handle));
   }
 
   class fd adopter(uninitialized_t{});
@@ -56,8 +70,8 @@ fd::fd(const fd& that) noexcept(false) : pimpl_(kUninitializedNativeHandle) {
 
   const auto retval = SYSCALL(::dup(**that.pimpl_));
   if (retval == kSyscallError) [[unlikely]] {
-    throw std::runtime_error(std::format("failed to clone file descriptor: {}",
-                                         std::strerror(errno)));
+    throw std::runtime_error(
+        std::format("failed to clone fd descriptor: {}", std::strerror(errno)));
   }
 
   pimpl_.emplace(retval);
@@ -71,8 +85,8 @@ fd& fd::operator=(const fd& that) noexcept(false) {
   if (is_valid(**pimpl_) && is_valid(**that.pimpl_)) {
     const auto retval = SYSCALL(::dup2(**that.pimpl_, (**pimpl_)));
     if (retval == kSyscallError) [[unlikely]] {
-      throw std::runtime_error(std::format(
-          "failed to clone file descriptor: {} ", std::strerror(errno)));
+      throw std::runtime_error(std::format("failed to clone fd descriptor: {} ",
+                                           std::strerror(errno)));
     }
     return *this;
   }
@@ -81,15 +95,15 @@ fd& fd::operator=(const fd& that) noexcept(false) {
     const auto retval = SYSCALL(::close(**pimpl_));
     pimpl_.emplace(kUninitializedNativeHandle);
     if (retval == kSyscallError) [[unlikely]] {
-      throw std::runtime_error(std::format(
-          "failed to close file descriptor: {} ", std::strerror(errno)));
+      throw std::runtime_error(std::format("failed to close fd descriptor: {} ",
+                                           std::strerror(errno)));
     }
     return *this;
   }
 
   const auto retval = SYSCALL(::dup(**that.pimpl_));
   if (retval == kSyscallError) [[unlikely]] {
-    throw std::runtime_error(std::format("failed to clone file descriptor: {} ",
+    throw std::runtime_error(std::format("failed to clone fd descriptor: {} ",
                                          std::strerror(errno)));
   }
 
@@ -109,8 +123,8 @@ fd& fd::operator=(fd&& that) noexcept(false) {
     const auto retval = SYSCALL(::close(**pimpl_));
     pimpl_.emplace(kUninitializedNativeHandle);
     if (retval == kSyscallError) [[unlikely]] {
-      throw std::runtime_error(std::format(
-          "failed to close file descriptor: {} ", std::strerror(errno)));
+      throw std::runtime_error(std::format("failed to close fd descriptor: {} ",
+                                           std::strerror(errno)));
     }
   }
 
@@ -127,28 +141,21 @@ fd::~fd() noexcept {
   pimpl_.emplace(kUninitializedNativeHandle);
 }
 
-void fd::set_nonblock(bool value) noexcept(false) {
-  const auto retval = SYSCALL(::fcntl(**pimpl_, F_GETFL));
-  if (retval == kSyscallError) [[unlikely]] {
-    throw std::runtime_error(
-        std::format("failed to get F_GETFL on fd: {}", std::strerror(errno)));
-  }
-
-  const auto flags = value ? (retval | O_NONBLOCK) : (retval & ~O_NONBLOCK);
-  if (SYSCALL(::fcntl(**pimpl_, F_SETFL, flags) == kSyscallError))
-      [[unlikely]] {
+void fd::set_flags(flags_t flags) noexcept(false) {
+  if (SYSCALL(::fcntl(**pimpl_, F_SETFL, to_native_flags(flags)) ==
+              kSyscallError)) [[unlikely]] {
     throw std::runtime_error(std::format("failed to set O_NONBLOCK on fd: {}",
                                          std::strerror(errno)));
   }
 }
 
-bool fd::get_nonblock() const noexcept(false) {
+fd::flags_t fd::get_flags() noexcept(false) {
   const auto retval = SYSCALL(::fcntl(**pimpl_, F_GETFL));
   if (retval == kSyscallError) [[unlikely]] {
     throw std::runtime_error(std::format(
         "failed to get O_NONBLOCK on socket: {}", std::strerror(errno)));
   }
-  return (retval & O_NONBLOCK);
+  return from_native_flags(retval);
 }
 
 std::size_t fd::write(std::span<const std::byte> bytes) noexcept(false) {
@@ -184,14 +191,14 @@ bool fd::operator!=(const fd& that) const noexcept { return !operator==(that); }
 void fd::close() noexcept(false) {
   if (!is_valid(**pimpl_)) [[unlikely]] {
     throw std::runtime_error(
-        std::format("close() called on already closed file descriptor: {}",
+        std::format("close() called on already closed fd descriptor: {}",
                     std::strerror(errno)));
   }
 
   const auto retval = SYSCALL(::close(**pimpl_));
   pimpl_.emplace(kUninitializedNativeHandle);
   if (retval == kSyscallError) [[unlikely]] {
-    throw std::runtime_error(std::format("failed to close file descriptor: {} ",
+    throw std::runtime_error(std::format("failed to close fd descriptor: {} ",
                                          std::strerror(errno)));
   }
 }

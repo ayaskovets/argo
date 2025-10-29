@@ -38,10 +38,18 @@ class fd {
   ~fd() noexcept;
 
  public:
-  void set_nonblock(bool value) noexcept(false);
+  enum flag : std::uint16_t {
+    kAppend = 1 << 0,    ///< Open in append mode
+    kNonblock = 1 << 1,  ///< Set non-blocking mode
+  };
+  using flags_t = std::underlying_type_t<flag>;
 
- public:
-  bool get_nonblock() const noexcept(false);
+  /**
+   * @warning Resets all fd flags to the passed value. File creation flags are
+   * ignored
+   */
+  void set_flags(flags_t flags) noexcept(false);
+  flags_t get_flags() noexcept(false);
 
  public:
   std::size_t write(std::span<const std::byte> bytes) noexcept(false);

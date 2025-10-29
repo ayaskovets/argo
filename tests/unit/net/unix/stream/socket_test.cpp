@@ -9,6 +9,7 @@
 namespace tests::net::unix::stream {
 
 namespace unix = sandbox::net::unix;
+namespace io = sandbox::io;
 
 TEST(net_unix_stream_socket, size) {
   static_assert(sizeof(unix::stream::socket) == 4);
@@ -75,7 +76,7 @@ TEST(net_unix_stream_socket, unconnected_accept) {
   unix::stream::socket peer(sandbox::io::uninitialized_t{});
 
   unix::stream::socket socket;
-  socket.set_nonblock(true);
+  socket.set_flags(io::fd::flag::kNonblock);
 
   EXPECT_ANY_THROW(socket.listen(1));
   EXPECT_ANY_THROW(socket.accept(peer));
@@ -119,12 +120,12 @@ TEST(net_unix_stream_socket, nonblocking_handshake) {
   const unix::sockaddr sockaddr("net_unix_stream_socket_nonblocking_handshake");
 
   unix::stream::socket server;
-  server.set_nonblock(true);
+  server.set_flags(io::fd::flag::kNonblock);
   server.unlink_bind(sockaddr);
   server.listen(1);
 
   unix::stream::socket client;
-  client.set_nonblock(true);
+  client.set_flags(io::fd::flag::kNonblock);
 
   EXPECT_EQ(client.connect(sockaddr), sandbox::net::connect_status::kSuccess);
   unix::stream::socket peer(sandbox::io::uninitialized_t{});

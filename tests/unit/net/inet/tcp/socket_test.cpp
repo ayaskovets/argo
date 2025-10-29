@@ -8,6 +8,7 @@
 namespace tests::net::inet::tcp {
 
 namespace inet = sandbox::net::inet;
+namespace io = sandbox::io;
 
 TEST(net_inet_tcp_socket, size) {
   static_assert(sizeof(inet::tcp::socket) == 4);
@@ -59,7 +60,7 @@ TEST(net_inet_tcp_socket, sockaddrs) {
                                         inet::port(9996));
 
   inet::tcp::socket socket;
-  socket.set_nonblock(true);
+  socket.set_flags(io::fd::flag::kNonblock);
   socket.set_reuseaddr(true);
   socket.set_reuseport(true);
 
@@ -80,7 +81,7 @@ TEST(net_inet_tcp_socket, sockaddrs) {
 
 TEST(net_inet_tcp_socket, unconnected_accept) {
   inet::tcp::socket socket;
-  socket.set_nonblock(true);
+  socket.set_flags(io::fd::flag::kNonblock);
   socket.set_reuseaddr(true);
   socket.set_reuseport(true);
 
@@ -126,14 +127,14 @@ TEST(net_inet_tcp_socket, nonblocking_handshake) {
   const inet::sockaddr sockaddr(inet::ip::kLoopback(), inet::port(9996));
 
   inet::tcp::socket server;
-  server.set_nonblock(true);
+  server.set_flags(io::fd::flag::kNonblock);
   server.set_reuseaddr(true);
   server.set_reuseport(true);
   server.bind(sockaddr);
   server.listen(1);
 
   inet::tcp::socket client;
-  client.set_nonblock(true);
+  client.set_flags(io::fd::flag::kNonblock);
   client.set_reuseaddr(true);
   client.set_reuseport(true);
 

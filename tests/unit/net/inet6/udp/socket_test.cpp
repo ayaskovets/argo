@@ -8,6 +8,7 @@
 namespace tests::net::inet6::udp {
 
 namespace inet6 = sandbox::net::inet6;
+namespace io = sandbox::io;
 
 TEST(net_inet6_udp_socket, size) {
   static_assert(sizeof(inet6::udp::socket) == 4);
@@ -19,7 +20,7 @@ TEST(net_inet6_udp_socket, unconnected_send_receive) {
   const inet6::sockaddr sockaddr(inet6::ip::kLoopback(), inet6::port(9999));
 
   inet6::udp::socket socket;
-  socket.set_nonblock(true);
+  socket.set_flags(io::fd::flag::kNonblock);
   socket.set_reuseaddr(true);
   socket.set_reuseport(true);
 
@@ -137,13 +138,13 @@ TEST(net_inet6_udp_socket, nonblocking_handshake) {
                                         inet6::port(9996));
 
   inet6::udp::socket server;
-  server.set_nonblock(true);
+  server.set_flags(io::fd::flag::kNonblock);
   server.set_reuseaddr(true);
   server.set_reuseport(true);
   server.bind(server_sockaddr);
 
   inet6::udp::socket client;
-  client.set_nonblock(true);
+  client.set_flags(io::fd::flag::kNonblock);
   client.set_reuseaddr(true);
   client.set_reuseport(true);
   client.bind(client_sockaddr);

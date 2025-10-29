@@ -6,6 +6,7 @@ target_sources(${TARGET}
     async/executors/current_executor.cpp
     datetime/iso8601.cpp
     io/fd.cpp
+    io/file.cpp
     io/poller.cpp
     logging/logger.cpp
     logging/renderer.cpp
