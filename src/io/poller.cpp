@@ -40,6 +40,7 @@ constexpr poller::events_t from_native_events(short native_events) noexcept {
 }  // namespace
 
 struct poller::impl final {
+  // TODO: allocator
   std::vector<::pollfd> fds;
   std::unordered_map<int, std::size_t> fds_index_by_native_handle;
   std::vector<::pollfd> fds_to_insert;
@@ -47,12 +48,9 @@ struct poller::impl final {
 
 poller::poller(callback_t callback) noexcept : callback_(std::move(callback)) {}
 
-poller::poller(poller&& that) noexcept : pimpl_(std::move(that.pimpl_)) {}
+poller::poller(poller&& that) noexcept = default;
 
-poller& poller::operator=(poller&& that) noexcept {
-  pimpl_ = std::move(that.pimpl_);
-  return *this;
-}
+poller& poller::operator=(poller&& that) noexcept = default;
 
 poller::~poller() noexcept = default;
 
