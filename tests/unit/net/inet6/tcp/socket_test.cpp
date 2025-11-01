@@ -11,6 +11,7 @@ namespace tests::net::inet6::tcp {
 
 namespace inet6 = sandbox::net::inet6;
 namespace io = sandbox::io;
+namespace net = sandbox::net;
 
 TEST(net_inet6_tcp_socket, size) {
   static_assert(sizeof(inet6::tcp::socket) == 4);
@@ -35,14 +36,14 @@ TEST(net_inet6_tcp_socket, bind) {
   inet6::tcp::socket socket;
   socket.set_reuseaddr(true);
   socket.set_reuseport(true);
-  EXPECT_EQ(socket.bind(sockaddr), sandbox::net::bind_status::kSuccess);
+  EXPECT_EQ(socket.bind(sockaddr), net::bind_status::kSuccess);
   EXPECT_ANY_THROW(socket.bind(sockaddr));
 
   inet6::tcp::socket other;
-  EXPECT_EQ(other.bind(sockaddr), sandbox::net::bind_status::kInUse);
+  EXPECT_EQ(other.bind(sockaddr), net::bind_status::kInUse);
   other.set_reuseaddr(true);
   other.set_reuseport(true);
-  EXPECT_EQ(other.bind(sockaddr), sandbox::net::bind_status::kSuccess);
+  EXPECT_EQ(other.bind(sockaddr), net::bind_status::kSuccess);
 }
 
 TEST(net_inet6_tcp_socket, connect) {
@@ -52,7 +53,7 @@ TEST(net_inet6_tcp_socket, connect) {
   socket.set_reuseaddr(true);
   socket.set_reuseport(true);
 
-  EXPECT_EQ(socket.connect(sockaddr), sandbox::net::connect_status::kRefused);
+  EXPECT_EQ(socket.connect(sockaddr), net::connect_status::kRefused);
   EXPECT_ANY_THROW(socket.connect(sockaddr));
 }
 
@@ -77,8 +78,7 @@ TEST(net_inet6_tcp_socket, sockaddrs) {
   EXPECT_ANY_THROW(socket.get_connect_sockaddr(out_sockaddr));
 
   EXPECT_NE(out_sockaddr, connect_sockaddr);
-  EXPECT_EQ(socket.connect(connect_sockaddr),
-            sandbox::net::connect_status::kPending);
+  EXPECT_EQ(socket.connect(connect_sockaddr), net::connect_status::kPending);
   EXPECT_ANY_THROW(socket.get_connect_sockaddr(out_sockaddr));
 }
 
@@ -88,10 +88,10 @@ TEST(net_inet6_tcp_socket, unconnected_accept) {
   socket.set_reuseaddr(true);
   socket.set_reuseport(true);
 
-  inet6::tcp::socket peer(sandbox::io::uninitialized_t{});
+  inet6::tcp::socket peer(io::uninitialized_t{});
   EXPECT_ANY_THROW(socket.accept(peer));
   socket.listen(1);
-  EXPECT_EQ(socket.accept(peer), sandbox::net::accept_status::kEmptyQueue);
+  EXPECT_EQ(socket.accept(peer), net::accept_status::kEmptyQueue);
 }
 
 TEST(net_inet6_tcp_socket, blocking_handshake) {
@@ -106,7 +106,7 @@ TEST(net_inet6_tcp_socket, blocking_handshake) {
 
   const std::jthread server_thread([&server, &data] {
     inet6::tcp::socket peer;
-    EXPECT_EQ(server.accept(peer), sandbox::net::accept_status::kSuccess);
+    EXPECT_EQ(server.accept(peer), net::accept_status::kSuccess);
 
     std::vector<std::byte> buffer(data.size());
     EXPECT_EQ(peer.receive(buffer), data.size());
@@ -118,7 +118,7 @@ TEST(net_inet6_tcp_socket, blocking_handshake) {
   client.set_reuseaddr(true);
   client.set_reuseport(true);
 
-  EXPECT_EQ(client.connect(sockaddr), sandbox::net::connect_status::kSuccess);
+  EXPECT_EQ(client.connect(sockaddr), net::connect_status::kSuccess);
   EXPECT_EQ(client.send(data), data.size());
   std::vector<std::byte> buffer(data.size());
   EXPECT_EQ(client.receive(buffer), data.size());
@@ -141,9 +141,9 @@ TEST(net_inet6_tcp_socket, nonblocking_handshake) {
   client.set_reuseaddr(true);
   client.set_reuseport(true);
 
-  EXPECT_EQ(client.connect(sockaddr), sandbox::net::connect_status::kPending);
-  inet6::tcp::socket peer(sandbox::io::uninitialized_t{});
-  while (server.accept(peer) != sandbox::net::accept_status::kSuccess);
+  EXPECT_EQ(client.connect(sockaddr), net::connect_status::kPending);
+  inet6::tcp::socket peer(io::uninitialized_t{});
+  while (server.accept(peer) != net::accept_status::kSuccess);
 
   EXPECT_EQ(peer.send(data), data.size());
   std::vector<std::byte> buffer(data.size());

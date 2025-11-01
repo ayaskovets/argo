@@ -8,8 +8,9 @@
 
 namespace tests::net::unix::stream {
 
-namespace unix = sandbox::net::unix;
 namespace io = sandbox::io;
+namespace net = sandbox::net;
+namespace unix = sandbox::net::unix;
 
 TEST(net_unix_stream_socket, size) {
   static_assert(sizeof(unix::stream::socket) == 4);
@@ -30,11 +31,11 @@ TEST(net_unix_stream_socket, bind) {
   const unix::sockaddr sockaddr("net_unix_stream_socket_bind");
 
   unix::stream::socket socket;
-  EXPECT_EQ(socket.unlink_bind(sockaddr), sandbox::net::bind_status::kSuccess);
+  EXPECT_EQ(socket.unlink_bind(sockaddr), net::bind_status::kSuccess);
   EXPECT_ANY_THROW(socket.unlink_bind(sockaddr));
 
   unix::stream::socket other;
-  EXPECT_EQ(other.unlink_bind(sockaddr), sandbox::net::bind_status::kSuccess);
+  EXPECT_EQ(other.unlink_bind(sockaddr), net::bind_status::kSuccess);
   EXPECT_ANY_THROW(other.unlink_bind(sockaddr));
 }
 
@@ -46,8 +47,8 @@ TEST(net_unix_stream_socket, connect) {
   socket.set_reuseaddr(true);
   socket.set_reuseport(true);
 
-  EXPECT_EQ(socket.connect(sockaddr), sandbox::net::connect_status::kRefused);
-  EXPECT_EQ(socket.connect(sockaddr), sandbox::net::connect_status::kRefused);
+  EXPECT_EQ(socket.connect(sockaddr), net::connect_status::kRefused);
+  EXPECT_EQ(socket.connect(sockaddr), net::connect_status::kRefused);
 }
 
 TEST(net_unix_stream_socket, sockaddrs) {
@@ -59,10 +60,10 @@ TEST(net_unix_stream_socket, sockaddrs) {
   server.listen(1);
 
   unix::stream::socket client;
-  EXPECT_EQ(client.connect(sockaddr), sandbox::net::connect_status::kSuccess);
+  EXPECT_EQ(client.connect(sockaddr), net::connect_status::kSuccess);
 
-  unix::stream::socket peer(sandbox::io::uninitialized_t{});
-  EXPECT_EQ(server.accept(peer), sandbox::net::accept_status::kSuccess);
+  unix::stream::socket peer(io::uninitialized_t{});
+  EXPECT_EQ(server.accept(peer), net::accept_status::kSuccess);
 
   unix::sockaddr out_sockaddr(unix::sockaddr::kEmpty());
   EXPECT_NE(out_sockaddr, sockaddr);
@@ -73,7 +74,7 @@ TEST(net_unix_stream_socket, sockaddrs) {
 }
 
 TEST(net_unix_stream_socket, unconnected_accept) {
-  unix::stream::socket peer(sandbox::io::uninitialized_t{});
+  unix::stream::socket peer(io::uninitialized_t{});
 
   unix::stream::socket socket;
   socket.set_flags(io::fd::flag::kNonblock);
@@ -85,7 +86,7 @@ TEST(net_unix_stream_socket, unconnected_accept) {
   socket.unlink_bind(sockaddr);
 
   EXPECT_NO_THROW(socket.listen(1));
-  EXPECT_EQ(socket.accept(peer), sandbox::net::accept_status::kEmptyQueue);
+  EXPECT_EQ(socket.accept(peer), net::accept_status::kEmptyQueue);
 }
 
 TEST(net_unix_stream_socket, blocking_handshake) {
@@ -97,8 +98,8 @@ TEST(net_unix_stream_socket, blocking_handshake) {
   server.listen(1);
 
   const std::jthread server_thread([&server, &data] {
-    unix::stream::socket peer(sandbox::io::uninitialized_t{});
-    EXPECT_EQ(server.accept(peer), sandbox::net::accept_status::kSuccess);
+    unix::stream::socket peer(io::uninitialized_t{});
+    EXPECT_EQ(server.accept(peer), net::accept_status::kSuccess);
 
     std::vector<std::byte> buffer(data.size());
     EXPECT_EQ(peer.receive(buffer), data.size());
@@ -108,7 +109,7 @@ TEST(net_unix_stream_socket, blocking_handshake) {
 
   unix::stream::socket client;
 
-  EXPECT_EQ(client.connect(sockaddr), sandbox::net::connect_status::kSuccess);
+  EXPECT_EQ(client.connect(sockaddr), net::connect_status::kSuccess);
   EXPECT_EQ(client.send(data), data.size());
   std::vector<std::byte> buffer(data.size());
   EXPECT_EQ(client.receive(buffer), data.size());
@@ -127,9 +128,9 @@ TEST(net_unix_stream_socket, nonblocking_handshake) {
   unix::stream::socket client;
   client.set_flags(io::fd::flag::kNonblock);
 
-  EXPECT_EQ(client.connect(sockaddr), sandbox::net::connect_status::kSuccess);
-  unix::stream::socket peer(sandbox::io::uninitialized_t{});
-  EXPECT_EQ(server.accept(peer), sandbox::net::accept_status::kSuccess);
+  EXPECT_EQ(client.connect(sockaddr), net::connect_status::kSuccess);
+  unix::stream::socket peer(io::uninitialized_t{});
+  EXPECT_EQ(server.accept(peer), net::accept_status::kSuccess);
 
   EXPECT_EQ(peer.send(data), data.size());
   std::vector<std::byte> buffer(data.size());
@@ -142,19 +143,18 @@ TEST(net_unix_stream_socket, unlink_close) {
       unix::sockaddr("net_unix_stream_socket_unlink_close"));
 
   unix::stream::socket socket;
-  EXPECT_EQ(socket.unlink_bind(sockaddr), sandbox::net::bind_status::kSuccess);
+  EXPECT_EQ(socket.unlink_bind(sockaddr), net::bind_status::kSuccess);
 
   unix::stream::socket other;
-  EXPECT_EQ(other.bind(sockaddr), sandbox::net::bind_status::kInUse);
+  EXPECT_EQ(other.bind(sockaddr), net::bind_status::kInUse);
 
   socket.unlink_close();
-  EXPECT_EQ(other.bind(sockaddr), sandbox::net::bind_status::kSuccess);
+  EXPECT_EQ(other.bind(sockaddr), net::bind_status::kSuccess);
 
   unix::stream::socket reuseaddr_socket;
-  EXPECT_EQ(reuseaddr_socket.bind(sockaddr), sandbox::net::bind_status::kInUse);
+  EXPECT_EQ(reuseaddr_socket.bind(sockaddr), net::bind_status::kInUse);
   reuseaddr_socket.set_reuseaddr(true);
-  EXPECT_EQ(reuseaddr_socket.bind(sockaddr),
-            sandbox::net::bind_status::kSuccess);
+  EXPECT_EQ(reuseaddr_socket.bind(sockaddr), net::bind_status::kSuccess);
 }
 
 }  // namespace tests::net::unix::stream

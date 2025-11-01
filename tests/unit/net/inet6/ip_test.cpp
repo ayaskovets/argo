@@ -5,6 +5,7 @@
 namespace tests::net::inet6 {
 
 namespace inet6 = sandbox::net::inet6;
+namespace net = sandbox::net;
 
 TEST(net_inet6_ip, size) {
   static_assert(sizeof(inet6::ip) == 16);
@@ -26,14 +27,14 @@ TEST(net_inet6_ip, construction) {
   const std::string string("0:255e::");
 
   const inet6::ip from_bytes(std::span<const std::byte, 16>(bytes),
-                             sandbox::net::network_byte_order_t{});
+                             net::network_byte_order_t{});
   const inet6::ip from_string(string);
 
   EXPECT_EQ(from_bytes, from_string);
-  EXPECT_EQ(bytes, from_bytes.get_bytes(sandbox::net::network_byte_order_t{}));
+  EXPECT_EQ(bytes, from_bytes.get_bytes(net::network_byte_order_t{}));
   EXPECT_EQ(from_bytes.to_string(), string);
-  EXPECT_EQ(from_bytes.get_bytes(sandbox::net::network_byte_order_t{}),
-            from_string.get_bytes(sandbox::net::network_byte_order_t{}));
+  EXPECT_EQ(from_bytes.get_bytes(net::network_byte_order_t{}),
+            from_string.get_bytes(net::network_byte_order_t{}));
   EXPECT_EQ(from_bytes.to_string(), from_string.to_string());
 }
 

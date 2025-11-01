@@ -4,8 +4,8 @@
 
 namespace tests::net {
 
-namespace net = sandbox::net;
 namespace io = sandbox::io;
+namespace net = sandbox::net;
 
 namespace {
 

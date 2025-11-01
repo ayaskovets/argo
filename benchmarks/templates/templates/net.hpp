@@ -28,7 +28,7 @@ constexpr void nonblock_handshake(benchmark::State& state,
     client.set_reuseport(true);
 
     while (client.connect(sockaddr) == net::connect_status::kRefused);
-    Socket peer(sandbox::io::uninitialized_t{});
+    Socket peer(io::uninitialized_t{});
     while (server.accept(peer) != net::accept_status::kSuccess);
   }
 }
@@ -49,7 +49,7 @@ constexpr void stream_throughput(benchmark::State& state,
     socket.bind(sockaddr);
     socket.listen(1);
 
-    Socket peer(sandbox::io::uninitialized_t{});
+    Socket peer(io::uninitialized_t{});
     while (socket.accept(peer) != net::accept_status::kSuccess);
 
     for (const auto _ : state) {

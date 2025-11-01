@@ -5,6 +5,7 @@
 namespace tests::net::inet {
 
 namespace inet = sandbox::net::inet;
+namespace net = sandbox::net;
 
 TEST(net_inet_ip, size) {
   static_assert(sizeof(inet::ip) == 4);
@@ -39,15 +40,12 @@ TEST(net_inet_ip, network_order) {
   const std::uint32_t bytes{0xFFFFFF00};
 
   const inet::ip host_byte_order(bytes);
-  const inet::ip network_byte_order(bytes,
-                                    sandbox::net::network_byte_order_t{});
+  const inet::ip network_byte_order(bytes, net::network_byte_order_t{});
 
   EXPECT_EQ(host_byte_order.get_bytes(), bytes);
-  EXPECT_NE(host_byte_order.get_bytes(sandbox::net::network_byte_order_t{}),
-            bytes);
+  EXPECT_NE(host_byte_order.get_bytes(net::network_byte_order_t{}), bytes);
   EXPECT_NE(network_byte_order.get_bytes(), bytes);
-  EXPECT_EQ(network_byte_order.get_bytes(sandbox::net::network_byte_order_t{}),
-            bytes);
+  EXPECT_EQ(network_byte_order.get_bytes(net::network_byte_order_t{}), bytes);
 }
 
 TEST(net_inet_ip, invalid) {

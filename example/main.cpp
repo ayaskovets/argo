@@ -10,9 +10,9 @@
 
 namespace {
 
+namespace io = sandbox::io;
 namespace logging = sandbox::logging;
 namespace net = sandbox::net;
-namespace io = sandbox::io;
 
 }  // namespace
 

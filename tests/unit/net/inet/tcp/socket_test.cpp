@@ -1,151 +1,40 @@
 #include <sandbox/net/inet/sockaddr.hpp>
 #include <sandbox/net/inet/tcp/socket.hpp>
 
-#include <thread>
-
 #include <gtest/gtest.h>
+
+#include "templates/net.hpp"
+#include "templates/templates.hpp"
 
 namespace tests::net::inet::tcp {
 
 namespace inet = sandbox::net::inet;
-namespace io = sandbox::io;
 
 TEST(net_inet_tcp_socket, size) {
   static_assert(sizeof(inet::tcp::socket) == 4);
   static_assert(alignof(inet::tcp::socket) == 4);
 }
 
-TEST(net_inet_tcp_socket, unconnected_send_receive) {
-  const std::vector<std::byte> data{std::byte(1), std::byte(2), std::byte(3)};
+TEST_T(net_inet_tcp_socket, unconnected_send_receive, inet::tcp::socket);
 
-  inet::tcp::socket socket;
-  socket.set_reuseaddr(true);
-  socket.set_reuseport(true);
+TEST_T(net_inet_tcp_socket, bind, inet::tcp::socket,
+       inet::sockaddr(inet::ip::kLoopback(), inet::port(9999)));
 
-  EXPECT_ANY_THROW(socket.send(data));
-  std::vector<std::byte> buffer(data.size());
-  EXPECT_ANY_THROW(socket.receive(buffer));
-}
+TEST_T(net_inet_tcp_socket, connect, inet::tcp::socket,
+       inet::sockaddr(inet::ip::kLoopback(), inet::port(9998)));
 
-TEST(net_inet_tcp_socket, bind) {
-  const inet::sockaddr sockaddr(inet::ip::kLoopback(), inet::port(9999));
+TEST_T(net_inet_tcp_socket, sockaddrs, inet::tcp::socket,
+       inet::sockaddr(inet::ip::kLoopback(), inet::port(9997)),
+       inet::sockaddr(inet::ip::kLoopback(), inet::port(9996))
+       //,inet::sockaddr(inet::ip::kAny(), inet::port(0))
+);
 
-  inet::tcp::socket socket;
-  socket.set_reuseaddr(true);
-  socket.set_reuseport(true);
-  EXPECT_EQ(socket.bind(sockaddr), sandbox::net::bind_status::kSuccess);
-  EXPECT_ANY_THROW(socket.bind(sockaddr));
+TEST_T(net_inet_tcp_socket, unconnected_accept, inet::tcp::socket);
 
-  inet::tcp::socket other;
-  EXPECT_EQ(other.bind(sockaddr), sandbox::net::bind_status::kInUse);
-  other.set_reuseaddr(true);
-  other.set_reuseport(true);
-  EXPECT_EQ(other.bind(sockaddr), sandbox::net::bind_status::kSuccess);
-}
+TEST_T(net_inet_tcp_socket, blocking_handshake, inet::tcp::socket,
+       inet::sockaddr(inet::ip::kLoopback(), inet::port(9995)));
 
-TEST(net_inet_tcp_socket, connect) {
-  const inet::sockaddr sockaddr(inet::ip::kLoopback(), inet::port(9998));
-
-  inet::tcp::socket socket;
-  socket.set_reuseaddr(true);
-  socket.set_reuseport(true);
-
-  EXPECT_EQ(socket.connect(sockaddr), sandbox::net::connect_status::kRefused);
-  EXPECT_ANY_THROW(socket.connect(sockaddr));
-}
-
-TEST(net_inet_tcp_socket, sockaddrs) {
-  const inet::sockaddr bind_sockaddr(inet::ip::kLoopback(), inet::port(9997));
-  const inet::sockaddr connect_sockaddr(inet::ip::kLoopback(),
-                                        inet::port(9996));
-
-  inet::tcp::socket socket;
-  socket.set_flags(io::fd::flag::kNonblock);
-  socket.set_reuseaddr(true);
-  socket.set_reuseport(true);
-
-  inet::sockaddr out_sockaddr(inet::ip::kAny(), inet::port(0));
-  EXPECT_NO_THROW((socket.get_bind_sockaddr(out_sockaddr)));
-  EXPECT_NE((socket.get_bind_sockaddr(out_sockaddr), out_sockaddr),
-            bind_sockaddr);
-  socket.bind(bind_sockaddr);
-  EXPECT_EQ((socket.get_bind_sockaddr(out_sockaddr), out_sockaddr),
-            bind_sockaddr);
-  EXPECT_ANY_THROW(socket.get_connect_sockaddr(out_sockaddr));
-
-  EXPECT_NE(out_sockaddr, connect_sockaddr);
-  EXPECT_EQ(socket.connect(connect_sockaddr),
-            sandbox::net::connect_status::kPending);
-  EXPECT_ANY_THROW(socket.get_connect_sockaddr(out_sockaddr));
-}
-
-TEST(net_inet_tcp_socket, unconnected_accept) {
-  inet::tcp::socket socket;
-  socket.set_flags(io::fd::flag::kNonblock);
-  socket.set_reuseaddr(true);
-  socket.set_reuseport(true);
-
-  inet::tcp::socket peer(sandbox::io::uninitialized_t{});
-  EXPECT_ANY_THROW(socket.accept(peer));
-  socket.listen(1);
-  EXPECT_EQ(socket.accept(peer), sandbox::net::accept_status::kEmptyQueue);
-}
-
-TEST(net_inet_tcp_socket, blocking_handshake) {
-  const std::vector<std::byte> data{std::byte(1), std::byte(2), std::byte(3)};
-  const inet::sockaddr sockaddr(inet::ip::kLoopback(), inet::port(9995));
-
-  inet::tcp::socket server;
-  server.set_reuseaddr(true);
-  server.set_reuseport(true);
-  server.bind(sockaddr);
-  server.listen(1);
-
-  const std::jthread server_thread([&server, &data] {
-    inet::tcp::socket peer;
-    EXPECT_EQ(server.accept(peer), sandbox::net::accept_status::kSuccess);
-
-    std::vector<std::byte> buffer(data.size());
-    EXPECT_EQ(peer.receive(buffer), data.size());
-    EXPECT_EQ(buffer, data);
-    EXPECT_EQ(peer.send(data), data.size());
-  });
-
-  inet::tcp::socket client;
-  client.set_reuseaddr(true);
-  client.set_reuseport(true);
-
-  EXPECT_EQ(client.connect(sockaddr), sandbox::net::connect_status::kSuccess);
-  EXPECT_EQ(client.send(data), data.size());
-  std::vector<std::byte> buffer(data.size());
-  EXPECT_EQ(client.receive(buffer), data.size());
-  EXPECT_EQ(buffer, data);
-}
-
-TEST(net_inet_tcp_socket, nonblocking_handshake) {
-  const std::vector<std::byte> data{std::byte(1), std::byte(2), std::byte(3)};
-  const inet::sockaddr sockaddr(inet::ip::kLoopback(), inet::port(9996));
-
-  inet::tcp::socket server;
-  server.set_flags(io::fd::flag::kNonblock);
-  server.set_reuseaddr(true);
-  server.set_reuseport(true);
-  server.bind(sockaddr);
-  server.listen(1);
-
-  inet::tcp::socket client;
-  client.set_flags(io::fd::flag::kNonblock);
-  client.set_reuseaddr(true);
-  client.set_reuseport(true);
-
-  EXPECT_EQ(client.connect(sockaddr), sandbox::net::connect_status::kPending);
-  inet::tcp::socket peer(sandbox::io::uninitialized_t{});
-  while (server.accept(peer) != sandbox::net::accept_status::kSuccess);
-
-  EXPECT_EQ(peer.send(data), data.size());
-  std::vector<std::byte> buffer(data.size());
-  while (client.receive(buffer) != data.size());
-  EXPECT_EQ(buffer, data);
-}
+TEST_T(net_inet_tcp_socket, nonblocking_handshake, inet::tcp::socket,
+       inet::sockaddr(inet::ip::kLoopback(), inet::port(9996)));
 
 }  // namespace tests::net::inet::tcp

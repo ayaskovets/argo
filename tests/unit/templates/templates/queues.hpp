@@ -11,6 +11,8 @@
 
 namespace tests::queues::templates {
 
+namespace utils = sandbox::utils;
+
 template <typename Queue>
   requires(std::is_same_v<typename Queue::value_t, int>)
 constexpr void minimal_capacity(std::size_t capacity) noexcept {
@@ -177,7 +179,7 @@ constexpr void non_copyable_item_type() noexcept {
 
 template <typename Queue>
   requires(std::is_same_v<typename Queue::allocator_t,
-                          sandbox::utils::leak_detector_allocator<
+                          utils::leak_detector_allocator<
                               typename Queue::allocator_value_t, true>>)
 constexpr void allocator() noexcept {
   typename Queue::allocator_t allocator;
