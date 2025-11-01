@@ -14,23 +14,23 @@ const sockaddr& sockaddr::kEmpty() noexcept {
   return sockaddr;
 }
 
-sockaddr::sockaddr(std::string_view path) noexcept(false)
+sockaddr::sockaddr(const std::filesystem::path& path) noexcept(false)
     : net::base_sockaddr(net::family::kUnix) {
   constexpr std::size_t kMaxPathSize = sizeof(sockaddr_un{}.sun_path) - 1;
 
-  if (path.size() >= kMaxPathSize) [[unlikely]] {
+  if (path.native().size() >= kMaxPathSize) [[unlikely]] {
     throw std::invalid_argument(
-        std::format("invalid path size {}", path.size()));
+        std::format("invalid path size {}", path.native().size()));
   }
 
   ::sockaddr_un* storage = reinterpret_cast<::sockaddr_un*>(get_storage());
-  std::strncpy(storage->sun_path, path.data(), path.size());
+  std::strncpy(storage->sun_path, path.c_str(), path.native().size());
 }
 
-std::string_view sockaddr::get_path() const noexcept {
+std::filesystem::path sockaddr::get_path() const noexcept {
   const ::sockaddr_un* storage =
       reinterpret_cast<const ::sockaddr_un*>(get_storage());
-  return std::string_view(storage->sun_path);
+  return std::filesystem::path(storage->sun_path);
 }
 
 }  // namespace sandbox::net::unix

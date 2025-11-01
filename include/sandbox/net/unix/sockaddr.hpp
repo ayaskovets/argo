@@ -2,6 +2,8 @@
 
 #include <sandbox/net/base_sockaddr.hpp>
 
+#include <filesystem>
+
 namespace sandbox::net::unix {
 
 /**
@@ -13,10 +15,10 @@ class sockaddr final : public net::base_sockaddr {
   static const sockaddr& kEmpty() noexcept;
 
  public:
-  explicit sockaddr(std::string_view path) noexcept(false);
+  explicit sockaddr(const std::filesystem::path& path) noexcept(false);
 
  public:
-  std::string_view get_path() const noexcept;
+  std::filesystem::path get_path() const noexcept;
 };
 
 }  // namespace sandbox::net::unix
