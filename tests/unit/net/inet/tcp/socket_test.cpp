@@ -25,9 +25,7 @@ TEST_T(net_inet_tcp_socket, connect, inet::tcp::socket,
 
 TEST_T(net_inet_tcp_socket, sockaddrs, inet::tcp::socket,
        inet::sockaddr(inet::ip::kLoopback(), inet::port(9997)),
-       inet::sockaddr(inet::ip::kLoopback(), inet::port(9996))
-       //,inet::sockaddr(inet::ip::kAny(), inet::port(0))
-);
+       inet::sockaddr(inet::ip::kLoopback(), inet::port(9996)));
 
 TEST_T(net_inet_tcp_socket, unconnected_accept, inet::tcp::socket);
 
