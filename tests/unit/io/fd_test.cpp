@@ -70,7 +70,13 @@ TEST(io_fd, equality) {
 TEST(io_fd, flags) {
   io::fd fd(io::fd::kStdin());
 
-  // TODO: check all flags
+  io::fd::flags_t flags{};
+  EXPECT_EQ(fd.get_flags(), flags);
+  for (const io::fd::flag flag : {io::fd::flag::kNonblock}) {
+    flags |= flag;
+    fd.set_flags(flags);
+    EXPECT_EQ(fd.get_flags(), flags);
+  }
 }
 
 }  // namespace tests::io

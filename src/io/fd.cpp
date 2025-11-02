@@ -21,14 +21,12 @@ constexpr bool is_valid(int native_handle) noexcept {
 
 constexpr int to_native_flags(fd::flags_t flags) noexcept {
   int native_flags{};
-  native_flags |= (flags & fd::flag::kAppend) ? O_APPEND : 0;
   native_flags |= (flags & fd::flag::kNonblock) ? O_NONBLOCK : 0;
   return native_flags;
 }
 
 constexpr fd::flags_t from_native_flags(int native_flags) noexcept {
   int flags{};
-  flags |= (native_flags & O_APPEND) ? fd::flag::kAppend : 0;
   flags |= (native_flags & O_NONBLOCK) ? fd::flag::kNonblock : 0;
   return flags;
 }
@@ -145,16 +143,16 @@ fd::~fd() noexcept {
 void fd::set_flags(flags_t flags) noexcept(false) {
   if (SYSCALL(::fcntl(*native_handle(), F_SETFL, to_native_flags(flags)) ==
               kSyscallError)) [[unlikely]] {
-    throw std::runtime_error(std::format("failed to set O_NONBLOCK on fd: {}",
-                                         std::strerror(errno)));
+    throw std::runtime_error(
+        std::format("failed to set flags on fd: {}", std::strerror(errno)));
   }
 }
 
-fd::flags_t fd::get_flags() noexcept(false) {
+fd::flags_t fd::get_flags() const noexcept(false) {
   const auto retval = SYSCALL(::fcntl(*native_handle(), F_GETFL));
   if (retval == kSyscallError) [[unlikely]] {
-    throw std::runtime_error(std::format(
-        "failed to get O_NONBLOCK on socket: {}", std::strerror(errno)));
+    throw std::runtime_error(
+        std::format("failed to get flags on fd: {}", std::strerror(errno)));
   }
   return from_native_flags(retval);
 }
@@ -172,7 +170,7 @@ std::size_t fd::write(std::span<const std::byte> bytes) noexcept(false) {
   return retval;
 }
 
-std::size_t fd::read(std::span<std::byte> bytes) noexcept(false) {
+std::size_t fd::read(std::span<std::byte> bytes) const noexcept(false) {
   const auto retval =
       SYSCALL(::read(*native_handle(), bytes.data(), bytes.size()));
   if (retval == kSyscallError) {

@@ -38,9 +38,8 @@ class fd {
   ~fd() noexcept;
 
  public:
-  enum flag : std::uint16_t {
-    kAppend = 1 << 0,    ///< Open in append mode
-    kNonblock = 1 << 1,  ///< Set non-blocking mode
+  enum flag : std::uint8_t {
+    kNonblock = 1 << 0,  ///< Set non-blocking mode
   };
   using flags_t = std::underlying_type_t<flag>;
 
@@ -49,11 +48,11 @@ class fd {
    * ignored
    */
   void set_flags(flags_t flags) noexcept(false);
-  flags_t get_flags() noexcept(false);
+  flags_t get_flags() const noexcept(false);
 
  public:
   std::size_t write(std::span<const std::byte> bytes) noexcept(false);
-  std::size_t read(std::span<std::byte> bytes) noexcept(false);
+  std::size_t read(std::span<std::byte> bytes) const noexcept(false);
 
  public:
   /**
