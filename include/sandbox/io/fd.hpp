@@ -44,8 +44,7 @@ class fd {
   using flags_t = std::underlying_type_t<flag>;
 
   /**
-   * @warning Resets all fd flags to the passed value. File creation flags are
-   * ignored
+   * @warning Resets all fd flags to the passed value
    */
   void set_flags(flags_t flags) noexcept(false);
   flags_t get_flags() const noexcept(false);
