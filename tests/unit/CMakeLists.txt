@@ -8,6 +8,7 @@ target_sources(${TARGET}
     PRIVATE
     datetime/iso8601_test.cpp
     io/fd_test.cpp
+    io/file_test.cpp
     io/poller_test.cpp
     logging/logger_test.cpp
     net/base_sockaddr_test.cpp

@@ -1,33 +1,50 @@
-#include <sandbox/io/fd.hpp>
-
-#include <latch>
-#include <thread>
+#include <sandbox/io/file.hpp>
 
 #include <gtest/gtest.h>
-
-// #include "impl.hpp"
 
 namespace tests::io {
 
 namespace io = sandbox::io;
 
-TEST(io_fd, read_write) {
-  const std::vector<std::byte> data{std::byte(5), std::byte(6), std::byte(7)};
+// TODO: test read & write & seek & tell & truncate & size
 
-  std::latch latch(2);
-  const std::jthread writer([&]() {
-    latch.arrive_and_wait();
-    EXPECT_EQ(io::fd::kStdin().write(data), data.size());
-  });
+TEST(io_file, creation_flags) {
+  const auto path =
+      std::filesystem::current_path().append("io_file_creation_flags");
 
-  latch.count_down();
-
-  std::vector<std::byte> buffer{std::byte(1), std::byte(2), std::byte(3),
-                                std::byte(4)};
-  EXPECT_EQ(io::fd::kStdin().read(buffer), data.size());
-  // EXPECT_EQ(std::span(buffer.data(), data.size()), data);
+  for (const auto flag : std::initializer_list<io::file::open_flag>{
+           io::file::open_flag::kCloexec, io::file::open_flag::kTrunc}) {
+    std::filesystem::remove(path);
+    EXPECT_ANY_THROW(
+        io::file::open(path, flag, {}, io::file::access_mode::kRdonly));
+    EXPECT_NO_THROW(io::file::create(path, flag, {},
+                                     io::file::access_mode::kRdonly,
+                                     std::filesystem::perms::owner_all));
+    EXPECT_NO_THROW(
+        io::file::open(path, flag, {}, io::file::access_mode::kRdonly));
+    std::filesystem::remove(path);
+    EXPECT_ANY_THROW(
+        io::file::open(path, flag, {}, io::file::access_mode::kRdonly));
+  }
 }
 
-// TODO: test read & write etc
+TEST(io_file, flags) {
+  const auto path = std::filesystem::current_path().append("io_file_flags");
+
+  std::filesystem::remove(path);
+  auto file = io::file::create(path, {}, {}, io::file::access_mode::kRdonly,
+                               std::filesystem::perms::owner_all);
+
+  std::common_type_t<io::fd::flags_t, io::file::flags_t> flags{};
+  EXPECT_EQ(file.get_flags(), flags);
+  for (const auto flag : std::initializer_list<
+           std::common_type_t<io::fd::flags_t, io::file::flags_t>>{
+           io::fd::flag::kNonblock, io::file::flag::kAppend,
+           io::file::flag::kSync, io::file::flag::kDsync}) {
+    flags |= flag;
+    file.set_flags(flags);
+    EXPECT_EQ(file.get_flags(), flags);
+  }
+}
 
 }  // namespace tests::io
