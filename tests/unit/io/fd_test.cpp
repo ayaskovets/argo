@@ -72,7 +72,8 @@ TEST(io_fd, flags) {
 
   io::fd::flags_t flags{};
   EXPECT_EQ(fd.get_flags(), flags);
-  for (const io::fd::flag flag : {io::fd::flag::kNonblock}) {
+  for (const auto flag :
+       std::initializer_list<io::fd::flag>{io::fd::flag::kNonblock}) {
     flags |= flag;
     fd.set_flags(flags);
     EXPECT_EQ(fd.get_flags(), flags);
