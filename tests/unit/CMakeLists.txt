@@ -40,6 +40,7 @@ target_sources(${TARGET}
     utils/predicates_test.cpp
     utils/static_pimpl_test.cpp
     utils/strong_typedef_test.cpp
+    utils/type_erased_pimpl_test.cpp
 )
 target_compile_features(${TARGET}
     PRIVATE cxx_std_23
