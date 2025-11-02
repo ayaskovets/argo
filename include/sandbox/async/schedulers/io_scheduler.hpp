@@ -16,7 +16,8 @@ namespace concepts {
  * @brief Requirements for input and output channels of io_scheduler
  */
 template <typename InChannel, typename OutChannel>
-concept io_scheduler_channels = requires(typename InChannel::value_t in_value) {
+concept io_scheduler_channels = requires(
+    typename InChannel::value_type in_value) {
   requires async::concepts::channel<InChannel>;
   requires async::concepts::channel<OutChannel>;
 
@@ -24,9 +25,9 @@ concept io_scheduler_channels = requires(typename InChannel::value_t in_value) {
   { utils::as_ref(in_value).events() } -> std::same_as<io::poller::events_t>;
   { utils::as_ref(in_value).payload() };
 
-  requires std::is_nothrow_move_constructible_v<typename InChannel::value_t>;
-  requires std::is_default_constructible_v<typename InChannel::value_t>;
-  requires std::constructible_from<typename OutChannel::value_t,
+  requires std::is_nothrow_move_constructible_v<typename InChannel::value_type>;
+  requires std::is_default_constructible_v<typename InChannel::value_type>;
+  requires std::constructible_from<typename OutChannel::value_type,
                                    decltype(utils::as_ref(in_value).payload())>;
 };
 
@@ -80,7 +81,7 @@ class io_scheduler : public utils::non_copyable {
             return;
           }
 
-          typename OutChannel::value_t out_value(
+          typename OutChannel::value_type out_value(
               payload_by_fd_.at(fd.native_handle()));
           // TODO: try_push throws
           if (out_channel_.try_push(std::move(out_value))) [[unlikely]] {
@@ -105,7 +106,7 @@ class io_scheduler : public utils::non_copyable {
       consume_in_value();
     }
 
-    typename InChannel::value_t in_value{};
+    typename InChannel::value_type in_value{};
     // TODO: try_pop throws
     if (in_channel_.try_pop(in_value)) [[likely]] {
       in_value_.emplace(std::move(in_value));
@@ -120,9 +121,9 @@ class io_scheduler : public utils::non_copyable {
   OutChannel& out_channel_;
 
  private:
-  std::optional<typename InChannel::value_t> in_value_;
+  std::optional<typename InChannel::value_type> in_value_;
   io::poller poller_;
-  std::unordered_map<int, typename OutChannel::value_t> payload_by_fd_;
+  std::unordered_map<int, typename OutChannel::value_type> payload_by_fd_;
 
  private:
   constexpr void consume_in_value() noexcept {

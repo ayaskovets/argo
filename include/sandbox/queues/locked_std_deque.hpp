@@ -65,23 +65,23 @@ template <typename Value, std::unsigned_integral Index = std::size_t,
 class locked_std_deque final : public utils::non_copyable,
                                public utils::non_movable {
  public:
-  using value_t = Value;
-  using index_t = Index;
-  using allocator_t = Allocator;
-  using allocator_value_t = typename Allocator::value_type;
+  using value_type = Value;
+  using index_type = Index;
+  using allocator_type = Allocator;
+  using allocator_value_type = typename Allocator::value_type;
 
  public:
   constexpr explicit locked_std_deque(
-      const allocator_t& allocator = allocator_t()) noexcept(false)
-    requires(Capacity != utils::kDynamicExtent<index_t>)
+      const allocator_type& allocator = allocator_type()) noexcept(false)
+    requires(Capacity != utils::kDynamicExtent<index_type>)
       : deque_(allocator) {
     static_assert(Capacity > 0, "capacity must be greater than zero");
   }
 
   constexpr explicit locked_std_deque(
-      index_t capacity,
-      const allocator_t& allocator = allocator_t()) noexcept(false)
-    requires(Capacity == utils::kDynamicExtent<index_t>)
+      index_type capacity,
+      const allocator_type& allocator = allocator_type()) noexcept(false)
+    requires(Capacity == utils::kDynamicExtent<index_type>)
       : deque_(allocator), capacity_(capacity) {
     if (*capacity_ <= 0) [[unlikely]] {
       throw std::invalid_argument("capacity must be greater than zero");
@@ -115,7 +115,7 @@ class locked_std_deque final : public utils::non_copyable,
     return true;
   }
 
-  constexpr bool try_push(value_t value) {
+  constexpr bool try_push(value_type value) {
     return try_emplace(std::move(value));
   }
 
@@ -132,11 +132,11 @@ class locked_std_deque final : public utils::non_copyable,
     pop_available_cv_.notify_one();
   }
 
-  constexpr void push(value_t value) noexcept(false) {
+  constexpr void push(value_type value) noexcept(false) {
     emplace(std::move(value));
   }
 
-  constexpr bool try_pop(value_t& value) noexcept {
+  constexpr bool try_pop(value_type& value) noexcept {
     std::unique_lock lock(mutex_, std::defer_lock_t{});
     if (!lock.try_lock()) {
       return false;
@@ -153,11 +153,11 @@ class locked_std_deque final : public utils::non_copyable,
     return true;
   }
 
-  constexpr value_t pop() noexcept {
+  constexpr value_type pop() noexcept {
     std::unique_lock lock(mutex_);
     pop_available_cv_.wait(lock, [this] { return !deque_.empty(); });
 
-    value_t value(std::move(deque_.front().value()));
+    value_type value(std::move(deque_.front().value()));
     deque_.pop_front();
 
     push_available_cv_.notify_one();
@@ -165,15 +165,15 @@ class locked_std_deque final : public utils::non_copyable,
   }
 
  public:
-  constexpr index_t capacity() const noexcept { return *capacity_; }
-  constexpr index_t size() const noexcept {
+  constexpr index_type capacity() const noexcept { return *capacity_; }
+  constexpr index_type size() const noexcept {
     std::lock_guard lock(mutex_);
     return deque_.size();
   }
 
  public:
-  allocator_t get_allocator() const
-      noexcept(std::is_nothrow_copy_constructible_v<allocator_t>) {
+  allocator_type get_allocator() const
+      noexcept(std::is_nothrow_copy_constructible_v<allocator_type>) {
     return deque_.get_allocator();
   }
 
@@ -181,10 +181,11 @@ class locked_std_deque final : public utils::non_copyable,
   mutable std::mutex mutex_;
   std::condition_variable pop_available_cv_;
   std::condition_variable push_available_cv_;
-  std::deque<allocator_value_t, allocator_t> deque_;
+  std::deque<allocator_value_type, allocator_type> deque_;
 
   [[no_unique_address]] const utils::conditionally_runtime<
-      index_t, Capacity == utils::kDynamicExtent<index_t>, Capacity> capacity_;
+      index_type, Capacity == utils::kDynamicExtent<index_type>, Capacity>
+      capacity_;
 };
 
 }  // namespace sandbox::queues

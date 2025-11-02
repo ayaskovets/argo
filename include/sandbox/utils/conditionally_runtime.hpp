@@ -19,6 +19,13 @@ class conditionally_runtime;
 template <typename T, T CompileTimeValue>
 class conditionally_runtime<T, true, CompileTimeValue> final {
  public:
+  using value_type = T;
+  using reference = T&;
+  using const_reference = T&;
+  using pointer = T*;
+  using const_pointer = const T*;
+
+ public:
   constexpr conditionally_runtime() = delete;
   constexpr conditionally_runtime(T value) noexcept(
       std::is_nothrow_move_constructible_v<T>)

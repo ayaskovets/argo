@@ -14,7 +14,7 @@ namespace tests::queues::templates {
 namespace utils = sandbox::utils;
 
 template <typename Queue>
-  requires(std::is_same_v<typename Queue::value_t, int>)
+  requires(std::is_same_v<typename Queue::value_type, int>)
 constexpr void minimal_capacity(std::size_t capacity) noexcept {
   for (std::size_t i = 0; i < capacity; ++i) {
     EXPECT_ANY_THROW((Queue(i)));
@@ -23,7 +23,7 @@ constexpr void minimal_capacity(std::size_t capacity) noexcept {
 }
 
 template <typename Queue>
-  requires(std::is_same_v<typename Queue::value_t, int>)
+  requires(std::is_same_v<typename Queue::value_type, int>)
 constexpr void nonblocking_smoke() noexcept {
   int value;
   Queue queue(2);
@@ -43,7 +43,7 @@ constexpr void nonblocking_smoke() noexcept {
 }
 
 template <typename Queue>
-  requires(std::is_same_v<typename Queue::value_t, int>)
+  requires(std::is_same_v<typename Queue::value_type, int>)
 constexpr void blocking_smoke() noexcept {
   Queue queue(2);
 
@@ -56,7 +56,7 @@ constexpr void blocking_smoke() noexcept {
 }
 
 template <typename Queue>
-  requires(std::is_same_v<typename Queue::value_t, int>)
+  requires(std::is_same_v<typename Queue::value_type, int>)
 constexpr void mixed_smoke() noexcept {
   int value;
   Queue queue(2);
@@ -85,7 +85,7 @@ constexpr void mixed_smoke() noexcept {
 }
 
 template <typename Queue>
-  requires(std::is_same_v<typename Queue::value_t, int>)
+  requires(std::is_same_v<typename Queue::value_type, int>)
 constexpr void blocking_push() noexcept {
   Queue queue(2);
 
@@ -103,7 +103,7 @@ constexpr void blocking_push() noexcept {
 }
 
 template <typename Queue>
-  requires(std::is_same_v<typename Queue::value_t, int>)
+  requires(std::is_same_v<typename Queue::value_type, int>)
 constexpr void blocking_pop() noexcept {
   Queue queue(2);
 
@@ -113,7 +113,7 @@ constexpr void blocking_pop() noexcept {
 }
 
 template <typename Queue>
-  requires(std::is_same_v<typename Queue::value_t, int>)
+  requires(std::is_same_v<typename Queue::value_type, int>)
 constexpr void capacity_one() noexcept {
   int value;
   Queue queue(1);
@@ -129,7 +129,7 @@ constexpr void capacity_one() noexcept {
 }
 
 template <typename Queue>
-  requires(std::is_same_v<typename Queue::value_t, std::shared_ptr<int>>)
+  requires(std::is_same_v<typename Queue::value_type, std::shared_ptr<int>>)
 constexpr void queue_destructor() noexcept {
   std::shared_ptr<int> value = std::make_shared<int>();
   {
@@ -145,7 +145,7 @@ constexpr void queue_destructor() noexcept {
 }
 
 template <typename Queue>
-  requires(std::is_same_v<typename Queue::value_t, std::shared_ptr<int>>)
+  requires(std::is_same_v<typename Queue::value_type, std::shared_ptr<int>>)
 constexpr void item_destructor() noexcept {
   std::shared_ptr<int> value = std::make_shared<int>();
   Queue queue(2);
@@ -166,7 +166,7 @@ constexpr void item_destructor() noexcept {
 }
 
 template <typename Queue>
-  requires(std::is_same_v<typename Queue::value_t, std::unique_ptr<int>>)
+  requires(std::is_same_v<typename Queue::value_type, std::unique_ptr<int>>)
 constexpr void non_copyable_item_type() noexcept {
   std::unique_ptr<int> value;
   Queue queue(2);
@@ -178,12 +178,12 @@ constexpr void non_copyable_item_type() noexcept {
 }
 
 template <typename Queue>
-  requires(std::is_same_v<typename Queue::allocator_t,
+  requires(std::is_same_v<typename Queue::allocator_type,
                           utils::leak_detector_allocator<
-                              typename Queue::allocator_value_t, true>>)
+                              typename Queue::allocator_value_type, true>>)
 constexpr void allocator() noexcept {
-  typename Queue::allocator_t allocator;
-  Queue::allocator_t::clear();
+  typename Queue::allocator_type allocator;
+  Queue::allocator_type::clear();
 
   EXPECT_TRUE(allocator.is_clean());
   {
@@ -203,7 +203,7 @@ constexpr void allocator() noexcept {
 }
 
 template <typename Queue>
-  requires(std::is_same_v<typename Queue::value_t, int>)
+  requires(std::is_same_v<typename Queue::value_type, int>)
 constexpr void nonblocking(const auto& param) noexcept {
   const auto& [items_size, queue_size, producers, consumers] = param;
 
@@ -254,7 +254,7 @@ constexpr void nonblocking(const auto& param) noexcept {
 }
 
 template <typename Queue>
-  requires(std::is_same_v<typename Queue::value_t, int>)
+  requires(std::is_same_v<typename Queue::value_type, int>)
 constexpr void blocking(const auto& param) noexcept {
   const auto& [items_size, queue_size, producers, consumers] = param;
 
@@ -305,7 +305,7 @@ constexpr void blocking(const auto& param) noexcept {
 }
 
 template <typename Queue>
-  requires(std::is_same_v<typename Queue::value_t, int>)
+  requires(std::is_same_v<typename Queue::value_type, int>)
 constexpr void queued_producers_nonblocking() noexcept {
   Queue queue(2);
   queue.push(0);
@@ -328,7 +328,7 @@ constexpr void queued_producers_nonblocking() noexcept {
 }
 
 template <typename Queue>
-  requires(std::is_same_v<typename Queue::value_t, int>)
+  requires(std::is_same_v<typename Queue::value_type, int>)
 constexpr void queued_producers_blocking() noexcept {
   Queue queue(2);
   queue.push(0);
@@ -350,7 +350,7 @@ constexpr void queued_producers_blocking() noexcept {
 }
 
 template <typename Queue>
-  requires(std::is_same_v<typename Queue::value_t, int>)
+  requires(std::is_same_v<typename Queue::value_type, int>)
 constexpr void queued_consumers_nonblocking() noexcept {
   Queue queue(2);
 
@@ -370,7 +370,7 @@ constexpr void queued_consumers_nonblocking() noexcept {
 }
 
 template <typename Queue>
-  requires(std::is_same_v<typename Queue::value_t, int>)
+  requires(std::is_same_v<typename Queue::value_type, int>)
 constexpr void queued_consumers_blocking() noexcept {
   Queue queue(2);
 
@@ -390,7 +390,7 @@ constexpr void queued_consumers_blocking() noexcept {
 }
 
 template <typename Queue>
-  requires(std::is_same_v<typename Queue::value_t, int>)
+  requires(std::is_same_v<typename Queue::value_type, int>)
 constexpr void rollover() noexcept {
   Queue queue(8);
 

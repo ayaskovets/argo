@@ -59,15 +59,15 @@ template <typename Value, std::unsigned_integral Index = std::size_t,
 class single_threaded_queue final : public utils::non_copyable,
                                     public utils::non_movable {
  public:
-  using value_t = Value;
-  using index_t = Index;
-  using allocator_t = Allocator;
-  using allocator_value_t = typename Allocator::value_type;
+  using value_type = Value;
+  using index_type = Index;
+  using allocator_type = Allocator;
+  using allocator_value_type = typename Allocator::value_type;
 
  public:
   constexpr explicit single_threaded_queue(
-      const allocator_t& allocator = allocator_t()) noexcept(false)
-    requires(Capacity != utils::kDynamicExtent<index_t>)
+      const allocator_type& allocator = allocator_type()) noexcept(false)
+    requires(Capacity != utils::kDynamicExtent<index_type>)
       : allocator_(allocator) {
     static_assert(Capacity > 0, "capacity must be greater than zero");
 
@@ -77,9 +77,9 @@ class single_threaded_queue final : public utils::non_copyable,
   }
 
   constexpr explicit single_threaded_queue(
-      index_t capacity,
-      const allocator_t& allocator = allocator_t()) noexcept(false)
-    requires(Capacity == utils::kDynamicExtent<index_t>)
+      index_type capacity,
+      const allocator_type& allocator = allocator_type()) noexcept(false)
+    requires(Capacity == utils::kDynamicExtent<index_type>)
       : allocator_(allocator), capacity_(capacity) {
     if (*capacity_ <= 0) [[unlikely]] {
       throw std::invalid_argument("capacity must be greater than zero");
@@ -99,7 +99,7 @@ class single_threaded_queue final : public utils::non_copyable,
     while (size_ != 0) {
       std::destroy_at(&ring_buffer_[pop_from_].value());
 
-      const index_t next_pop_from =
+      const index_type next_pop_from =
           (pop_from_ == *capacity_ - 1) ? 0 : pop_from_ + 1;
       pop_from_ = next_pop_from;
       size_ -= 1;
@@ -120,14 +120,14 @@ class single_threaded_queue final : public utils::non_copyable,
     std::construct_at(&ring_buffer_[push_to_].value(),
                       std::forward<Args>(args)...);
 
-    const index_t next_push_to =
+    const index_type next_push_to =
         (push_to_ == *capacity_ - 1) ? 0 : push_to_ + 1;
     push_to_ = next_push_to;
     size_ += 1;
     return true;
   }
 
-  constexpr bool try_push(value_t value) noexcept {
+  constexpr bool try_push(value_type value) noexcept {
     return try_emplace(std::move(value));
   }
 
@@ -140,11 +140,11 @@ class single_threaded_queue final : public utils::non_copyable,
     }
   }
 
-  constexpr void push(value_t value) noexcept(false) {
+  constexpr void push(value_type value) noexcept(false) {
     emplace(std::move(value));
   }
 
-  constexpr bool try_pop(value_t& value) noexcept {
+  constexpr bool try_pop(value_type& value) noexcept {
     if (size_ == 0) {
       return false;
     }
@@ -152,22 +152,22 @@ class single_threaded_queue final : public utils::non_copyable,
     value = std::move(ring_buffer_[pop_from_].value());
     std::destroy_at(&ring_buffer_[pop_from_].value());
 
-    const index_t next_pop_from =
+    const index_type next_pop_from =
         (pop_from_ == *capacity_ - 1) ? 0 : pop_from_ + 1;
     pop_from_ = next_pop_from;
     size_ -= 1;
     return true;
   }
 
-  constexpr value_t pop() noexcept(false) {
+  constexpr value_type pop() noexcept(false) {
     if (size_ == 0) {
       throw std::runtime_error("queue is empty");
     }
 
-    value_t value(std::move(ring_buffer_[pop_from_].value()));
+    value_type value(std::move(ring_buffer_[pop_from_].value()));
     std::destroy_at(&ring_buffer_[pop_from_].value());
 
-    const index_t next_pop_from =
+    const index_type next_pop_from =
         (pop_from_ == *capacity_ - 1) ? 0 : pop_from_ + 1;
     pop_from_ = next_pop_from;
     size_ -= 1;
@@ -175,22 +175,23 @@ class single_threaded_queue final : public utils::non_copyable,
   }
 
  public:
-  constexpr index_t capacity() const noexcept { return *capacity_; }
-  constexpr index_t size() const noexcept { return size_; }
+  constexpr index_type capacity() const noexcept { return *capacity_; }
+  constexpr index_type size() const noexcept { return size_; }
 
  public:
-  allocator_t get_allocator() const noexcept { return allocator_; }
+  allocator_type get_allocator() const noexcept { return allocator_; }
 
  private:
-  allocator_value_t* ring_buffer_ = nullptr;
+  allocator_value_type* ring_buffer_ = nullptr;
 
-  index_t push_to_ = 0;
-  index_t pop_from_ = 0;
-  index_t size_ = 0;
+  index_type push_to_ = 0;
+  index_type pop_from_ = 0;
+  index_type size_ = 0;
 
-  [[no_unique_address]] allocator_t allocator_;
+  [[no_unique_address]] allocator_type allocator_;
   [[no_unique_address]] const utils::conditionally_runtime<
-      index_t, Capacity == utils::kDynamicExtent<index_t>, Capacity> capacity_;
+      index_type, Capacity == utils::kDynamicExtent<index_type>, Capacity>
+      capacity_;
 };
 
 }  // namespace sandbox::queues

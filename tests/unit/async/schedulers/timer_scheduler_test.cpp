@@ -31,7 +31,7 @@ TEST(async_schedulers_timer_scheduler, size) {
 
 TEST(tmp, tmp) {
   sandbox::queues::dereferencing_decorator<channel_t<int*>> q(3);
-  static_assert(std::is_same_v<typename decltype(q)::value_t, int&>);
+  static_assert(std::is_same_v<typename decltype(q)::value_type, int&>);
 
   int tmp = 42;
   q.push(tmp);

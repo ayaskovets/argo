@@ -14,7 +14,7 @@ constexpr void nonblocking_throughput(benchmark::State& state) noexcept {
   const std::size_t items = state.range(1);
   const std::size_t producers = state.range(2);
   const std::size_t consumers = state.range(3);
-  const typename Queue::value_t value{};
+  const typename Queue::value_type value{};
 
   std::atomic<std::size_t> try_push_times = 0;
   std::atomic<std::size_t> try_pop_times = 0;
@@ -49,13 +49,13 @@ constexpr void nonblocking_throughput(benchmark::State& state) noexcept {
 
       if (consumers == 1) {
         for (std::size_t i = 0; i < items;) {
-          typename Queue::value_t out_value;
+          typename Queue::value_type out_value;
           try_pop_times.fetch_add(1, std::memory_order::relaxed);
           i += queue.try_pop(out_value);
         }
       } else {
         while (popped_items.fetch_add(1, std::memory_order::relaxed) < items) {
-          typename Queue::value_t out_value{};
+          typename Queue::value_type out_value{};
           do {
             try_pop_times.fetch_add(1, std::memory_order::relaxed);
           } while (!queue.try_pop(out_value));
@@ -92,7 +92,7 @@ constexpr void blocking_throughput(benchmark::State& state) {
   const std::size_t items = state.range(1);
   const std::size_t producers = state.range(2);
   const std::size_t consumers = state.range(3);
-  const typename Queue::value_t value{};
+  const typename Queue::value_type value{};
 
   for (const auto _ : state) {
     state.PauseTiming();
@@ -148,7 +148,7 @@ template <typename Queue>
 constexpr void single_threaded_throughput(benchmark::State& state) noexcept {
   const std::size_t capacity = state.range(0);
   const std::size_t items = state.range(1);
-  const typename Queue::value_t value{};
+  const typename Queue::value_type value{};
 
   for (const auto _ : state) {
     state.PauseTiming();

@@ -10,7 +10,7 @@ namespace sandbox::queues {
 template <concepts::queue Queue>
 class dereferencing_decorator : public Queue {
  public:
-  using value_t = decltype(*std::declval<typename Queue::value_t>());
+  using value_type = decltype(*std::declval<typename Queue::value_type>());
 
  public:
   using Queue::Queue;
@@ -22,22 +22,23 @@ class dereferencing_decorator : public Queue {
   template <typename... Args>
   constexpr bool try_emplace(Args&&...) = delete;
 
-  constexpr bool try_push(value_t& value) noexcept(
+  constexpr bool try_push(value_type& value) noexcept(
       noexcept(Queue::try_push(&value))) {
     return Queue::try_push(&value);
   }
 
-  constexpr void push(value_t& value) noexcept(noexcept(Queue::push(&value))) {
+  constexpr void push(value_type& value) noexcept(
+      noexcept(Queue::push(&value))) {
     Queue::push(&value);
   }
 
-  constexpr value_t pop() noexcept(noexcept(Queue::pop())) {
+  constexpr value_type pop() noexcept(noexcept(Queue::pop())) {
     return *Queue::pop();
   }
 
-  constexpr bool try_pop(value_t& value) noexcept(
-      noexcept(Queue::try_pop(std::declval<typename Queue::value_t&>()))) {
-    typename Queue::value_t pointer = nullptr;
+  constexpr bool try_pop(value_type& value) noexcept(
+      noexcept(Queue::try_pop(std::declval<typename Queue::value_type&>()))) {
+    typename Queue::value_type pointer = nullptr;
     if (Queue::try_pop(pointer)) {
       value = std::move(*pointer);
       return true;

@@ -12,6 +12,13 @@ namespace sandbox::utils {
 template <typename T, bool Shared = false>
 class leak_detector_allocator final : public std::allocator<T> {
  public:
+  using value_type = T;
+  using reference = T&;
+  using const_reference = T&;
+  using pointer = T*;
+  using const_pointer = const T*;
+
+ public:
   using std::allocator<T>::allocator;
 
  public:

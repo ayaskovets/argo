@@ -79,15 +79,15 @@ template <typename Value, std::unsigned_integral Index = std::size_t,
 class lockless_mpmc_queue final : public utils::non_copyable,
                                   public utils::non_movable {
  public:
-  using value_t = Value;
-  using index_t = Index;
-  using allocator_t = Allocator;
-  using allocator_value_t = typename Allocator::value_type;
+  using value_type = Value;
+  using index_type = Index;
+  using allocator_type = Allocator;
+  using allocator_value_type = typename Allocator::value_type;
 
  public:
   constexpr explicit lockless_mpmc_queue(
-      const allocator_t& allocator = allocator_t()) noexcept(false)
-    requires(Capacity != utils::kDynamicExtent<index_t>)
+      const allocator_type& allocator = allocator_type()) noexcept(false)
+    requires(Capacity != utils::kDynamicExtent<index_type>)
       : allocator_(allocator) {
     static_assert(utils::is_power_of_two(Capacity) && Capacity > 1,
                   "capacity must be a power of two greater than one");
@@ -96,15 +96,15 @@ class lockless_mpmc_queue final : public utils::non_copyable,
       throw std::runtime_error("failed to allocate memory");
     }
 
-    for (index_t i = 0; i < *capacity_; ++i) {
+    for (index_type i = 0; i < *capacity_; ++i) {
       ring_buffer_[i].seqnum() = i;
     }
   }
 
   constexpr explicit lockless_mpmc_queue(
-      index_t capacity,
-      const allocator_t& allocator = allocator_t()) noexcept(false)
-    requires(Capacity == utils::kDynamicExtent<index_t>)
+      index_type capacity,
+      const allocator_type& allocator = allocator_type()) noexcept(false)
+    requires(Capacity == utils::kDynamicExtent<index_type>)
       : allocator_(allocator), capacity_(capacity) {
     if (!utils::is_power_of_two(*capacity_) || *capacity_ <= 1) {
       throw std::invalid_argument(
@@ -115,7 +115,7 @@ class lockless_mpmc_queue final : public utils::non_copyable,
       throw std::runtime_error("failed to allocate memory");
     }
 
-    for (index_t i = 0; i < *capacity_; ++i) {
+    for (index_type i = 0; i < *capacity_; ++i) {
       ring_buffer_[i].seqnum() = i;
     }
   }
@@ -126,12 +126,12 @@ class lockless_mpmc_queue final : public utils::non_copyable,
    * destruction occurs
    */
   constexpr ~lockless_mpmc_queue() noexcept {
-    const index_t push_to = push_to_.load(std::memory_order::relaxed);
-    index_t pop_from = pop_from_.load(std::memory_order::relaxed);
+    const index_type push_to = push_to_.load(std::memory_order::relaxed);
+    index_type pop_from = pop_from_.load(std::memory_order::relaxed);
     while (push_to != pop_from) {
       std::destroy_at(&ring_buffer_[pop_from & (*capacity_ - 1)].value());
 
-      const index_t next_pop_from = pop_from + 1;
+      const index_type next_pop_from = pop_from + 1;
       pop_from = next_pop_from;
     }
 
@@ -143,8 +143,8 @@ class lockless_mpmc_queue final : public utils::non_copyable,
   constexpr bool try_emplace(Args&&... args) noexcept
     requires(std::is_nothrow_constructible_v<Value, Args...>)
   {
-    index_t push_to = push_to_.load(std::memory_order::relaxed);
-    allocator_value_t& entry = ring_buffer_[push_to & (*capacity_ - 1)];
+    index_type push_to = push_to_.load(std::memory_order::relaxed);
+    allocator_value_type& entry = ring_buffer_[push_to & (*capacity_ - 1)];
 
     if (push_to != entry.seqnum().load(std::memory_order::acquire)) {
       return false;
@@ -160,7 +160,7 @@ class lockless_mpmc_queue final : public utils::non_copyable,
     return true;
   }
 
-  constexpr bool try_push(value_t value) noexcept {
+  constexpr bool try_push(value_type value) noexcept {
     return try_emplace(std::move(value));
   }
 
@@ -169,8 +169,8 @@ class lockless_mpmc_queue final : public utils::non_copyable,
     requires(std::is_nothrow_constructible_v<Value, Args...>)
   {
     do {
-      index_t push_to = push_to_.load(std::memory_order::relaxed);
-      allocator_value_t& entry = ring_buffer_[push_to & (*capacity_ - 1)];
+      index_type push_to = push_to_.load(std::memory_order::relaxed);
+      allocator_value_type& entry = ring_buffer_[push_to & (*capacity_ - 1)];
       if (push_to != entry.seqnum().load(std::memory_order::acquire)) {
         continue;
       }
@@ -184,11 +184,11 @@ class lockless_mpmc_queue final : public utils::non_copyable,
     } while (true);
   }
 
-  constexpr void push(value_t value) noexcept { emplace(std::move(value)); }
+  constexpr void push(value_type value) noexcept { emplace(std::move(value)); }
 
-  constexpr bool try_pop(value_t& value) noexcept {
-    index_t pop_from = pop_from_.load(std::memory_order::relaxed);
-    allocator_value_t& entry = ring_buffer_[pop_from & (*capacity_ - 1)];
+  constexpr bool try_pop(value_type& value) noexcept {
+    index_type pop_from = pop_from_.load(std::memory_order::relaxed);
+    allocator_value_type& entry = ring_buffer_[pop_from & (*capacity_ - 1)];
 
     if (pop_from + 1 != entry.seqnum().load(std::memory_order::acquire)) {
       return false;
@@ -205,17 +205,17 @@ class lockless_mpmc_queue final : public utils::non_copyable,
     return true;
   }
 
-  constexpr value_t pop() noexcept {
+  constexpr value_type pop() noexcept {
     do {
-      index_t pop_from = pop_from_.load(std::memory_order::relaxed);
-      allocator_value_t& entry = ring_buffer_[pop_from & (*capacity_ - 1)];
+      index_type pop_from = pop_from_.load(std::memory_order::relaxed);
+      allocator_value_type& entry = ring_buffer_[pop_from & (*capacity_ - 1)];
       if (pop_from + 1 != entry.seqnum().load(std::memory_order::acquire)) {
         continue;
       }
 
       if (pop_from_.compare_exchange_weak(pop_from, pop_from + 1,
                                           std::memory_order::relaxed)) {
-        value_t value(std::move(entry.value()));
+        value_type value(std::move(entry.value()));
         std::destroy_at(&entry.value());
 
         entry.seqnum().store(pop_from + *capacity_, std::memory_order::release);
@@ -225,33 +225,34 @@ class lockless_mpmc_queue final : public utils::non_copyable,
   }
 
  public:
-  constexpr index_t capacity() const noexcept { return *capacity_; }
+  constexpr index_type capacity() const noexcept { return *capacity_; }
 
   /**
    * @brief Approximate size
    */
-  constexpr index_t size() const noexcept {
-    const index_t push_to = push_to_.load(std::memory_order::relaxed);
-    const index_t pop_from = pop_from_.load(std::memory_order::relaxed);
+  constexpr index_type size() const noexcept {
+    const index_type push_to = push_to_.load(std::memory_order::relaxed);
+    const index_type pop_from = pop_from_.load(std::memory_order::relaxed);
 
     return push_to >= pop_from ? push_to - pop_from
                                : *capacity_ - pop_from - push_to + 1;
   }
 
  public:
-  allocator_t get_allocator() const noexcept { return allocator_; }
+  allocator_type get_allocator() const noexcept { return allocator_; }
 
  private:
-  allocator_value_t* ring_buffer_ = nullptr;
+  allocator_value_type* ring_buffer_ = nullptr;
 
   alignas(std::hardware_destructive_interference_size)
-      std::atomic<index_t> push_to_ = 0;
+      std::atomic<index_type> push_to_ = 0;
   alignas(std::hardware_destructive_interference_size)
-      std::atomic<index_t> pop_from_ = 0;
+      std::atomic<index_type> pop_from_ = 0;
 
-  [[no_unique_address]] allocator_t allocator_;
+  [[no_unique_address]] allocator_type allocator_;
   [[no_unique_address]] const utils::conditionally_runtime<
-      index_t, Capacity == utils::kDynamicExtent<index_t>, Capacity> capacity_;
+      index_type, Capacity == utils::kDynamicExtent<index_type>, Capacity>
+      capacity_;
 };
 
 }  // namespace sandbox::queues

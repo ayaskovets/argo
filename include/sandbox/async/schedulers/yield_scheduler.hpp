@@ -19,14 +19,14 @@ namespace concepts {
  */
 template <typename InChannel, typename OutChannel>
 concept yield_scheduler_channels = requires(
-    typename InChannel::value_t in_value) {
+    typename InChannel::value_type in_value) {
   requires async::concepts::channel<InChannel>;
   requires async::concepts::channel<OutChannel>;
-  requires std::convertible_to<typename InChannel::value_t,
-                               typename OutChannel::value_t>;
+  requires std::convertible_to<typename InChannel::value_type,
+                               typename OutChannel::value_type>;
 
-  requires std::is_nothrow_move_constructible_v<typename InChannel::value_t>;
-  requires std::is_default_constructible_v<typename InChannel::value_t>;
+  requires std::is_nothrow_move_constructible_v<typename InChannel::value_type>;
+  requires std::is_default_constructible_v<typename InChannel::value_type>;
 };
 
 }  // namespace concepts
@@ -36,13 +36,13 @@ concept yield_scheduler_channels = requires(
  */
 template <async::concepts::channel InChannel,
           async::concepts::channel OutChannel,
-          typename Allocator = std::allocator<typename InChannel::value_t>>
+          typename Allocator = std::allocator<typename InChannel::value_type>>
 class yield_scheduler : public utils::non_copyable {
  private:
   static_assert(concepts::yield_scheduler_channels<InChannel, OutChannel>);
 
  public:
-  using allocator_value_t = typename Allocator::value_type;
+  using allocator_value_type = typename Allocator::value_type;
 
  public:
   constexpr yield_scheduler(InChannel& in_channel, OutChannel& out_channel,
@@ -69,7 +69,7 @@ class yield_scheduler : public utils::non_copyable {
       consume_in_value();
     }
 
-    typename InChannel::value_t in_value{};
+    typename InChannel::value_type in_value{};
     // TODO: try_pop throws
     if (in_channel_.try_pop(in_value)) [[likely]] {
       in_value_.emplace(std::move(in_value));
@@ -82,7 +82,7 @@ class yield_scheduler : public utils::non_copyable {
 
     const auto& top = queue_.top();
 
-    typename OutChannel::value_t out_value(top);
+    typename OutChannel::value_type out_value(top);
     // TODO: try_push throws
     if (out_channel_.try_push(std::move(out_value))) [[unlikely]] {
       queue_.pop();
@@ -94,8 +94,8 @@ class yield_scheduler : public utils::non_copyable {
   OutChannel& out_channel_;
 
  private:
-  std::optional<typename InChannel::value_t> in_value_;
-  std::deque<allocator_value_t, Allocator> queue_;
+  std::optional<typename InChannel::value_type> in_value_;
+  std::deque<allocator_value_type, Allocator> queue_;
 
  private:
   constexpr void consume_in_value() {

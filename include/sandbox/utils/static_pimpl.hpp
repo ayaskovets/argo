@@ -19,6 +19,13 @@ namespace sandbox::utils {
 template <typename T, std::size_t Size, std::size_t Alignment>
 class static_pimpl final {
  public:
+  using value_type = T;
+  using reference = T&;
+  using const_reference = T&;
+  using pointer = T*;
+  using const_pointer = const T*;
+
+ public:
   template <typename... Args>
   constexpr explicit static_pimpl(Args&&... args) noexcept(
       std::is_nothrow_constructible_v<T, Args...>) {

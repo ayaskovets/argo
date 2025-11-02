@@ -15,6 +15,13 @@ namespace sandbox::utils {
 template <typename T>
 class strong_typedef {
  public:
+  using value_type = T;
+  using reference = T&;
+  using const_reference = T&;
+  using pointer = T*;
+  using const_pointer = const T*;
+
+ public:
   template <typename... Args>
   constexpr explicit strong_typedef(Args&&... args) noexcept(
       std::is_nothrow_constructible_v<T, Args...>)

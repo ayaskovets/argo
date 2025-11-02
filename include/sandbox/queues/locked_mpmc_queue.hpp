@@ -65,15 +65,15 @@ template <typename Value, std::unsigned_integral Index = std::size_t,
 class locked_mpmc_queue final : public utils::non_copyable,
                                 public utils::non_movable {
  public:
-  using value_t = Value;
-  using index_t = Index;
-  using allocator_t = Allocator;
-  using allocator_value_t = typename Allocator::value_type;
+  using value_type = Value;
+  using index_type = Index;
+  using allocator_type = Allocator;
+  using allocator_value_type = typename Allocator::value_type;
 
  public:
   constexpr explicit locked_mpmc_queue(
-      const allocator_t& allocator = allocator_t()) noexcept(false)
-    requires(Capacity != utils::kDynamicExtent<index_t>)
+      const allocator_type& allocator = allocator_type()) noexcept(false)
+    requires(Capacity != utils::kDynamicExtent<index_type>)
       : size_(0), allocator_(allocator) {
     static_assert(Capacity > 0, "capacity must be greater than zero");
 
@@ -83,9 +83,9 @@ class locked_mpmc_queue final : public utils::non_copyable,
   }
 
   constexpr explicit locked_mpmc_queue(
-      index_t capacity,
-      const allocator_t& allocator = allocator_t()) noexcept(false)
-    requires(Capacity == utils::kDynamicExtent<index_t>)
+      index_type capacity,
+      const allocator_type& allocator = allocator_type()) noexcept(false)
+    requires(Capacity == utils::kDynamicExtent<index_type>)
       : size_(0), allocator_(allocator), capacity_(capacity) {
     if (*capacity_ <= 0) [[unlikely]] {
       throw std::invalid_argument("capacity must be greater than zero");
@@ -105,7 +105,7 @@ class locked_mpmc_queue final : public utils::non_copyable,
     while (push_to_ != pop_from_) {
       std::destroy_at(&ring_buffer_[pop_from_].value());
 
-      const index_t next_pop_from =
+      const index_type next_pop_from =
           (pop_from_ == *capacity_) ? 0 : pop_from_ + 1;
       pop_from_ = next_pop_from;
     }
@@ -125,7 +125,7 @@ class locked_mpmc_queue final : public utils::non_copyable,
     if (!lock.try_lock()) {
       return false;
     }
-    const index_t next_push_to = (push_to_ == *capacity_) ? 0 : push_to_ + 1;
+    const index_type next_push_to = (push_to_ == *capacity_) ? 0 : push_to_ + 1;
     if (next_push_to == pop_from_) {
       return false;
     }
@@ -139,7 +139,7 @@ class locked_mpmc_queue final : public utils::non_copyable,
     return true;
   }
 
-  constexpr bool try_push(value_t value) noexcept {
+  constexpr bool try_push(value_type value) noexcept {
     return try_emplace(std::move(value));
   }
 
@@ -149,22 +149,23 @@ class locked_mpmc_queue final : public utils::non_copyable,
   {
     std::unique_lock lock(mutex_);
     push_available_cv_.wait(lock, [this] {
-      const index_t next_push_to = (push_to_ == *capacity_) ? 0 : push_to_ + 1;
+      const index_type next_push_to =
+          (push_to_ == *capacity_) ? 0 : push_to_ + 1;
       return next_push_to != pop_from_;
     });
 
     std::construct_at(&ring_buffer_[push_to_].value(),
                       std::forward<Args>(args)...);
 
-    const index_t next_push_to = (push_to_ == *capacity_) ? 0 : push_to_ + 1;
+    const index_type next_push_to = (push_to_ == *capacity_) ? 0 : push_to_ + 1;
     push_to_ = next_push_to;
     size_.fetch_add(1, std::memory_order::relaxed);
     pop_available_cv_.notify_one();
   }
 
-  constexpr void push(value_t value) noexcept { emplace(std::move(value)); }
+  constexpr void push(value_type value) noexcept { emplace(std::move(value)); }
 
-  constexpr bool try_pop(value_t& value) noexcept {
+  constexpr bool try_pop(value_type& value) noexcept {
     if (size_.load(std::memory_order::relaxed) == 0) {
       return false;
     }
@@ -179,21 +180,23 @@ class locked_mpmc_queue final : public utils::non_copyable,
     value = std::move(ring_buffer_[pop_from_].value());
     std::destroy_at(&ring_buffer_[pop_from_].value());
 
-    const index_t next_pop_from = (pop_from_ == *capacity_) ? 0 : pop_from_ + 1;
+    const index_type next_pop_from =
+        (pop_from_ == *capacity_) ? 0 : pop_from_ + 1;
     pop_from_ = next_pop_from;
     size_.fetch_sub(1, std::memory_order::relaxed);
     push_available_cv_.notify_one();
     return true;
   }
 
-  constexpr value_t pop() noexcept {
+  constexpr value_type pop() noexcept {
     std::unique_lock lock(mutex_);
     pop_available_cv_.wait(lock, [this] { return pop_from_ != push_to_; });
 
-    value_t value(std::move(ring_buffer_[pop_from_].value()));
+    value_type value(std::move(ring_buffer_[pop_from_].value()));
     std::destroy_at(&ring_buffer_[pop_from_].value());
 
-    const index_t next_pop_from = (pop_from_ == *capacity_) ? 0 : pop_from_ + 1;
+    const index_type next_pop_from =
+        (pop_from_ == *capacity_) ? 0 : pop_from_ + 1;
     pop_from_ = next_pop_from;
 
     size_.fetch_sub(1, std::memory_order::relaxed);
@@ -202,33 +205,34 @@ class locked_mpmc_queue final : public utils::non_copyable,
   }
 
  public:
-  constexpr index_t capacity() const noexcept { return *capacity_; }
+  constexpr index_type capacity() const noexcept { return *capacity_; }
 
   /**
    * @brief Approximate size
    */
-  constexpr index_t size() const noexcept {
+  constexpr index_type size() const noexcept {
     return size_.load(std::memory_order::relaxed);
   }
 
  public:
-  allocator_t get_allocator() const noexcept { return allocator_; }
+  allocator_type get_allocator() const noexcept { return allocator_; }
 
  private:
   mutable std::mutex mutex_;
   std::condition_variable pop_available_cv_;
   std::condition_variable push_available_cv_;
 
-  allocator_value_t* ring_buffer_ = nullptr;
+  allocator_value_type* ring_buffer_ = nullptr;
 
-  index_t push_to_ = 0;
-  index_t pop_from_ = 0;
-  alignas(
-      std::hardware_destructive_interference_size) std::atomic<index_t> size_;
+  index_type push_to_ = 0;
+  index_type pop_from_ = 0;
+  alignas(std::hardware_destructive_interference_size)
+      std::atomic<index_type> size_;
 
-  [[no_unique_address]] allocator_t allocator_;
+  [[no_unique_address]] allocator_type allocator_;
   [[no_unique_address]] const utils::conditionally_runtime<
-      index_t, Capacity == utils::kDynamicExtent<index_t>, Capacity> capacity_;
+      index_type, Capacity == utils::kDynamicExtent<index_type>, Capacity>
+      capacity_;
 };
 
 }  // namespace sandbox::queues

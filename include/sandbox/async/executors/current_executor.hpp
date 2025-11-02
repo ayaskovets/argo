@@ -20,7 +20,7 @@ template <typename Executor>
 constexpr void resume(Executor& executor, std::coroutine_handle<> handle) {
   try_push = [&executor](const base_scheduler_input& params) {
     using out_channel_t = std::decay_t<decltype(executor.out_channel())>;
-    using out_channel_value_t = typename out_channel_t::value_t;
+    using out_channel_value_t = typename out_channel_t::value_type;
 
     // TODO: static_cast?
     return executor.out_channel().try_push(

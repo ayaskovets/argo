@@ -14,7 +14,7 @@ class thread_pool_executor final : public utils::non_copyable,
                                    public utils::non_movable {
  private:
   static_assert(
-      std::is_same_v<typename InChannel::value_t, std::coroutine_handle<>>);
+      std::is_same_v<typename InChannel::value_type, std::coroutine_handle<>>);
 
  public:
   constexpr thread_pool_executor(
