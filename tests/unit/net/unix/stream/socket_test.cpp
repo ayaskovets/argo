@@ -4,8 +4,6 @@
 
 #include <gtest/gtest.h>
 
-#include "sandbox/net/unix/sockaddr.hpp"
-
 namespace tests::net::unix::stream {
 
 namespace io = sandbox::io;
