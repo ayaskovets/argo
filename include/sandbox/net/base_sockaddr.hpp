@@ -1,9 +1,9 @@
 #pragma once
 
 #include <sandbox/net/family.hpp>
+#include <sandbox/utils/unchecked_any.hpp>
 
 #include <format>
-#include <memory>
 #include <string>
 
 namespace sandbox::net {
@@ -51,7 +51,7 @@ class base_sockaddr {
   std::string to_string() const noexcept(false);
 
  private:
-  std::shared_ptr<void> storage_;
+  utils::unchecked_any impl_;
 };
 
 }  // namespace sandbox::net

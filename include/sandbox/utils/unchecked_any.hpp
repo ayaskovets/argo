@@ -10,12 +10,12 @@ namespace sandbox::utils {
 /**
  * @brief Type-erased pimpl with value semantics
  */
-class type_erased_pimpl final {
+class unchecked_any final {
  public:
   template <typename T, typename... Args>
     requires(!std::is_array_v<T>)
-  constexpr explicit type_erased_pimpl(std::in_place_type_t<T>,
-                                       Args&&... args) noexcept(false)
+  constexpr explicit unchecked_any(std::in_place_type_t<T>,
+                                   Args&&... args) noexcept(false)
     requires(std::constructible_from<T, Args...>)
       : delete_([](void* ptr) { delete static_cast<T*>(ptr); }),
         clone_([](const void* ptr) -> void* {
@@ -24,33 +24,33 @@ class type_erased_pimpl final {
         ptr_(new T(std::forward<Args>(args)...)) {}
 
   template <typename T>
-  constexpr explicit type_erased_pimpl(T value) noexcept(false)
-      : type_erased_pimpl(std::in_place_type<T>, std::move(value)) {}
+  constexpr explicit unchecked_any(T value) noexcept(false)
+      : unchecked_any(std::in_place_type<T>, std::move(value)) {}
 
-  constexpr type_erased_pimpl(const type_erased_pimpl& that) noexcept(false) {
+  constexpr unchecked_any(const unchecked_any& that) noexcept(false) {
     *this = that;
   }
 
-  constexpr type_erased_pimpl& operator=(
-      const type_erased_pimpl& that) noexcept(false) {
+  constexpr unchecked_any& operator=(const unchecked_any& that) noexcept(
+      false) {
     delete_ = that.delete_;
     clone_ = that.clone_;
     ptr_ = that.clone_(that.ptr_);
     return *this;
   }
 
-  constexpr type_erased_pimpl(type_erased_pimpl&& that) noexcept {
+  constexpr unchecked_any(unchecked_any&& that) noexcept {
     *this = std::move(that);
   }
 
-  constexpr type_erased_pimpl& operator=(type_erased_pimpl&& that) noexcept {
+  constexpr unchecked_any& operator=(unchecked_any&& that) noexcept {
     delete_ = std::exchange(that.delete_, nullptr);
     clone_ = std::exchange(that.clone_, nullptr);
     ptr_ = std::exchange(that.ptr_, nullptr);
     return *this;
   }
 
-  constexpr ~type_erased_pimpl() noexcept {
+  constexpr ~unchecked_any() noexcept {
     if (!valueless_after_move()) {
       delete_(ptr_);
     }
@@ -58,8 +58,8 @@ class type_erased_pimpl final {
 
  public:
   template <typename T>
-  constexpr type_erased_pimpl& operator=(T value) noexcept(false) {
-    new (this) type_erased_pimpl(std::move(value));
+  constexpr unchecked_any& operator=(T value) noexcept(false) {
+    new (this) unchecked_any(std::move(value));
     return *this;
   }
 

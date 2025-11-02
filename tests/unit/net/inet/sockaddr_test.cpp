@@ -7,7 +7,7 @@ namespace tests::net::inet {
 namespace inet = sandbox::net::inet;
 
 TEST(net_inet_sockaddr, size) {
-  static_assert(sizeof(inet::sockaddr) == 16);
+  static_assert(sizeof(inet::sockaddr) == 24);
   static_assert(alignof(inet::sockaddr) == 8);
 }
 

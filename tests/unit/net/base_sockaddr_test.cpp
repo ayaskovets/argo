@@ -19,7 +19,7 @@ class impl_sockaddr final : public net::base_sockaddr {
 }  // namespace
 
 TEST(net_sockets_base_sockaddr, size) {
-  static_assert(sizeof(net::base_sockaddr) == 16);
+  static_assert(sizeof(net::base_sockaddr) == 24);
   static_assert(alignof(net::base_sockaddr) == 8);
 }
 

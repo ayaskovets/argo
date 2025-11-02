@@ -7,7 +7,7 @@ namespace tests::net::unix {
 namespace unix = sandbox::net::unix;
 
 TEST(net_unix_sockaddr, size) {
-  static_assert(sizeof(unix::sockaddr) == 16);
+  static_assert(sizeof(unix::sockaddr) == 24);
   static_assert(alignof(unix::sockaddr) == 8);
 }
 
