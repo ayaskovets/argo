@@ -5,6 +5,9 @@
 
 #include <gtest/gtest.h>
 
+#include "templates/net.hpp"
+#include "templates/templates.hpp"
+
 namespace tests::net::inet::udp {
 
 namespace inet = sandbox::net::inet;
@@ -30,21 +33,8 @@ TEST(net_inet_udp_socket, unconnected_send_receive) {
   EXPECT_EQ(socket.receive(buffer), 0);
 }
 
-TEST(net_inet_udp_socket, bind) {
-  const inet::sockaddr sockaddr(inet::ip::kLoopback(), inet::port(9999));
-
-  inet::udp::socket socket;
-  socket.set_reuseaddr(true);
-  socket.set_reuseport(true);
-  EXPECT_EQ(socket.bind(sockaddr), net::bind_status::kSuccess);
-  EXPECT_ANY_THROW(socket.bind(sockaddr));
-
-  inet::udp::socket other;
-  EXPECT_EQ(other.bind(sockaddr), net::bind_status::kInUse);
-  other.set_reuseaddr(true);
-  other.set_reuseport(true);
-  EXPECT_EQ(other.bind(sockaddr), net::bind_status::kSuccess);
-}
+TEST_T(net_inet_udp_socket, bind, inet::udp::socket,
+       inet::sockaddr(inet::ip::kLoopback(), inet::port(9999)));
 
 TEST(net_inet_udp_socket, connect) {
   const inet::sockaddr sockaddr(inet::ip::kLoopback(), inet::port(9998));

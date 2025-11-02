@@ -4,6 +4,9 @@
 
 #include <gtest/gtest.h>
 
+#include "templates/net.hpp"
+#include "templates/templates.hpp"
+
 namespace tests::net::unix::stream {
 
 namespace io = sandbox::io;
@@ -25,17 +28,8 @@ TEST(net_inet_tcp_socket, unconnected_send_receive) {
   EXPECT_ANY_THROW(socket.receive(buffer));
 }
 
-TEST(net_unix_stream_socket, bind) {
-  const unix::sockaddr sockaddr("net_unix_stream_socket_bind");
-
-  unix::stream::socket socket;
-  EXPECT_EQ(socket.unlink_bind(sockaddr), net::bind_status::kSuccess);
-  EXPECT_ANY_THROW(socket.unlink_bind(sockaddr));
-
-  unix::stream::socket other;
-  EXPECT_EQ(other.unlink_bind(sockaddr), net::bind_status::kSuccess);
-  EXPECT_ANY_THROW(other.unlink_bind(sockaddr));
-}
+TEST_T(net_unix_stream_socket, bind, unix::stream::socket,
+       unix::sockaddr("net_unix_stream_socket_bind"));
 
 TEST(net_unix_stream_socket, connect) {
   const unix::sockaddr sockaddr(

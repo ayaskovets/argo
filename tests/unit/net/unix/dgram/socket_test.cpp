@@ -4,6 +4,9 @@
 
 #include <gtest/gtest.h>
 
+#include "templates/net.hpp"
+#include "templates/templates.hpp"
+
 namespace tests::net::unix::dgram {
 
 namespace io = sandbox::io;
@@ -26,17 +29,8 @@ TEST(net_unix_dgram_socket, unconnected_send_receive) {
   EXPECT_EQ(socket.receive(buffer), 0);
 }
 
-TEST(net_unix_dgram_socket, bind) {
-  const unix::sockaddr sockaddr("net_unix_dgram_socket_bind");
-
-  unix::dgram::socket socket;
-  EXPECT_EQ(socket.unlink_bind(sockaddr), net::bind_status::kSuccess);
-  EXPECT_ANY_THROW(socket.unlink_bind(sockaddr));
-
-  unix::dgram::socket other;
-  EXPECT_EQ(other.unlink_bind(sockaddr), net::bind_status::kSuccess);
-  EXPECT_ANY_THROW(other.unlink_bind(sockaddr));
-}
+TEST_T(net_unix_dgram_socket, bind, unix::dgram::socket,
+       unix::sockaddr("net_unix_dgram_socket_bind"));
 
 TEST(net_unix_dgram_socket, connect) {
   const unix::sockaddr sockaddr("net_unix_dgram_socket_connect");
