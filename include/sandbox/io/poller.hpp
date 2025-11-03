@@ -22,12 +22,12 @@ namespace sandbox::io {
 class poller final : public utils::non_copyable {
  public:
   enum event : std::uint8_t {
-    kPollIn = 1 << 0,
-    kPollPri = 1 << 1,
-    kPollOut = 1 << 2,
-    kPollErr = 1 << 3,
-    kPollHup = 1 << 4,
-    kPollNval = 1 << 5,
+    kPollIn = 1 << 0,    ///< There is data to read
+    kPollPri = 1 << 1,   ///< There is OOB data to read
+    kPollOut = 1 << 2,   ///< There is available space to write
+    kPollErr = 1 << 3,   ///< Error condition
+    kPollHup = 1 << 4,   ///< Connection hang up
+    kPollNval = 1 << 5,  ///< Invalid fd
   };
   using events_t = std::underlying_type_t<event>;
   using callback_t = std::function<void(const io::fd&, events_t)>;
