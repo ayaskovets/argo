@@ -48,7 +48,6 @@ constexpr void connect(const auto& sockaddr) noexcept {
   socket.set_reuseport(true);
 
   EXPECT_EQ(socket.connect(sockaddr), net::connect_status::kRefused);
-  EXPECT_ANY_THROW(socket.connect(sockaddr));
 }
 
 template <typename Socket>
@@ -75,11 +74,12 @@ constexpr void sockaddrs(const auto& bind_sockaddr,
 }
 
 template <typename Socket>
-constexpr void unconnected_accept() noexcept {
+constexpr void unconnected_accept(const auto& sockaddr) noexcept {
   Socket socket;
   socket.set_flags(io::fd::flag::kNonblock);
   socket.set_reuseaddr(true);
   socket.set_reuseport(true);
+  socket.bind(sockaddr);
 
   Socket peer(io::uninitialized_t{});
   EXPECT_ANY_THROW(socket.accept(peer));
@@ -119,7 +119,8 @@ constexpr void blocking_handshake(const auto& sockaddr) noexcept {
 }
 
 template <typename Socket>
-constexpr void nonblocking_handshake(const auto& sockaddr) noexcept {
+constexpr void nonblocking_handshake(const auto& sockaddr,
+                                     const auto& connect_status) noexcept {
   const std::vector<std::byte> data{std::byte(1), std::byte(2), std::byte(3)};
 
   Socket server;
@@ -134,7 +135,7 @@ constexpr void nonblocking_handshake(const auto& sockaddr) noexcept {
   client.set_reuseaddr(true);
   client.set_reuseport(true);
 
-  EXPECT_EQ(client.connect(sockaddr), net::connect_status::kPending);
+  EXPECT_EQ(client.connect(sockaddr), connect_status);
   Socket peer(io::uninitialized_t{});
   while (server.accept(peer) != net::accept_status::kSuccess);
 

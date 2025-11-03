@@ -9,6 +9,7 @@
 namespace tests::net::inet::tcp {
 
 namespace inet = sandbox::net::inet;
+namespace net = sandbox::net;
 
 TEST(net_inet_tcp_socket, size) {
   static_assert(sizeof(inet::tcp::socket) == 4);
@@ -27,12 +28,14 @@ TEST_T(net_inet_tcp_socket, sockaddrs, inet::tcp::socket,
        inet::sockaddr(inet::ip::kLoopback(), inet::port(9997)),
        inet::sockaddr(inet::ip::kLoopback(), inet::port(9996)));
 
-TEST_T(net_inet_tcp_socket, unconnected_accept, inet::tcp::socket);
+TEST_T(net_inet_tcp_socket, unconnected_accept, inet::tcp::socket,
+       inet::sockaddr(inet::ip::kLoopback(), inet::port(9999)));
 
 TEST_T(net_inet_tcp_socket, blocking_handshake, inet::tcp::socket,
        inet::sockaddr(inet::ip::kLoopback(), inet::port(9995)));
 
 TEST_T(net_inet_tcp_socket, nonblocking_handshake, inet::tcp::socket,
-       inet::sockaddr(inet::ip::kLoopback(), inet::port(9996)));
+       inet::sockaddr(inet::ip::kLoopback(), inet::port(9996)),
+       net::connect_status::kPending);
 
 }  // namespace tests::net::inet::tcp
