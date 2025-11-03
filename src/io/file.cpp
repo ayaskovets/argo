@@ -67,6 +67,16 @@ constexpr int to_native_mode(file::access_mode mode) noexcept {
   }
 }
 
+constexpr file::access_mode from_native_mode(int native_mode) noexcept {
+  if (native_mode & O_RDWR) {
+    return file::access_mode::kRdwr;
+  }
+  if (native_mode & O_WRONLY) {
+    return file::access_mode::kWronly;
+  }
+  return file::access_mode::kRdonly;
+}
+
 constexpr int native_open(const std::filesystem::path& path, int native_flags,
                           std::filesystem::perms perms) noexcept(false) {
   const int retval = SYSCALL(::open(
@@ -121,8 +131,18 @@ std::common_type_t<fd::flags_t, file::flags_t> file::get_flags() const
   return from_native_flags(retval);
 }
 
-void file::seek(std::size_t bytes, seek_whence whence) noexcept(false) {
-  if (SYSCALL(::lseek(*native_handle(), static_cast<::off_t>(bytes),
+file::access_mode file::get_access_mode() const noexcept(false) {
+  const auto retval = SYSCALL(::fcntl(*native_handle(), F_GETFL));
+  if (retval == kSyscallError) [[unlikely]] {
+    throw std::runtime_error(std::format(
+        "failed to get access mode on file: {}", std::strerror(errno)));
+  }
+  return from_native_mode(retval);
+}
+
+void file::set_offset(std::int64_t relative_bytes,
+                      seek_whence whence) noexcept(false) {
+  if (SYSCALL(::lseek(*native_handle(), static_cast<::off_t>(relative_bytes),
                       to_native_seek_whence(whence))) ==
       static_cast<::off_t>(kSyscallError)) {
     throw std::runtime_error(
@@ -130,7 +150,7 @@ void file::seek(std::size_t bytes, seek_whence whence) noexcept(false) {
   }
 }
 
-std::size_t file::tell_bytes() noexcept(false) {
+std::size_t file::get_offset() noexcept(false) {
   const ::off_t retval = SYSCALL(::lseek(*native_handle(), 0, SEEK_CUR));
   if (retval == static_cast<::off_t>(kSyscallError)) {
     throw std::runtime_error(
@@ -139,7 +159,7 @@ std::size_t file::tell_bytes() noexcept(false) {
   return retval;
 }
 
-std::size_t file::size_bytes() noexcept(false) {
+std::size_t file::get_size_bytes() noexcept(false) {
   struct stat stat;
   if (SYSCALL(::fstat(*native_handle(), &stat)) == kSyscallError) {
     throw std::runtime_error(

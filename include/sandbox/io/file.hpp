@@ -49,8 +49,7 @@ class file final : public fd {
       noexcept(false);
 
  public:
-  void set_access_mode(access_mode mode) noexcept(false);
-  access_mode get_access_mode() noexcept(false);
+  access_mode get_access_mode() const noexcept(false);
 
  public:
   /**
@@ -65,14 +64,15 @@ class file final : public fd {
     kData,     ///< Set offset to the nearest data starting from >= offset
     kHole,     ///< Set offset to the nearest hole starting from >= offset
   };
-  void seek(std::size_t bytes, seek_whence whence) noexcept(false);
-  std::size_t tell_bytes() noexcept(false);
+  void set_offset(std::int64_t relative_bytes,
+                  seek_whence whence = seek_whence::kBegin) noexcept(false);
+  std::size_t get_offset() noexcept(false);
 
  public:
   void truncate(std::size_t bytes) noexcept(false);
 
  public:
-  std::size_t size_bytes() noexcept(false);
+  std::size_t get_size_bytes() noexcept(false);
 
  private:
   file(io::fd&& fd) noexcept;
