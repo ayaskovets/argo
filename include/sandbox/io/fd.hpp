@@ -51,7 +51,7 @@ class fd {
 
  public:
   std::size_t write(std::span<const std::byte> bytes) noexcept(false);
-  std::size_t read(std::span<std::byte> bytes) const noexcept(false);
+  std::size_t read(std::span<std::byte> bytes) noexcept(false);
 
  public:
   /**
