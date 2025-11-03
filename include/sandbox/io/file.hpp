@@ -61,11 +61,11 @@ class file final : public fd {
     kCurrent,  ///< Set offset to current offset + bytes
     kBegin,    ///< Set offset to bytes
     kEnd,      ///< Set offset to file size + bytes
-    kData,     ///< Set offset to the nearest data starting from >= offset
-    kHole,     ///< Set offset to the nearest hole starting from >= offset
+    kData,     ///< Set offset to the nearest data starting from relative_bytes
+    kHole,     ///< Set offset to the nearest hole starting from relative_bytes
   };
   void set_offset(std::int64_t relative_bytes,
-                  seek_whence whence = seek_whence::kBegin) noexcept(false);
+                  seek_whence whence) noexcept(false);
   std::size_t get_offset() noexcept(false);
 
  public:
