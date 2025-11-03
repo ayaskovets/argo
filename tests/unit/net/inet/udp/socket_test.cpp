@@ -1,8 +1,6 @@
 #include <sandbox/net/inet/sockaddr.hpp>
 #include <sandbox/net/inet/udp/socket.hpp>
 
-#include <thread>
-
 #include <gtest/gtest.h>
 
 #include "templates/net.hpp"
@@ -11,7 +9,6 @@
 namespace tests::net::inet::udp {
 
 namespace inet = sandbox::net::inet;
-namespace io = sandbox::io;
 namespace net = sandbox::net;
 
 TEST(net_inet_udp_socket, size) {
@@ -19,133 +16,27 @@ TEST(net_inet_udp_socket, size) {
   static_assert(alignof(inet::udp::socket) == 4);
 }
 
-TEST(net_inet_udp_socket, unconnected_send_receive) {
-  const std::vector<std::byte> data{std::byte(1), std::byte(2), std::byte(3)};
-  const inet::sockaddr sockaddr(inet::ip::kLoopback(), inet::port(9999));
-
-  inet::udp::socket socket;
-  socket.set_flags(io::fd::flag::kNonblock);
-  socket.set_reuseaddr(true);
-  socket.set_reuseport(true);
-
-  EXPECT_EQ(socket.send_to(data, sockaddr), data.size());
-  std::vector<std::byte> buffer(data.size());
-  EXPECT_EQ(socket.receive(buffer), 0);
-}
+TEST_T(net_inet_udp_socket, dgram_unconnected_send_receive, inet::udp::socket,
+       inet::sockaddr(inet::ip::kLoopback(), inet::port(9999)));
 
 TEST_T(net_inet_udp_socket, bind, inet::udp::socket,
        inet::sockaddr(inet::ip::kLoopback(), inet::port(9999)));
 
-TEST(net_inet_udp_socket, connect) {
-  const inet::sockaddr sockaddr(inet::ip::kLoopback(), inet::port(9998));
+TEST_T(net_inet_udp_socket, connect, inet::udp::socket,
+       inet::sockaddr(inet::ip::kLoopback(), inet::port(9998)),
+       net::connect_status::kSuccess);
 
-  inet::udp::socket socket;
-  socket.set_reuseaddr(true);
-  socket.set_reuseport(true);
+TEST_T(net_inet_udp_socket, sockaddrs, inet::udp::socket,
+       inet::sockaddr(inet::ip::kLoopback(), inet::port(9997)),
+       inet::sockaddr(inet::ip::kLoopback(), inet::port(9996)),
+       net::connect_status::kSuccess);
 
-  EXPECT_EQ(socket.connect(sockaddr), net::connect_status::kSuccess);
-  EXPECT_EQ(socket.connect(sockaddr), net::connect_status::kSuccess);
-}
+TEST_T(net_inet_udp_socket, dgram_blocking_handshake, inet::udp::socket,
+       inet::sockaddr(inet::ip::kLoopback(), inet::port(9995)),
+       inet::sockaddr(inet::ip::kLoopback(), inet::port(9996)));
 
-TEST(net_inet_udp_socket, sockaddrs) {
-  const inet::sockaddr bind_sockaddr(inet::ip::kLoopback(), inet::port(9997));
-  const inet::sockaddr connect_sockaddr(inet::ip::kLoopback(),
-                                        inet::port(9996));
-
-  inet::udp::socket socket;
-  socket.set_reuseaddr(true);
-  socket.set_reuseport(true);
-
-  inet::sockaddr out_sockaddr(inet::ip::kAny(), inet::port(0));
-  EXPECT_NO_THROW(socket.get_bind_sockaddr(out_sockaddr));
-  EXPECT_NE((socket.get_bind_sockaddr(out_sockaddr), out_sockaddr),
-            bind_sockaddr);
-  socket.bind(bind_sockaddr);
-  EXPECT_EQ((socket.get_bind_sockaddr(out_sockaddr), out_sockaddr),
-            bind_sockaddr);
-  EXPECT_ANY_THROW(socket.get_connect_sockaddr(out_sockaddr));
-
-  EXPECT_NE(out_sockaddr, connect_sockaddr);
-  EXPECT_EQ(socket.connect(connect_sockaddr), net::connect_status::kSuccess);
-  EXPECT_EQ((socket.get_connect_sockaddr(out_sockaddr), out_sockaddr),
-            connect_sockaddr);
-}
-
-TEST(net_inet_udp_socket, unconnected_accept) { GTEST_SKIP(); }
-
-TEST(net_inet_udp_socket, blocking_handshake) {
-  const std::vector<std::byte> data{std::byte(1), std::byte(2), std::byte(3)};
-  const inet::sockaddr server_sockaddr(inet::ip::kLoopback(), inet::port(9995));
-  const inet::sockaddr client_sockaddr(inet::ip::kLoopback(), inet::port(9996));
-
-  inet::udp::socket server;
-  server.set_reuseaddr(true);
-  server.set_reuseport(true);
-  server.bind(server_sockaddr);
-
-  const std::jthread server_thread([&server, &client_sockaddr, &data] {
-    inet::sockaddr peer(inet::ip::kAny(), inet::port(0));
-    std::vector<std::byte> buffer(data.size());
-    EXPECT_EQ(server.receive_from(buffer, peer), data.size());
-    EXPECT_EQ(buffer, data);
-    EXPECT_EQ(peer, client_sockaddr);
-    EXPECT_EQ(server.send_to(data, peer), data.size());
-
-    EXPECT_EQ(server.receive(buffer), data.size());
-    EXPECT_EQ(server.connect(client_sockaddr), net::connect_status::kSuccess);
-    EXPECT_EQ(server.send(data), data.size());
-  });
-
-  inet::sockaddr peer(inet::ip::kAny(), inet::port(0));
-  std::vector<std::byte> buffer(data.size());
-
-  inet::udp::socket client;
-  client.set_reuseaddr(true);
-  client.set_reuseport(true);
-  client.bind(client_sockaddr);
-
-  EXPECT_EQ(client.send_to(data, server_sockaddr), data.size());
-  EXPECT_EQ(client.receive_from(buffer, peer), data.size());
-  EXPECT_EQ(buffer, data);
-  EXPECT_EQ(peer, server_sockaddr);
-
-  EXPECT_EQ(client.connect(server_sockaddr), net::connect_status::kSuccess);
-  EXPECT_EQ(client.send(data), data.size());
-  EXPECT_EQ(client.receive(buffer), data.size());
-  EXPECT_EQ(buffer, data);
-}
-
-TEST(net_inet_udp_socket, nonblocking_handshake) {
-  const std::vector<std::byte> data{std::byte(1), std::byte(2), std::byte(3)};
-  const inet::sockaddr server_sockaddr(inet::ip::kLoopback(), inet::port(9995));
-  const inet::sockaddr client_sockaddr(inet::ip::kLoopback(), inet::port(9996));
-
-  inet::udp::socket server;
-  server.set_flags(io::fd::flag::kNonblock);
-  server.set_reuseaddr(true);
-  server.set_reuseport(true);
-  server.bind(server_sockaddr);
-
-  inet::udp::socket client;
-  client.set_flags(io::fd::flag::kNonblock);
-  client.set_reuseaddr(true);
-  client.set_reuseport(true);
-  client.bind(client_sockaddr);
-
-  inet::sockaddr peer(inet::ip::kNonRoutable(), inet::port(0));
-  std::vector<std::byte> buffer(data.size());
-
-  EXPECT_EQ(server.send_to(data, client_sockaddr), data.size());
-  while (client.receive_from(buffer, peer) != data.size());
-  EXPECT_EQ(buffer, data);
-  EXPECT_EQ(peer, server_sockaddr);
-
-  server.connect(client_sockaddr);
-  client.connect(server_sockaddr);
-
-  EXPECT_EQ(client.send(data), data.size());
-  while (server.receive(buffer) != data.size());
-  EXPECT_EQ(buffer, data);
-}
+TEST_T(net_inet_udp_socket, dgram_nonblocking_handshake, inet::udp::socket,
+       inet::sockaddr(inet::ip::kLoopback(), inet::port(9995)),
+       inet::sockaddr(inet::ip::kLoopback(), inet::port(9996)));
 
 }  // namespace tests::net::inet::udp
