@@ -28,13 +28,17 @@ class file final : public fd {
   };
 
  public:
-  static file open(const std::filesystem::path& path, open_flags_t open_flags,
-                   std::common_type_t<fd::flags_t, file::flags_t> flags,
-                   access_mode mode) noexcept(false);
-  static file create(const std::filesystem::path& path, open_flags_t open_flags,
-                     std::common_type_t<fd::flags_t, file::flags_t> flags,
-                     access_mode mode,
-                     std::filesystem::perms perms) noexcept(false);
+  static file open(const std::filesystem::path& path, access_mode mode,
+                   open_flags_t open_flags = {},
+                   std::common_type_t<fd::flags_t, file::flags_t> flags =
+                       {}) noexcept(false);
+  static file create(const std::filesystem::path& path, access_mode mode,
+                     open_flags_t open_flags = {},
+                     std::common_type_t<fd::flags_t, file::flags_t> flags = {},
+                     std::filesystem::perms perms =
+                         std::filesystem::perms::owner_all |
+                         std::filesystem::perms::group_read |
+                         std::filesystem::perms::others_read) noexcept(false);
 
  public:
   static_assert(std::is_same_v<fd::flags_t, file::flags_t>);
