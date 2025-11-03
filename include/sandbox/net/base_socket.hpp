@@ -77,6 +77,10 @@ class base_socket : public io::fd {
   std::size_t receive(std::span<std::byte> bytes) const noexcept(false);
   std::size_t receive_from(std::span<std::byte> bytes,
                            net::base_sockaddr& sockaddr) const noexcept(false);
+
+ private:
+  using fd::read;
+  using fd::write;
 };
 
 }  // namespace sandbox::net
