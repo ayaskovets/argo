@@ -43,7 +43,7 @@ TEST_P(net_sockets_base_sockaddr, copy) {
 
   EXPECT_EQ(original.get_family(), copy.get_family());
   EXPECT_EQ(original.get_length(), copy.get_length());
-  EXPECT_EQ(original.get_storage(), copy.get_storage());
+  EXPECT_NE(original.get_storage(), copy.get_storage());
   EXPECT_EQ(original, copy);
 }
 
