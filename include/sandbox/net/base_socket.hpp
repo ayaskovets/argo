@@ -71,12 +71,12 @@ class base_socket : public io::fd {
   accept_status accept(base_socket& socket) const noexcept(false);
 
  public:
-  std::size_t send(std::span<const std::byte> bytes) const noexcept(false);
+  std::size_t send(std::span<const std::byte> bytes) noexcept(false);
   std::size_t send_to(std::span<const std::byte> bytes,
-                      const net::base_sockaddr& sockaddr) const noexcept(false);
-  std::size_t receive(std::span<std::byte> bytes) const noexcept(false);
+                      const net::base_sockaddr& sockaddr) noexcept(false);
+  std::size_t receive(std::span<std::byte> bytes) noexcept(false);
   std::size_t receive_from(std::span<std::byte> bytes,
-                           net::base_sockaddr& sockaddr) const noexcept(false);
+                           net::base_sockaddr& sockaddr) noexcept(false);
 
  private:
   using fd::read;

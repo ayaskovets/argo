@@ -290,8 +290,8 @@ accept_status base_socket::accept(base_socket &socket) const noexcept(false) {
   return accept_status::kSuccess;
 }
 
-std::size_t base_socket::send(std::span<const std::byte> bytes) const
-    noexcept(false) {
+std::size_t base_socket::send(std::span<const std::byte> bytes) noexcept(
+    false) {
   const auto retval =
       SYSCALL(::send(*native_handle(), bytes.data(), bytes.size(), 0));
   if (retval == kSyscallError) {
@@ -304,9 +304,9 @@ std::size_t base_socket::send(std::span<const std::byte> bytes) const
   return static_cast<std::size_t>(retval);
 }
 
-std::size_t base_socket::send_to(std::span<const std::byte> bytes,
-                                 const net::base_sockaddr &sockaddr) const
-    noexcept(false) {
+std::size_t base_socket::send_to(
+    std::span<const std::byte> bytes,
+    const net::base_sockaddr &sockaddr) noexcept(false) {
   const auto retval = SYSCALL(
       ::sendto(*native_handle(), bytes.data(), bytes.size(), 0,
                reinterpret_cast<const ::sockaddr *>(sockaddr.get_storage()),
@@ -321,8 +321,7 @@ std::size_t base_socket::send_to(std::span<const std::byte> bytes,
   return static_cast<std::size_t>(retval);
 }
 
-std::size_t base_socket::receive(std::span<std::byte> bytes) const
-    noexcept(false) {
+std::size_t base_socket::receive(std::span<std::byte> bytes) noexcept(false) {
   const auto retval =
       SYSCALL(::recv(*native_handle(), bytes.data(), bytes.size(), 0));
   if (retval == kSyscallError) {
@@ -335,9 +334,8 @@ std::size_t base_socket::receive(std::span<std::byte> bytes) const
   return static_cast<std::size_t>(retval);
 }
 
-std::size_t base_socket::receive_from(std::span<std::byte> bytes,
-                                      net::base_sockaddr &sockaddr) const
-    noexcept(false) {
+std::size_t base_socket::receive_from(
+    std::span<std::byte> bytes, net::base_sockaddr &sockaddr) noexcept(false) {
   ::socklen_t socklen = static_cast<::socklen_t>(sockaddr.get_length());
   const auto retval = SYSCALL(::recvfrom(
       *native_handle(), bytes.data(), bytes.size(), 0,

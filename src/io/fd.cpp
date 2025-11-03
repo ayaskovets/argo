@@ -170,7 +170,7 @@ std::size_t fd::write(std::span<const std::byte> bytes) noexcept(false) {
   return retval;
 }
 
-std::size_t fd::read(std::span<std::byte> bytes) const noexcept(false) {
+std::size_t fd::read(std::span<std::byte> bytes) noexcept(false) {
   const auto retval =
       SYSCALL(::read(*native_handle(), bytes.data(), bytes.size()));
   if (retval == kSyscallError) {
