@@ -4,19 +4,22 @@ IncludeCategories:
   - Regex: '<sandbox/.*>'
     Priority: 1
     SortPriority: 1
-  - Regex: '^<.*\.h>'
-    Priority: 3
-    SortPriority: 3
-  - Regex: '^<.*>'
+  - Regex: '<boost/.*>'
     Priority: 2
     SortPriority: 2
-  - Regex: '^[a-zA-Z].*'
+  - Regex: '^<.*\.h>'
     Priority: 4
     SortPriority: 4
-  - Regex: '\.\./.*'
+  - Regex: '^<.*>'
+    Priority: 3
+    SortPriority: 3
+  - Regex: '^[a-zA-Z].*'
     Priority: 5
     SortPriority: 5
-  - Regex: '.*'
+  - Regex: '\.\./.*'
     Priority: 6
     SortPriority: 6
+  - Regex: '.*'
+    Priority: 7
+    SortPriority: 7
 IncludeIsMainRegex: "(_test|_benchmark)?$"
