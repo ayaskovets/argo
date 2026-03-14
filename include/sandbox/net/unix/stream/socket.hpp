@@ -1,8 +1,8 @@
 #pragma once
 
-#include <sandbox/net/unix/base_socket.hpp>
+#include <wip/net/unix/base_socket.hpp>
 
-namespace sandbox::net::unix::stream {
+namespace wip::net::unix::stream {
 
 /**
  * @brief UNIX stream socket
@@ -13,4 +13,4 @@ class socket final : public net::unix::base_socket {
   socket() noexcept(false);
 };
 
-}  // namespace sandbox::net::unix::stream
+}  // namespace wip::net::unix::stream

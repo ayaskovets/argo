@@ -1,10 +1,10 @@
 #pragma once
 
-#include <sandbox/async/scheduler.hpp>
+#include <wip/async/scheduler.hpp>
 
 #include <thread>
 
-namespace sandbox::async::schedulers {
+namespace wip::async::schedulers {
 
 /**
  * @brief Decorator for detached call to run_once()
@@ -27,4 +27,4 @@ class detached_decorator : public Scheduler {
   std::jthread worker_;
 };
 
-}  // namespace sandbox::async::schedulers
+}  // namespace wip::async::schedulers

@@ -1,4 +1,4 @@
-#include <sandbox/net/unix/dgram/socket.hpp>
+#include <wip/net/unix/dgram/socket.hpp>
 
 #include <gtest/gtest.h>
 
@@ -7,9 +7,9 @@
 
 namespace tests::net::unix::dgram {
 
-namespace io = sandbox::io;
-namespace net = sandbox::net;
-namespace unix = sandbox::net::unix;
+namespace io = wip::io;
+namespace net = wip::net;
+namespace unix = wip::net::unix;
 
 TEST(net_unix_dgram_socket, size) {
   static_assert(sizeof(unix::dgram::socket) == 4);

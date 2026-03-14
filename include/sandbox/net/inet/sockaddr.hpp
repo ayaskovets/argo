@@ -1,10 +1,10 @@
 #pragma once
 
-#include <sandbox/net/base_sockaddr.hpp>
-#include <sandbox/net/inet/ip.hpp>
-#include <sandbox/net/inet/port.hpp>
+#include <wip/net/base_sockaddr.hpp>
+#include <wip/net/inet/ip.hpp>
+#include <wip/net/inet/port.hpp>
 
-namespace sandbox::net::inet {
+namespace wip::net::inet {
 
 /**
  * @brief IPv4 address:port pair
@@ -18,10 +18,10 @@ class sockaddr final : public net::base_sockaddr {
   net::inet::port get_port() const noexcept;
 };
 
-}  // namespace sandbox::net::inet
+}  // namespace wip::net::inet
 
 template <>
-class std::formatter<sandbox::net::inet::sockaddr> {
+class std::formatter<wip::net::inet::sockaddr> {
  public:
   template <typename FormatContext>
   constexpr auto parse(FormatContext& ctx) const noexcept {
@@ -29,7 +29,7 @@ class std::formatter<sandbox::net::inet::sockaddr> {
   }
 
   template <typename FormatContext>
-  constexpr auto format(const sandbox::net::inet::sockaddr& sockaddr,
+  constexpr auto format(const wip::net::inet::sockaddr& sockaddr,
                         FormatContext& ctx) const noexcept(false) {
     return std::format_to(ctx.out(), "{}", sockaddr.to_string());
   }

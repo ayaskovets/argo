@@ -1,11 +1,11 @@
 #pragma once
 
-#include <sandbox/net/network_byte_order.hpp>
+#include <wip/net/network_byte_order.hpp>
 
 #include <cstdint>
 #include <format>
 
-namespace sandbox::net::inet {
+namespace wip::net::inet {
 
 /**
  * @brief IP port
@@ -30,10 +30,10 @@ class port final {
   std::uint16_t port_;
 };
 
-}  // namespace sandbox::net::inet
+}  // namespace wip::net::inet
 
 template <>
-class std::formatter<sandbox::net::inet::port> {
+class std::formatter<wip::net::inet::port> {
  public:
   template <typename FormatContext>
   constexpr auto parse(FormatContext& ctx) const noexcept {
@@ -41,7 +41,7 @@ class std::formatter<sandbox::net::inet::port> {
   }
 
   template <typename FormatContext>
-  constexpr auto format(const sandbox::net::inet::port& port,
+  constexpr auto format(const wip::net::inet::port& port,
                         FormatContext& ctx) const noexcept {
     return std::format_to(ctx.out(), "{}", port.to_string());
   }

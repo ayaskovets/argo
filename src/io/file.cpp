@@ -1,6 +1,6 @@
-#include <sandbox/io/fd_impl.hpp>
-#include <sandbox/io/file.hpp>
-#include <sandbox/utils/syscall.hpp>
+#include <wip/io/fd_impl.hpp>
+#include <wip/io/file.hpp>
+#include <wip/utils/syscall.hpp>
 
 #include <format>
 
@@ -8,7 +8,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-namespace sandbox::io {
+namespace wip::io {
 
 namespace {
 
@@ -178,4 +178,4 @@ void file::truncate(std::size_t bytes) noexcept(false) {
 
 file::file(io::fd&& fd) noexcept : io::fd(std::move(fd)) {}
 
-}  // namespace sandbox::io
+}  // namespace wip::io

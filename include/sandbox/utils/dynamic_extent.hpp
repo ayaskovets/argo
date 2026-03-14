@@ -3,7 +3,7 @@
 #include <concepts>
 #include <cstddef>
 
-namespace sandbox::utils {
+namespace wip::utils {
 
 /**
  * @brief Type-parametrized std::dynamic_extent
@@ -11,4 +11,4 @@ namespace sandbox::utils {
 template <std::unsigned_integral T>
 constexpr const T kDynamicExtent = 0;
 
-}  // namespace sandbox::utils
+}  // namespace wip::utils

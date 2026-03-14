@@ -1,11 +1,11 @@
-#include <sandbox/net/inet/ip.hpp>
+#include <wip/net/inet/ip.hpp>
 
 #include <gtest/gtest.h>
 
 namespace tests::net::inet {
 
-namespace inet = sandbox::net::inet;
-namespace net = sandbox::net;
+namespace inet = wip::net::inet;
+namespace net = wip::net;
 
 TEST(net_inet_ip, size) {
   static_assert(sizeof(inet::ip) == 4);

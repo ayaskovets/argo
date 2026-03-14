@@ -1,13 +1,13 @@
 #pragma once
 
-#include <sandbox/async/executors/current_executor.hpp>
-#include <sandbox/utils/mixins.hpp>
+#include <wip/async/executors/current_executor.hpp>
+#include <wip/utils/mixins.hpp>
 
 #include <coroutine>
 #include <thread>
 #include <vector>
 
-namespace sandbox::async::executors {
+namespace wip::async::executors {
 
 template <typename InChannel, typename OutChannel>
 class thread_pool_executor final : public utils::non_copyable,
@@ -56,4 +56,4 @@ class thread_pool_executor final : public utils::non_copyable,
   std::stop_token stop_;
 };
 
-}  // namespace sandbox::async::executors
+}  // namespace wip::async::executors

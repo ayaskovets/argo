@@ -1,8 +1,8 @@
 #pragma once
 
-#include <sandbox/async/scheduler.hpp>
+#include <wip/async/scheduler.hpp>
 
-namespace sandbox::async::schedulers {
+namespace wip::async::schedulers {
 
 /**
  * @brief Decorator for conditional calls and loops with run_once()
@@ -27,4 +27,4 @@ class conditional_decorator : public Scheduler {
   }
 };
 
-}  // namespace sandbox::async::schedulers
+}  // namespace wip::async::schedulers

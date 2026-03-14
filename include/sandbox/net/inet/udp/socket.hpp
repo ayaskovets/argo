@@ -1,8 +1,8 @@
 #pragma once
 
-#include <sandbox/net/base_socket.hpp>
+#include <wip/net/base_socket.hpp>
 
-namespace sandbox::net::inet::udp {
+namespace wip::net::inet::udp {
 
 /**
  * @brief IPv4 UDP socket
@@ -13,4 +13,4 @@ class socket final : public net::base_socket {
   socket() noexcept(false);
 };
 
-}  // namespace sandbox::net::inet::udp
+}  // namespace wip::net::inet::udp

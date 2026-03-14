@@ -1,7 +1,7 @@
 #pragma once
 
-namespace sandbox::net {
+namespace wip::net {
 
 class network_byte_order_t final {};
 
-}  // namespace sandbox::net
+}  // namespace wip::net

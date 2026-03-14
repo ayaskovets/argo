@@ -1,10 +1,10 @@
-#include <sandbox/async/awaiters/timer_awaiter.hpp>
-#include <sandbox/async/executor.hpp>
-#include <sandbox/async/executors/inline_executor.hpp>
-#include <sandbox/async/executors/thread_pool_executor.hpp>
-#include <sandbox/async/schedulers/timer_scheduler.hpp>
-#include <sandbox/async/task.hpp>
-#include <sandbox/queues/lockfree_mpmc_queue.hpp>
+#include <wip/async/awaiters/timer_awaiter.hpp>
+#include <wip/async/executor.hpp>
+#include <wip/async/executors/inline_executor.hpp>
+#include <wip/async/executors/thread_pool_executor.hpp>
+#include <wip/async/schedulers/timer_scheduler.hpp>
+#include <wip/async/task.hpp>
+#include <wip/queues/lockfree_mpmc_queue.hpp>
 
 #include <gtest/gtest.h>
 
@@ -12,7 +12,7 @@ using namespace std::chrono_literals;
 
 namespace tests::async {
 
-namespace async = sandbox::async;
+namespace async = wip::async;
 
 using clock_t = std::chrono::steady_clock;
 
@@ -22,9 +22,9 @@ using in_channel_value_t =
 using out_channel_value_t = std::coroutine_handle<>;
 
 using timer_channel_t =
-    sandbox::queues::lockfree_mpmc_queue<const in_channel_value_t*>;
+    wip::queues::lockfree_mpmc_queue<const in_channel_value_t*>;
 using handle_channel_t =
-    sandbox::queues::lockfree_mpmc_queue<out_channel_value_t>;
+    wip::queues::lockfree_mpmc_queue<out_channel_value_t>;
 
 using scheduler_t = async::schedulers::timer_scheduler<clock_t, timer_channel_t,
                                                        handle_channel_t>;

@@ -3,7 +3,7 @@
 #include <cstdint>
 #include <format>
 
-namespace sandbox::net {
+namespace wip::net {
 
 /**
  * @brief Protocol type
@@ -16,10 +16,10 @@ enum class socktype : std::uint8_t {
   kSeqpacket,
 };
 
-}  // namespace sandbox::net
+}  // namespace wip::net
 
 template <>
-class std::formatter<sandbox::net::socktype> {
+class std::formatter<wip::net::socktype> {
  public:
   template <typename FormatContext>
   constexpr auto parse(FormatContext& ctx) const noexcept {
@@ -27,18 +27,18 @@ class std::formatter<sandbox::net::socktype> {
   }
 
   template <typename FormatContext>
-  constexpr auto format(const sandbox::net::socktype& type,
+  constexpr auto format(const wip::net::socktype& type,
                         FormatContext& ctx) const noexcept {
     switch (type) {
-      case sandbox::net::socktype::kStream:
+      case wip::net::socktype::kStream:
         return std::format_to(ctx.out(), "SOCK_STREAM");
-      case sandbox::net::socktype::kDgram:
+      case wip::net::socktype::kDgram:
         return std::format_to(ctx.out(), "SOCK_DGRAM");
-      case sandbox::net::socktype::kRaw:
+      case wip::net::socktype::kRaw:
         return std::format_to(ctx.out(), "SOCK_RAW");
-      case sandbox::net::socktype::kRdm:
+      case wip::net::socktype::kRdm:
         return std::format_to(ctx.out(), "SOCK_RDM");
-      case sandbox::net::socktype::kSeqpacket:
+      case wip::net::socktype::kSeqpacket:
         return std::format_to(ctx.out(), "SOCK_SEQPACKET");
     }
   }

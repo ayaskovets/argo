@@ -1,9 +1,9 @@
 #pragma once
 
-#include <sandbox/net/base_socket.hpp>
-#include <sandbox/net/unix/sockaddr.hpp>
+#include <wip/net/base_socket.hpp>
+#include <wip/net/unix/sockaddr.hpp>
 
-namespace sandbox::net::unix {
+namespace wip::net::unix {
 
 /**
  * @brief UNIX socket base class
@@ -11,7 +11,7 @@ namespace sandbox::net::unix {
 class base_socket : public net::base_socket {
  protected:
   explicit base_socket(io::uninitialized_t) noexcept;
-  explicit base_socket(sandbox::net::socktype type) noexcept(false);
+  explicit base_socket(wip::net::socktype type) noexcept(false);
   ~base_socket() noexcept;
 
  public:
@@ -27,4 +27,4 @@ class base_socket : public net::base_socket {
       false);
 };
 
-}  // namespace sandbox::net::unix
+}  // namespace wip::net::unix

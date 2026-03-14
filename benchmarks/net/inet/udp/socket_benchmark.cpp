@@ -1,5 +1,5 @@
-#include <sandbox/net/inet/sockaddr.hpp>
-#include <sandbox/net/inet/udp/socket.hpp>
+#include <wip/net/inet/sockaddr.hpp>
+#include <wip/net/inet/udp/socket.hpp>
 
 #include <benchmark/benchmark.h>
 
@@ -8,7 +8,7 @@
 
 namespace benchmarks::net::inet::udp {
 
-namespace inet = sandbox::net::inet;
+namespace inet = wip::net::inet;
 
 BENCHMARK_T(net_inet_udp, dgram_throughput, inet::udp::socket,
             inet::sockaddr(inet::ip::kLoopback(), inet::port(8000)))

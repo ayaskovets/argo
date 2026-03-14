@@ -1,8 +1,8 @@
-#include <sandbox/net/inet/port.hpp>
+#include <wip/net/inet/port.hpp>
 
 #include <arpa/inet.h>
 
-namespace sandbox::net::inet {
+namespace wip::net::inet {
 
 port::port(std::uint16_t port) noexcept : port_(port) {}
 
@@ -17,4 +17,4 @@ std::uint16_t port::get_bytes(network_byte_order_t) const noexcept {
 
 std::string port::to_string() const noexcept { return std::to_string(port_); }
 
-}  // namespace sandbox::net::inet
+}  // namespace wip::net::inet

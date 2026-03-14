@@ -1,11 +1,11 @@
 #pragma once
 
-#include <sandbox/logging/level.hpp>
+#include <wip/logging/level.hpp>
 
 #include <format>
 #include <string_view>
 
-namespace sandbox::logging {
+namespace wip::logging {
 
 /**
  * @brief Log message decorator
@@ -37,4 +37,4 @@ class renderer final {
   render_t render_;
 };
 
-}  // namespace sandbox::logging
+}  // namespace wip::logging

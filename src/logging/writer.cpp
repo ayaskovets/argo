@@ -1,10 +1,10 @@
-#include <sandbox/logging/level.hpp>
-#include <sandbox/logging/writer.hpp>
+#include <wip/logging/level.hpp>
+#include <wip/logging/writer.hpp>
 
 #include <cstdio>
 #include <format>
 
-namespace sandbox::logging {
+namespace wip::logging {
 
 const writer& writer::kStdout() noexcept {
   static const writer writer(
@@ -36,4 +36,4 @@ const writer& writer::kNoop() noexcept {
 
 const writer& writer::kDefault() noexcept { return kStderr(); }
 
-}  // namespace sandbox::logging
+}  // namespace wip::logging

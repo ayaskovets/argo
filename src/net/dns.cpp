@@ -1,5 +1,5 @@
-#include <sandbox/net/dns.hpp>
-#include <sandbox/utils/syscall.hpp>
+#include <wip/net/dns.hpp>
+#include <wip/utils/syscall.hpp>
 
 #include <cerrno>
 #include <format>
@@ -7,7 +7,7 @@
 
 #include <netdb.h>
 
-namespace sandbox::net {
+namespace wip::net {
 
 namespace {
 
@@ -102,4 +102,4 @@ std::vector<std::variant<net::inet::sockaddr, net::inet6::sockaddr>> resolve(
   return sockaddrs;
 }
 
-}  // namespace sandbox::net
+}  // namespace wip::net

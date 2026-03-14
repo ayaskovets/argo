@@ -1,7 +1,7 @@
 #pragma once
 
-namespace sandbox::io {
+namespace wip::io {
 
 class uninitialized_t final {};
 
-}  // namespace sandbox::io
+}  // namespace wip::io

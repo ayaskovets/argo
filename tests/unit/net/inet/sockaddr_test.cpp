@@ -1,10 +1,10 @@
-#include <sandbox/net/inet/sockaddr.hpp>
+#include <wip/net/inet/sockaddr.hpp>
 
 #include <gtest/gtest.h>
 
 namespace tests::net::inet {
 
-namespace inet = sandbox::net::inet;
+namespace inet = wip::net::inet;
 
 TEST(net_inet_sockaddr, size) {
   static_assert(sizeof(inet::sockaddr) == 24);

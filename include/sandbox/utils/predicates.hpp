@@ -2,7 +2,7 @@
 
 #include <concepts>
 
-namespace sandbox::utils {
+namespace wip::utils {
 
 template <std::integral T>
 constexpr bool is_power_of_two(T value) noexcept {
@@ -14,4 +14,4 @@ constexpr bool is_even(T value) noexcept {
   return !(value & 1);
 }
 
-}  // namespace sandbox::utils
+}  // namespace wip::utils

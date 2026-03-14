@@ -1,10 +1,10 @@
 #pragma once
 
-#include <sandbox/io/fd.hpp>
+#include <wip/io/fd.hpp>
 
 #include <filesystem>
 
-namespace sandbox::io {
+namespace wip::io {
 
 class file final : public fd {
  public:
@@ -78,4 +78,4 @@ class file final : public fd {
   file(io::fd&& fd) noexcept;
 };
 
-}  // namespace sandbox::io
+}  // namespace wip::io

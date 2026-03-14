@@ -1,10 +1,10 @@
-#include <sandbox/net/inet/sockaddr.hpp>
+#include <wip/net/inet/sockaddr.hpp>
 
 #include <benchmark/benchmark.h>
 
 namespace benchmarks::net::inet {
 
-namespace inet = sandbox::net::inet;
+namespace inet = wip::net::inet;
 
 constexpr void BM_net_inet_sockaddr_from_bytes(
     benchmark::State& state) noexcept {

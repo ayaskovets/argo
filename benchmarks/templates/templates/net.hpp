@@ -1,6 +1,6 @@
 #pragma once
 
-#include <sandbox/net/base_socket.hpp>
+#include <wip/net/base_socket.hpp>
 
 #include <atomic>
 
@@ -8,8 +8,8 @@
 
 namespace benchmarks::net::templates {
 
-namespace net = sandbox::net;
-namespace io = sandbox::io;
+namespace net = wip::net;
+namespace io = wip::io;
 
 template <typename Socket>
 constexpr void nonblock_handshake(benchmark::State& state,

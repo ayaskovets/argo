@@ -1,16 +1,16 @@
-#include <sandbox/async/schedulers/yield_scheduler.hpp>
-#include <sandbox/queues/locked_std_deque.hpp>
+#include <wip/async/schedulers/yield_scheduler.hpp>
+#include <wip/queues/locked_std_deque.hpp>
 
 #include <gtest/gtest.h>
 
 namespace tests::async::schedulers {
 
-namespace async = sandbox::async;
+namespace async = wip::async;
 
 namespace {
 
 template <typename T>
-using channel_t = sandbox::queues::locked_std_deque<T>;
+using channel_t = wip::queues::locked_std_deque<T>;
 
 template <typename T>
 using scheduler_t =
@@ -38,9 +38,9 @@ TEST(async_schedulers_yield_scheduler, channels) {
 // using out_channel_value_t = std::coroutine_handle<>;
 
 // using yield_channel_t =
-//     sandbox::queues::lockfree_mpmc_queue<const in_channel_value_t*>;
+//     wip::queues::lockfree_mpmc_queue<const in_channel_value_t*>;
 // using handle_channel_t =
-// sandbox::queues::lockfree_mpmc_queue<out_channel_value_t>;
+// wip::queues::lockfree_mpmc_queue<out_channel_value_t>;
 
 // using scheduler_t =
 //     async::schedulers::yield_scheduler<clock_t, yield_channel_t,

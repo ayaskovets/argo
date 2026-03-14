@@ -1,5 +1,5 @@
-#include <sandbox/net/inet6/sockaddr.hpp>
-#include <sandbox/net/inet6/tcp/socket.hpp>
+#include <wip/net/inet6/sockaddr.hpp>
+#include <wip/net/inet6/tcp/socket.hpp>
 
 #include <benchmark/benchmark.h>
 
@@ -8,7 +8,7 @@
 
 namespace benchmarks::net::inet6::tcp {
 
-namespace inet6 = sandbox::net::inet6;
+namespace inet6 = wip::net::inet6;
 
 BENCHMARK_T(net_inet6_tcp, nonblock_handshake, inet6::tcp::socket,
             inet6::sockaddr(inet6::ip::kLoopback(), inet6::port(8000)))

@@ -1,11 +1,11 @@
 #pragma once
 
-#include <sandbox/io/uninitialized.hpp>
-#include <sandbox/utils/static_pimpl.hpp>
+#include <wip/io/uninitialized.hpp>
+#include <wip/utils/static_pimpl.hpp>
 
 #include <span>
 
-namespace sandbox::io {
+namespace wip::io {
 
 /**
  * @brief Copy-featured RAII wrapper for a file descriptor/handle
@@ -82,4 +82,4 @@ class fd {
   utils::static_pimpl<impl, 4, 4> pimpl_;
 };
 
-}  // namespace sandbox::io
+}  // namespace wip::io

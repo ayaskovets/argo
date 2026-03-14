@@ -1,8 +1,8 @@
 #pragma once
 
-#include <sandbox/async/channel.hpp>
-#include <sandbox/utils/as_ref.hpp>
-#include <sandbox/utils/mixins.hpp>
+#include <wip/async/channel.hpp>
+#include <wip/utils/as_ref.hpp>
+#include <wip/utils/mixins.hpp>
 
 #include <concepts>
 #include <deque>
@@ -10,7 +10,7 @@
 #include <optional>
 #include <type_traits>
 
-namespace sandbox::async::schedulers {
+namespace wip::async::schedulers {
 
 namespace concepts {
 
@@ -104,4 +104,4 @@ class yield_scheduler : public utils::non_copyable {
   }
 };
 
-}  // namespace sandbox::async::schedulers
+}  // namespace wip::async::schedulers

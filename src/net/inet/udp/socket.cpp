@@ -1,12 +1,12 @@
-#include <sandbox/net/inet/udp/socket.hpp>
+#include <wip/net/inet/udp/socket.hpp>
 
-namespace sandbox::net::inet::udp {
+namespace wip::net::inet::udp {
 
 socket::socket(io::uninitialized_t) noexcept
-    : net::base_socket(sandbox::io::uninitialized_t{}) {}
+    : net::base_socket(wip::io::uninitialized_t{}) {}
 
 socket::socket() noexcept(false)
     : net::base_socket(net::family::kInet, net::socktype::kDgram,
                        net::protocol::kUdp) {}
 
-}  // namespace sandbox::net::inet::udp
+}  // namespace wip::net::inet::udp

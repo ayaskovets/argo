@@ -1,4 +1,4 @@
-#include <sandbox/utils/unchecked_any.hpp>
+#include <wip/utils/unchecked_any.hpp>
 
 #include <memory>
 #include <utility>
@@ -7,7 +7,7 @@
 
 namespace tests::utils {
 
-namespace utils = sandbox::utils;
+namespace utils = wip::utils;
 
 TEST(utils_type_erased_pimpl, size) {
   static_assert(sizeof(utils::unchecked_any) == 24);

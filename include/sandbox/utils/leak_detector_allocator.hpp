@@ -3,7 +3,7 @@
 #include <memory>
 #include <unordered_map>
 
-namespace sandbox::utils {
+namespace wip::utils {
 
 /**
  * @brief Simple leak detecting allocator. If Shared=true allocations are stored
@@ -79,4 +79,4 @@ class leak_detector_allocator final : public std::allocator<T> {
       static_allocations_by_ptr_;
 };
 
-}  // namespace sandbox::utils
+}  // namespace wip::utils

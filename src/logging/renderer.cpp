@@ -1,7 +1,7 @@
-#include <sandbox/datetime/iso8601.hpp>
-#include <sandbox/logging/renderer.hpp>
+#include <wip/datetime/iso8601.hpp>
+#include <wip/logging/renderer.hpp>
 
-namespace sandbox::logging {
+namespace wip::logging {
 
 namespace {
 
@@ -57,4 +57,4 @@ const renderer& renderer::kDefault() noexcept {
   return kColoredLeveledTimestamped();
 }
 
-}  // namespace sandbox::logging
+}  // namespace wip::logging

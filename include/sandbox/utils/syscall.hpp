@@ -2,4 +2,4 @@
 
 #define SYSCALL(x) x
 
-namespace sandbox::utils {}  // namespace sandbox::utils
+namespace wip::utils {}  // namespace wip::utils

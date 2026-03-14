@@ -1,11 +1,11 @@
-#include <sandbox/net/inet6/port.hpp>
+#include <wip/net/inet6/port.hpp>
 
 #include <gtest/gtest.h>
 
 namespace tests::net::inet6 {
 
-namespace inet6 = sandbox::net::inet6;
-namespace net = sandbox::net;
+namespace inet6 = wip::net::inet6;
+namespace net = wip::net;
 
 TEST(net_inet6_port, size) {
   static_assert(sizeof(inet6::port) == 2);

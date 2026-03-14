@@ -1,13 +1,13 @@
-#include <sandbox/async/awaiters/io_awaiter.hpp>
-#include <sandbox/async/executor.hpp>
-#include <sandbox/async/executors/inline_executor.hpp>
-#include <sandbox/async/executors/thread_pool_executor.hpp>
-#include <sandbox/async/schedulers/io_scheduler.hpp>
-#include <sandbox/async/schedulers/timer_scheduler.hpp>
-#include <sandbox/async/task.hpp>
-#include <sandbox/net/inet/sockaddr.hpp>
-#include <sandbox/net/inet/tcp/socket.hpp>
-#include <sandbox/queues/lockfree_mpmc_queue.hpp>
+#include <wip/async/awaiters/io_awaiter.hpp>
+#include <wip/async/executor.hpp>
+#include <wip/async/executors/inline_executor.hpp>
+#include <wip/async/executors/thread_pool_executor.hpp>
+#include <wip/async/schedulers/io_scheduler.hpp>
+#include <wip/async/schedulers/timer_scheduler.hpp>
+#include <wip/async/task.hpp>
+#include <wip/net/inet/sockaddr.hpp>
+#include <wip/net/inet/tcp/socket.hpp>
+#include <wip/queues/lockfree_mpmc_queue.hpp>
 
 #include <gtest/gtest.h>
 
@@ -15,28 +15,28 @@ using namespace std::chrono_literals;
 
 namespace tests::async {
 
-namespace async = sandbox::async;
+namespace async = wip::async;
 
 using in_channel_value_t =
     async::schedulers::detail::io_scheduler_input<std::coroutine_handle<>>;
 using out_channel_value_t = std::coroutine_handle<>;
 
 using io_channel_t =
-    sandbox::queues::lockfree_mpmc_queue<const in_channel_value_t*>;
+    wip::queues::lockfree_mpmc_queue<const in_channel_value_t*>;
 using handle_channel_t =
-    sandbox::queues::lockfree_mpmc_queue<out_channel_value_t>;
+    wip::queues::lockfree_mpmc_queue<out_channel_value_t>;
 
 using scheduler_t =
     async::schedulers::io_scheduler<io_channel_t, handle_channel_t>;
 using executor_t =
     async::executors::inline_executor<handle_channel_t, io_channel_t>;
 
-async::task<int> server(sandbox::net::inet::tcp::socket& srv) {
+async::task<int> server(wip::net::inet::tcp::socket& srv) {
   std::cerr << std::chrono::system_clock::now() << " - server() ENTER"
             << std::endl;
 
-  std::vector<sandbox::net::inet::tcp::socket> peers(
-      10, sandbox::io::uninitialized_t{});
+  std::vector<wip::net::inet::tcp::socket> peers(
+      10, wip::io::uninitialized_t{});
   for (std::size_t i = 0; i < 4; ++i) {
     std::cerr << std::chrono::system_clock::now() << " - server() ITER"
               << std::endl;
@@ -58,13 +58,13 @@ async::task<int> server(sandbox::net::inet::tcp::socket& srv) {
   co_return 0;
 }
 
-async::task<int> client(sandbox::net::inet::tcp::socket* cnt_ptr,
-                        const sandbox::net::inet::sockaddr& server_sockaddr) {
+async::task<int> client(wip::net::inet::tcp::socket* cnt_ptr,
+                        const wip::net::inet::sockaddr& server_sockaddr) {
   std::cerr << std::chrono::system_clock::now() << " - client() ENTER"
             << std::endl;
 
   for (std::size_t i = 0; i < 4; ++i) {
-    sandbox::net::inet::tcp::socket cnt;
+    wip::net::inet::tcp::socket cnt;
     cnt.set_flags(io::fd::flag::kNonblock);
     cnt.set_reuseaddr(true);
     cnt.set_reuseport(true);
@@ -104,17 +104,17 @@ TEST(async_task, io_smoke) {
 
   static_assert(async::concepts::executor<executor_t>);
 
-  const auto server_sockaddr = sandbox::net::inet::sockaddr(
-      sandbox::net::inet::ip("127.0.0.1"), sandbox::net::inet::port(8081));
+  const auto server_sockaddr = wip::net::inet::sockaddr(
+      wip::net::inet::ip("127.0.0.1"), wip::net::inet::port(8081));
 
-  sandbox::net::inet::tcp::socket srv;
+  wip::net::inet::tcp::socket srv;
   srv.set_flags(io::fd::flag::kNonblock);
   srv.set_reuseaddr(true);
   srv.set_reuseport(true);
   srv.bind(server_sockaddr);
   srv.listen(1);
 
-  sandbox::net::inet::tcp::socket cnt;
+  wip::net::inet::tcp::socket cnt;
   cnt.set_flags(io::fd::flag::kNonblock);
   cnt.set_reuseaddr(true);
   cnt.set_reuseport(true);
@@ -123,14 +123,14 @@ TEST(async_task, io_smoke) {
   auto client_task = client(&cnt, server_sockaddr);
 
   const in_channel_value_t server_value(
-      srv, sandbox::io::poller::event::kPollIn, server_task.get_handle());
+      srv, wip::io::poller::event::kPollIn, server_task.get_handle());
   io_channel.push(&server_value);
 
   const in_channel_value_t client_value(
-      cnt, sandbox::io::poller::event::kPollIn, client_task.get_handle());
+      cnt, wip::io::poller::event::kPollIn, client_task.get_handle());
   io_channel.push(&client_value);
 
-  EXPECT_EQ(sandbox::net::connect_status::kPending,
+  EXPECT_EQ(wip::net::connect_status::kPending,
             cnt.connect(server_sockaddr));
 
   const auto done_at = std::chrono::steady_clock::now() + 1000ms;

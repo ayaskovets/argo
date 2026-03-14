@@ -50,7 +50,7 @@ target_include_directories(${TARGET}
     PRIVATE templates
 )
 target_link_libraries(${TARGET}
-    PRIVATE sandbox GTest::gtest_main
+    PRIVATE wip GTest::gtest_main
 )
 
 gtest_discover_tests(${TARGET})

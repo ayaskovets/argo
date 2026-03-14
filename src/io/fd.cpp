@@ -1,6 +1,6 @@
-#include <sandbox/io/fd.hpp>
-#include <sandbox/io/fd_impl.hpp>
-#include <sandbox/utils/syscall.hpp>
+#include <wip/io/fd.hpp>
+#include <wip/io/fd_impl.hpp>
+#include <wip/utils/syscall.hpp>
 
 #include <cerrno>
 #include <format>
@@ -8,7 +8,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 
-namespace sandbox::io {
+namespace wip::io {
 
 namespace {
 
@@ -206,4 +206,4 @@ void fd::close() noexcept(false) {
 
 const fd::impl& fd::native_handle() const noexcept { return *pimpl_; }
 
-}  // namespace sandbox::io
+}  // namespace wip::io

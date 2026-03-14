@@ -1,10 +1,10 @@
-#include <sandbox/io/file.hpp>
+#include <wip/io/file.hpp>
 
 #include <gtest/gtest.h>
 
 namespace tests::io {
 
-namespace io = sandbox::io;
+namespace io = wip::io;
 
 TEST(io_file, size) {
   static_assert(sizeof(io::file) == 4);

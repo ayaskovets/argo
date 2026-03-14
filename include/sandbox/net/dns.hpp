@@ -1,14 +1,14 @@
 #pragma once
 
-#include <sandbox/net/inet/sockaddr.hpp>
-#include <sandbox/net/inet6/sockaddr.hpp>
-#include <sandbox/net/protocol.hpp>
+#include <wip/net/inet/sockaddr.hpp>
+#include <wip/net/inet6/sockaddr.hpp>
+#include <wip/net/protocol.hpp>
 
 #include <string_view>
 #include <variant>
 #include <vector>
 
-namespace sandbox::net {
+namespace wip::net {
 
 /**
  * @brief Resolve IPv4 or IPv6 address from a hostname
@@ -21,4 +21,4 @@ std::vector<std::variant<net::inet::sockaddr, net::inet6::sockaddr>> resolve(
     std::string_view hostname, net::family family,
     net::protocol protocol) noexcept(false);
 
-}  // namespace sandbox::net
+}  // namespace wip::net

@@ -34,5 +34,5 @@ target_include_directories(${TARGET}
     PUBLIC benchmark templates
 )
 target_link_libraries(${TARGET}
-    PRIVATE sandbox benchmark::benchmark
+    PRIVATE wip benchmark::benchmark
 )

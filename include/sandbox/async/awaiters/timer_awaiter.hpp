@@ -1,11 +1,11 @@
 #pragma once
 
-#include <sandbox/async/executors/current_executor.hpp>
-#include <sandbox/async/schedulers/timer_scheduler.hpp>
-#include <sandbox/async/task.hpp>
-#include <sandbox/utils/mixins.hpp>
+#include <wip/async/executors/current_executor.hpp>
+#include <wip/async/schedulers/timer_scheduler.hpp>
+#include <wip/async/task.hpp>
+#include <wip/utils/mixins.hpp>
 
-namespace sandbox::async::awaiters {
+namespace wip::async::awaiters {
 
 template <typename Clock, typename T>
 class timer_awaiter final : public utils::non_copyable,
@@ -44,4 +44,4 @@ constexpr auto after(Duration duration, task<T>&& task) noexcept {
   return on<Clock, T>(Clock::now() + duration, std::move(task));
 }
 
-}  // namespace sandbox::async::awaiters
+}  // namespace wip::async::awaiters

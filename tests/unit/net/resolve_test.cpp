@@ -1,10 +1,10 @@
-#include <sandbox/net/dns.hpp>
+#include <wip/net/dns.hpp>
 
 #include <gtest/gtest.h>
 
 namespace tests::net {
 
-namespace net = sandbox::net;
+namespace net = wip::net;
 
 TEST(net_dns_resolve, localhost_udp_ip4) {
   const auto results =

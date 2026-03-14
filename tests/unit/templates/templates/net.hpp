@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include <sandbox/net/base_socket.hpp>
+#include <wip/net/base_socket.hpp>
 
 #include <thread>
 
@@ -10,8 +10,8 @@
 
 namespace tests::net::templates {
 
-namespace io = sandbox::io;
-namespace net = sandbox::net;
+namespace io = wip::io;
+namespace net = wip::net;
 
 template <typename Socket>
 constexpr void stream_unconnected_send_receive() noexcept {

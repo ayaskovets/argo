@@ -1,11 +1,11 @@
 #pragma once
 
-#include <sandbox/async/channel.hpp>
-#include <sandbox/async/scheduler.hpp>
+#include <wip/async/channel.hpp>
+#include <wip/async/scheduler.hpp>
 
 #include <tuple>
 
-namespace sandbox::async::channels {
+namespace wip::async::channels {
 
 template <async::concepts::channel... Channels>
 class multiplexed_channel final {
@@ -62,4 +62,4 @@ class multiplexed_channel final {
   std::tuple<Channels...> channels_;
 };
 
-}  // namespace sandbox::async::channels
+}  // namespace wip::async::channels

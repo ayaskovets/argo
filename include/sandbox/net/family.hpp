@@ -3,7 +3,7 @@
 #include <cstdint>
 #include <format>
 
-namespace sandbox::net {
+namespace wip::net {
 
 /**
  * @brief Address family
@@ -15,10 +15,10 @@ enum class family : std::uint8_t {
   kUnix,
 };
 
-}  // namespace sandbox::net
+}  // namespace wip::net
 
 template <>
-class std::formatter<sandbox::net::family> {
+class std::formatter<wip::net::family> {
  public:
   template <typename FormatContext>
   constexpr auto parse(FormatContext& ctx) const noexcept {
@@ -26,16 +26,16 @@ class std::formatter<sandbox::net::family> {
   }
 
   template <typename FormatContext>
-  constexpr auto format(const sandbox::net::family& family,
+  constexpr auto format(const wip::net::family& family,
                         FormatContext& ctx) const noexcept {
     switch (family) {
-      case sandbox::net::family::kUnspecified:
+      case wip::net::family::kUnspecified:
         return std::format_to(ctx.out(), "AF_UNSPEC");
-      case sandbox::net::family::kInet:
+      case wip::net::family::kInet:
         return std::format_to(ctx.out(), "AF_INET");
-      case sandbox::net::family::kInet6:
+      case wip::net::family::kInet6:
         return std::format_to(ctx.out(), "AF_INET6");
-      case sandbox::net::family::kUnix:
+      case wip::net::family::kUnix:
         return std::format_to(ctx.out(), "AF_UNIX");
     }
   }

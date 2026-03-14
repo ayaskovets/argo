@@ -1,18 +1,18 @@
-#include <sandbox/queues/locked_mpmc_queue.hpp>
-#include <sandbox/queues/locked_std_deque.hpp>
-#include <sandbox/queues/lockfree_mpmc_queue.hpp>
-#include <sandbox/queues/lockfree_mpsc_queue.hpp>
-#include <sandbox/queues/lockfree_spmc_queue.hpp>
-#include <sandbox/queues/lockless_mpmc_queue.hpp>
-#include <sandbox/queues/queue.hpp>
-#include <sandbox/queues/single_threaded_queue.hpp>
-#include <sandbox/queues/waitfree_spsc_queue.hpp>
+#include <wip/queues/locked_mpmc_queue.hpp>
+#include <wip/queues/locked_std_deque.hpp>
+#include <wip/queues/lockfree_mpmc_queue.hpp>
+#include <wip/queues/lockfree_mpsc_queue.hpp>
+#include <wip/queues/lockfree_spmc_queue.hpp>
+#include <wip/queues/lockless_mpmc_queue.hpp>
+#include <wip/queues/queue.hpp>
+#include <wip/queues/single_threaded_queue.hpp>
+#include <wip/queues/waitfree_spsc_queue.hpp>
 
 #include <gtest/gtest.h>
 
 namespace tests::queues {
 
-namespace queues = sandbox::queues;
+namespace queues = wip::queues;
 
 TEST(queues_queue, concept) {
   static_assert(

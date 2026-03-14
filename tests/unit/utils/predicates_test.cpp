@@ -1,10 +1,10 @@
-#include <sandbox/utils/predicates.hpp>
+#include <wip/utils/predicates.hpp>
 
 #include <gtest/gtest.h>
 
 namespace tests::utils {
 
-namespace utils = sandbox::utils;
+namespace utils = wip::utils;
 
 TEST(utils_predicates, is_power_of_two) {
   static_assert(!utils::is_power_of_two(0));

@@ -1,11 +1,11 @@
 #pragma once
 
-#include <sandbox/net/network_byte_order.hpp>
+#include <wip/net/network_byte_order.hpp>
 
 #include <format>
 #include <string>
 
-namespace sandbox::net::inet {
+namespace wip::net::inet {
 
 /**
  * @brief IPv4 address
@@ -37,10 +37,10 @@ class ip final {
   std::uint32_t data_;
 };
 
-}  // namespace sandbox::net::inet
+}  // namespace wip::net::inet
 
 template <>
-class std::formatter<sandbox::net::inet::ip> {
+class std::formatter<wip::net::inet::ip> {
  public:
   template <typename FormatContext>
   constexpr auto parse(FormatContext& ctx) const noexcept {
@@ -48,7 +48,7 @@ class std::formatter<sandbox::net::inet::ip> {
   }
 
   template <typename FormatContext>
-  constexpr auto format(const sandbox::net::inet::ip& ip,
+  constexpr auto format(const wip::net::inet::ip& ip,
                         FormatContext& ctx) const noexcept(false) {
     return std::format_to(ctx.out(), "{}", ip.to_string());
   }

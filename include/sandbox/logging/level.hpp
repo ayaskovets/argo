@@ -3,7 +3,7 @@
 #include <cstdint>
 #include <format>
 
-namespace sandbox::logging {
+namespace wip::logging {
 
 enum class level : std::uint8_t {
   kDebug,
@@ -12,10 +12,10 @@ enum class level : std::uint8_t {
   kError,
 };
 
-}  // namespace sandbox::logging
+}  // namespace wip::logging
 
 template <>
-class std::formatter<sandbox::logging::level> {
+class std::formatter<wip::logging::level> {
  public:
   template <typename FormatContext>
   constexpr auto parse(FormatContext& ctx) const noexcept {
@@ -23,16 +23,16 @@ class std::formatter<sandbox::logging::level> {
   }
 
   template <typename FormatContext>
-  constexpr auto format(const sandbox::logging::level& level,
+  constexpr auto format(const wip::logging::level& level,
                         FormatContext& ctx) const noexcept {
     switch (level) {
-      case sandbox::logging::level::kDebug:
+      case wip::logging::level::kDebug:
         return std::format_to(ctx.out(), "DEBUG");
-      case sandbox::logging::level::kInfo:
+      case wip::logging::level::kInfo:
         return std::format_to(ctx.out(), "INFO");
-      case sandbox::logging::level::kWarn:
+      case wip::logging::level::kWarn:
         return std::format_to(ctx.out(), "WARN");
-      case sandbox::logging::level::kError:
+      case wip::logging::level::kError:
         return std::format_to(ctx.out(), "ERROR");
     }
   }

@@ -1,6 +1,6 @@
-#include <sandbox/logging/logger.hpp>
+#include <wip/logging/logger.hpp>
 
-namespace sandbox::logging {
+namespace wip::logging {
 
 const logger &logger::kColoredLeveledTimestampedStderr() noexcept {
   static const logger logger(logging::level::kInfo,
@@ -13,4 +13,4 @@ const logger &logger::kDefault() noexcept {
   return kColoredLeveledTimestampedStderr();
 }
 
-}  // namespace sandbox::logging
+}  // namespace wip::logging

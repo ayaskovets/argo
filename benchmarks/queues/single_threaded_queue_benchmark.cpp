@@ -1,4 +1,4 @@
-#include <sandbox/queues/single_threaded_queue.hpp>
+#include <wip/queues/single_threaded_queue.hpp>
 
 #include <benchmark/benchmark.h>
 
@@ -7,8 +7,8 @@
 
 namespace benchmarks::queues {
 
-namespace queues = sandbox::queues;
-namespace utils = sandbox::utils;
+namespace queues = wip::queues;
+namespace utils = wip::utils;
 
 template <typename Value>
 using queue_t = queues::single_threaded_queue<

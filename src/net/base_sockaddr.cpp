@@ -1,5 +1,5 @@
-#include <sandbox/net/base_sockaddr.hpp>
-#include <sandbox/utils/syscall.hpp>
+#include <wip/net/base_sockaddr.hpp>
+#include <wip/utils/syscall.hpp>
 
 #include <cassert>
 #include <cerrno>
@@ -7,7 +7,7 @@
 #include <arpa/inet.h>
 #include <sys/un.h>
 
-namespace sandbox::net {
+namespace wip::net {
 
 base_sockaddr::base_sockaddr(net::family family) noexcept(false)
     : impl_([family] {
@@ -145,4 +145,4 @@ std::string base_sockaddr::to_string() const noexcept(false) {
   return string;
 }
 
-}  // namespace sandbox::net
+}  // namespace wip::net

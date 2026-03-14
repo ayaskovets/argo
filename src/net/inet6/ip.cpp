@@ -1,12 +1,12 @@
-#include <sandbox/net/inet6/ip.hpp>
-#include <sandbox/utils/syscall.hpp>
+#include <wip/net/inet6/ip.hpp>
+#include <wip/utils/syscall.hpp>
 
 #include <cerrno>
 #include <format>
 
 #include <arpa/inet.h>
 
-namespace sandbox::net::inet6 {
+namespace wip::net::inet6 {
 
 const ip& ip::kLoopback() noexcept {
   static const ip ip("::1");
@@ -61,4 +61,4 @@ std::string ip::to_string() const noexcept(false) {
       std::format("could not serialize ip: {}", std::strerror(errno)));
 }
 
-}  // namespace sandbox::net::inet6
+}  // namespace wip::net::inet6

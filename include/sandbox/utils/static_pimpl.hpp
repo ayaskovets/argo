@@ -7,7 +7,7 @@
 #include <type_traits>
 #include <utility>
 
-namespace sandbox::utils {
+namespace wip::utils {
 
 /**
  * @brief Pimpl without dynamic allocations
@@ -102,4 +102,4 @@ class static_pimpl final {
   alignas(Alignment) std::byte storage_[Size];
 };
 
-}  // namespace sandbox::utils
+}  // namespace wip::utils

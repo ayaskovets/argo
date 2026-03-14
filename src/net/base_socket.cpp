@@ -1,6 +1,6 @@
-#include <sandbox/io/fd_impl.hpp>
-#include <sandbox/net/base_socket.hpp>
-#include <sandbox/utils/syscall.hpp>
+#include <wip/io/fd_impl.hpp>
+#include <wip/net/base_socket.hpp>
+#include <wip/utils/syscall.hpp>
 
 #include <cerrno>
 #include <format>
@@ -8,7 +8,7 @@
 #include <arpa/inet.h>
 #include <sys/socket.h>
 
-namespace sandbox::net {
+namespace wip::net {
 
 namespace {
 
@@ -350,4 +350,4 @@ std::size_t base_socket::receive_from(
   return static_cast<std::size_t>(retval);
 }
 
-}  // namespace sandbox::net
+}  // namespace wip::net

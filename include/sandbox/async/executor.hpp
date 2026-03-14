@@ -1,11 +1,11 @@
 #pragma once
 
-#include <sandbox/async/channel.hpp>
+#include <wip/async/channel.hpp>
 
 #include <concepts>
 #include <stop_token>
 
-namespace sandbox::async {
+namespace wip::async {
 
 namespace concepts {
 
@@ -35,4 +35,4 @@ concept executor = requires(T executor) {
 
 }  // namespace concepts
 
-}  // namespace sandbox::async
+}  // namespace wip::async

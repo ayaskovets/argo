@@ -1,11 +1,11 @@
 #pragma once
 
-#include <sandbox/logging/level.hpp>
+#include <wip/logging/level.hpp>
 
 #include <functional>
 #include <string_view>
 
-namespace sandbox::logging {
+namespace wip::logging {
 
 /**
  * @brief Log destination
@@ -35,4 +35,4 @@ class writer final {
   write_t write_;
 };
 
-}  // namespace sandbox::logging
+}  // namespace wip::logging

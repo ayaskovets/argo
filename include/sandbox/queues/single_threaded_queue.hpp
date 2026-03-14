@@ -1,13 +1,13 @@
 #pragma once
 
-#include <sandbox/utils/conditionally_runtime.hpp>
-#include <sandbox/utils/dynamic_extent.hpp>
-#include <sandbox/utils/mixins.hpp>
+#include <wip/utils/conditionally_runtime.hpp>
+#include <wip/utils/dynamic_extent.hpp>
+#include <wip/utils/mixins.hpp>
 
 #include <memory>
 #include <stdexcept>
 
-namespace sandbox::queues {
+namespace wip::queues {
 
 namespace concepts {
 
@@ -194,4 +194,4 @@ class single_threaded_queue final : public utils::non_copyable,
       capacity_;
 };
 
-}  // namespace sandbox::queues
+}  // namespace wip::queues

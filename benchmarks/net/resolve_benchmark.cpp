@@ -1,10 +1,10 @@
-#include <sandbox/net/dns.hpp>
+#include <wip/net/dns.hpp>
 
 #include <benchmark/benchmark.h>
 
 namespace benchmarks::net {
 
-namespace net = sandbox::net;
+namespace net = wip::net;
 
 constexpr void BM_net_dns_resolve_localhost(benchmark::State& state) noexcept {
   for (const auto _ : state) {

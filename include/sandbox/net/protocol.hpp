@@ -3,7 +3,7 @@
 #include <cstdint>
 #include <format>
 
-namespace sandbox::net {
+namespace wip::net {
 
 /**
  * @brief Specific protocol
@@ -14,10 +14,10 @@ enum class protocol : std::uint8_t {
   kUdp,
 };
 
-}  // namespace sandbox::net
+}  // namespace wip::net
 
 template <>
-class std::formatter<sandbox::net::protocol> {
+class std::formatter<wip::net::protocol> {
  public:
   template <typename FormatContext>
   constexpr auto parse(FormatContext& ctx) const noexcept {
@@ -25,14 +25,14 @@ class std::formatter<sandbox::net::protocol> {
   }
 
   template <typename FormatContext>
-  constexpr auto format(const sandbox::net::protocol& protocol,
+  constexpr auto format(const wip::net::protocol& protocol,
                         FormatContext& ctx) const noexcept {
     switch (protocol) {
-      case sandbox::net::protocol::kUnspecified:
+      case wip::net::protocol::kUnspecified:
         return std::format_to(ctx.out(), "UNSPECIFIED");
-      case sandbox::net::protocol::kTcp:
+      case wip::net::protocol::kTcp:
         return std::format_to(ctx.out(), "IPPROTO_TCP");
-      case sandbox::net::protocol::kUdp:
+      case wip::net::protocol::kUdp:
         return std::format_to(ctx.out(), "IPPROTO_UDP");
     }
   }

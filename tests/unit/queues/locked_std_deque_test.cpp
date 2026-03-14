@@ -1,5 +1,5 @@
-#include <sandbox/queues/locked_std_deque.hpp>
-#include <sandbox/utils/leak_detector_allocator.hpp>
+#include <wip/queues/locked_std_deque.hpp>
+#include <wip/utils/leak_detector_allocator.hpp>
 
 #include <new>
 
@@ -10,8 +10,8 @@
 
 namespace tests::queues {
 
-namespace queues = sandbox::queues;
-namespace utils = sandbox::utils;
+namespace queues = wip::queues;
+namespace utils = wip::utils;
 
 TEST(queues_locked_std_deque, size) {
   static_assert(sizeof(queues::locked_std_deque<int, std::size_t, 10>) == 208);

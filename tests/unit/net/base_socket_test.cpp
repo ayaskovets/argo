@@ -1,11 +1,11 @@
-#include <sandbox/net/base_socket.hpp>
+#include <wip/net/base_socket.hpp>
 
 #include <gtest/gtest.h>
 
 namespace tests::net {
 
-namespace io = sandbox::io;
-namespace net = sandbox::net;
+namespace io = wip::io;
+namespace net = wip::net;
 
 namespace {
 

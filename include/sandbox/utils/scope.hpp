@@ -1,11 +1,11 @@
 #pragma once
 
-#include <sandbox/utils/mixins.hpp>
+#include <wip/utils/mixins.hpp>
 
 #include <concepts>
 #include <utility>
 
-namespace sandbox::utils {
+namespace wip::utils {
 
 /**
  * @brief Declarative way to do an noexcept operation when exiting a scope
@@ -24,4 +24,4 @@ class scope_exit final : public utils::non_copyable, public utils::non_movable {
   const T& finally_;
 };
 
-}  // namespace sandbox::utils
+}  // namespace wip::utils

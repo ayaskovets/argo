@@ -1,10 +1,10 @@
-#include <sandbox/net/unix/sockaddr.hpp>
+#include <wip/net/unix/sockaddr.hpp>
 
 #include <gtest/gtest.h>
 
 namespace tests::net::unix {
 
-namespace unix = sandbox::net::unix;
+namespace unix = wip::net::unix;
 
 TEST(net_unix_sockaddr, size) {
   static_assert(sizeof(unix::sockaddr) == 24);

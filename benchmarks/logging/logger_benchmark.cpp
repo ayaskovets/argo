@@ -1,10 +1,10 @@
-#include <sandbox/logging/logging.hpp>
+#include <wip/logging/logging.hpp>
 
 #include <benchmark/benchmark.h>
 
 namespace benchmarks::logging {
 
-namespace logging = sandbox::logging;
+namespace logging = wip::logging;
 
 constexpr void BM_logging_default(benchmark::State& state) noexcept {
   (void)std::format("{}", 42);

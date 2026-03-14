@@ -1,6 +1,6 @@
-#include <sandbox/async/schedulers/timer_scheduler.hpp>
-#include <sandbox/queues/dereferencing_decorator.hpp>
-#include <sandbox/queues/locked_std_deque.hpp>
+#include <wip/async/schedulers/timer_scheduler.hpp>
+#include <wip/queues/dereferencing_decorator.hpp>
+#include <wip/queues/locked_std_deque.hpp>
 
 #include <chrono>
 
@@ -8,12 +8,12 @@
 
 namespace tests::async::schedulers {
 
-namespace async = sandbox::async;
+namespace async = wip::async;
 
 namespace {
 
 template <typename T>
-using channel_t = sandbox::queues::locked_std_deque<T>;
+using channel_t = wip::queues::locked_std_deque<T>;
 
 template <typename T>
 using scheduler_t = async::schedulers::timer_scheduler<
@@ -30,7 +30,7 @@ TEST(async_schedulers_timer_scheduler, size) {
 }
 
 TEST(tmp, tmp) {
-  sandbox::queues::dereferencing_decorator<channel_t<int*>> q(3);
+  wip::queues::dereferencing_decorator<channel_t<int*>> q(3);
   static_assert(std::is_same_v<typename decltype(q)::value_type, int&>);
 
   int tmp = 42;
@@ -60,9 +60,9 @@ TEST(async_schedulers_timer_scheduler, channels) {
 // using out_channel_value_t = std::coroutine_handle<>;
 
 // using timer_channel_t =
-//     sandbox::queues::lockfree_mpmc_queue<const in_channel_value_t*>;
+//     wip::queues::lockfree_mpmc_queue<const in_channel_value_t*>;
 // using handle_channel_t =
-// sandbox::queues::lockfree_mpmc_queue<out_channel_value_t>;
+// wip::queues::lockfree_mpmc_queue<out_channel_value_t>;
 
 // using scheduler_t =
 //     async::schedulers::timer_scheduler<clock_t, timer_channel_t,

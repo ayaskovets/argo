@@ -1,10 +1,10 @@
-#include <sandbox/net/base_sockaddr.hpp>
+#include <wip/net/base_sockaddr.hpp>
 
 #include <gtest/gtest.h>
 
 namespace tests::net {
 
-namespace net = sandbox::net;
+namespace net = wip::net;
 
 namespace {
 

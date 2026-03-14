@@ -1,7 +1,7 @@
 BasedOnStyle: Google
 IncludeBlocks: Regroup
 IncludeCategories:
-  - Regex: '<sandbox/.*>'
+  - Regex: '<wip/.*>'
     Priority: 1
     SortPriority: 1
   - Regex: '<boost/.*>'

@@ -1,5 +1,5 @@
-#include <sandbox/queues/lockfree_mpmc_queue.hpp>
-#include <sandbox/utils/leak_detector_allocator.hpp>
+#include <wip/queues/lockfree_mpmc_queue.hpp>
+#include <wip/utils/leak_detector_allocator.hpp>
 
 #include <gtest/gtest.h>
 
@@ -8,8 +8,8 @@
 
 namespace tests::queues {
 
-namespace queues = sandbox::queues;
-namespace utils = sandbox::utils;
+namespace queues = wip::queues;
+namespace utils = wip::utils;
 
 TEST(queues_lockfree_mpmc_queue, size) {
   static_assert(sizeof(queues::lockfree_mpmc_queue<int, std::size_t, 10>) ==

@@ -1,8 +1,8 @@
-#include <sandbox/net/inet6/sockaddr.hpp>
+#include <wip/net/inet6/sockaddr.hpp>
 
 #include <arpa/inet.h>
 
-namespace sandbox::net::inet6 {
+namespace wip::net::inet6 {
 
 sockaddr::sockaddr(net::inet6::ip ip, net::inet6::port port) noexcept(false)
     : net::base_sockaddr(net::family::kInet6) {
@@ -27,4 +27,4 @@ net::inet6::port sockaddr::get_port() const noexcept {
   return net::inet6::port(storage->sin6_port, net::network_byte_order_t{});
 }
 
-}  // namespace sandbox::net::inet6
+}  // namespace wip::net::inet6

@@ -2,7 +2,7 @@
 
 #include <concepts>
 
-namespace sandbox::queues {
+namespace wip::queues {
 
 namespace concepts {
 
@@ -52,4 +52,4 @@ concept noexcept_queue = detail::queue<T, true>;
 
 }  // namespace concepts
 
-}  // namespace sandbox::queues
+}  // namespace wip::queues

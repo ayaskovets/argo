@@ -1,12 +1,12 @@
 #pragma once
 
-#include <sandbox/async/channel.hpp>
-#include <sandbox/async/scheduler.hpp>
+#include <wip/async/channel.hpp>
+#include <wip/async/scheduler.hpp>
 
 #include <coroutine>
 #include <functional>
 
-namespace sandbox::async::executors::current_executor {
+namespace wip::async::executors::current_executor {
 
 extern thread_local std::function<bool(const base_scheduler_input&)> try_push;
 
@@ -29,4 +29,4 @@ constexpr void resume(Executor& executor, std::coroutine_handle<> handle) {
   handle.resume();
 }
 
-}  // namespace sandbox::async::executors::current_executor
+}  // namespace wip::async::executors::current_executor

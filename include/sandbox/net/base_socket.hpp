@@ -1,14 +1,14 @@
 #pragma once
 
-#include <sandbox/io/fd.hpp>
-#include <sandbox/net/base_sockaddr.hpp>
-#include <sandbox/net/family.hpp>
-#include <sandbox/net/protocol.hpp>
-#include <sandbox/net/socktype.hpp>
+#include <wip/io/fd.hpp>
+#include <wip/net/base_sockaddr.hpp>
+#include <wip/net/family.hpp>
+#include <wip/net/protocol.hpp>
+#include <wip/net/socktype.hpp>
 
 #include <span>
 
-namespace sandbox::net {
+namespace wip::net {
 
 /**
  * @brief Return code for bind()
@@ -83,4 +83,4 @@ class base_socket : public io::fd {
   using fd::write;
 };
 
-}  // namespace sandbox::net
+}  // namespace wip::net

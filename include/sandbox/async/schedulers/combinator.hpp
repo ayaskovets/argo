@@ -1,11 +1,11 @@
 #pragma once
 
-#include <sandbox/async/scheduler.hpp>
+#include <wip/async/scheduler.hpp>
 
 #include <tuple>
 #include <utility>
 
-namespace sandbox::async::schedulers {
+namespace wip::async::schedulers {
 
 /**
  * @brief Combinator for sequential execution of run_once() for multiple
@@ -37,4 +37,4 @@ class combinator final {
   std::tuple<Schedulers...> schedulers_;
 };
 
-}  // namespace sandbox::async::schedulers
+}  // namespace wip::async::schedulers

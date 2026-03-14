@@ -1,12 +1,12 @@
 #pragma once
 
-#include <sandbox/logging/level.hpp>
-#include <sandbox/logging/renderer.hpp>
-#include <sandbox/logging/writer.hpp>
+#include <wip/logging/level.hpp>
+#include <wip/logging/renderer.hpp>
+#include <wip/logging/writer.hpp>
 
 #include <format>
 
-namespace sandbox::logging {
+namespace wip::logging {
 
 /**
  * @brief Logger with customizable string rendering and log destination
@@ -40,4 +40,4 @@ class logger {
   logging::writer writer_;
 };
 
-}  // namespace sandbox::logging
+}  // namespace wip::logging

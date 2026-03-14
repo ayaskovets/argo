@@ -1,9 +1,9 @@
 #pragma once
 
-#include <sandbox/logging/level.hpp>
-#include <sandbox/logging/logger.hpp>
+#include <wip/logging/level.hpp>
+#include <wip/logging/logger.hpp>
 
-namespace sandbox::logging {
+namespace wip::logging {
 
 template <typename... Args>
 constexpr decltype(auto) debug(std::format_string<Args...> fmt,
@@ -33,4 +33,4 @@ constexpr decltype(auto) error(std::format_string<Args...> fmt,
                                      std::forward<Args>(args)...);
 }
 
-}  // namespace sandbox::logging
+}  // namespace wip::logging

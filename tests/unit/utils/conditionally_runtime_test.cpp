@@ -1,10 +1,10 @@
-#include <sandbox/utils/conditionally_runtime.hpp>
+#include <wip/utils/conditionally_runtime.hpp>
 
 #include <gtest/gtest.h>
 
 namespace tests::utils {
 
-namespace utils = sandbox::utils;
+namespace utils = wip::utils;
 
 TEST(utils_conditionally_runtime, size) {
   static_assert(sizeof(utils::conditionally_runtime<std::size_t, false, 42>) ==

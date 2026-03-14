@@ -1,15 +1,15 @@
 #pragma once
 
-#include <sandbox/async/channel.hpp>
-#include <sandbox/async/scheduler.hpp>
-#include <sandbox/utils/as_ref.hpp>
-#include <sandbox/utils/mixins.hpp>
+#include <wip/async/channel.hpp>
+#include <wip/async/scheduler.hpp>
+#include <wip/utils/as_ref.hpp>
+#include <wip/utils/mixins.hpp>
 
 #include <concepts>
 #include <optional>
 #include <queue>
 
-namespace sandbox::async::schedulers {
+namespace wip::async::schedulers {
 
 namespace concepts {
 
@@ -144,4 +144,4 @@ class timer_scheduler : public utils::non_copyable {
   }
 };
 
-}  // namespace sandbox::async::schedulers
+}  // namespace wip::async::schedulers

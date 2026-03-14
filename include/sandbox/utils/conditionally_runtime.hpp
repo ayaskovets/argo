@@ -3,7 +3,7 @@
 #include <type_traits>
 #include <utility>
 
-namespace sandbox::utils {
+namespace wip::utils {
 
 /**
  * @brief Conditionally runtime-stored value
@@ -54,4 +54,4 @@ class conditionally_runtime<T, false, CompileTimeValue> final {
   static inline const constinit T value_ = CompileTimeValue;
 };
 
-}  // namespace sandbox::utils
+}  // namespace wip::utils

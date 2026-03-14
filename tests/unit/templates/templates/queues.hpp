@@ -1,6 +1,6 @@
 #pragma once
 
-#include <sandbox/utils/leak_detector_allocator.hpp>
+#include <wip/utils/leak_detector_allocator.hpp>
 
 #include <algorithm>
 #include <latch>
@@ -11,7 +11,7 @@
 
 namespace tests::queues::templates {
 
-namespace utils = sandbox::utils;
+namespace utils = wip::utils;
 
 template <typename Queue>
   requires(std::is_same_v<typename Queue::value_type, int>)

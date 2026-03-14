@@ -1,6 +1,6 @@
 #pragma once
 
-namespace sandbox::utils {
+namespace wip::utils {
 
 /**
  * @brief Mix-in to restrict copying
@@ -37,4 +37,4 @@ class non_movable {
   constexpr non_movable& operator=(const non_movable&) noexcept = default;
 };
 
-}  // namespace sandbox::utils
+}  // namespace wip::utils

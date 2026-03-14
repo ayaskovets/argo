@@ -1,4 +1,4 @@
-#include <sandbox/net/unix/stream/socket.hpp>
+#include <wip/net/unix/stream/socket.hpp>
 
 #include <gtest/gtest.h>
 
@@ -7,8 +7,8 @@
 
 namespace tests::net::unix::stream {
 
-namespace net = sandbox::net;
-namespace unix = sandbox::net::unix;
+namespace net = wip::net;
+namespace unix = wip::net::unix;
 
 TEST(net_unix_stream_socket, size) {
   static_assert(sizeof(unix::stream::socket) == 4);

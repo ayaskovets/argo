@@ -1,10 +1,10 @@
-#include <sandbox/io/fd.hpp>
+#include <wip/io/fd.hpp>
 
 #include <gtest/gtest.h>
 
 namespace tests::io {
 
-namespace io = sandbox::io;
+namespace io = wip::io;
 
 TEST(io_fd, size) {
   static_assert(sizeof(io::fd) == 4);

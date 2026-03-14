@@ -1,11 +1,11 @@
-#include <sandbox/net/inet6/sockaddr.hpp>
+#include <wip/net/inet6/sockaddr.hpp>
 
 #include <benchmark/benchmark.h>
 
 namespace benchmarks::net::inet6 {
 
-namespace inet6 = sandbox::net::inet6;
-namespace net = sandbox::net;
+namespace inet6 = wip::net::inet6;
+namespace net = wip::net;
 
 constexpr void BM_net_inet6_from_bytes(benchmark::State& state) noexcept {
   const std::array<std::byte, 16> bytes{

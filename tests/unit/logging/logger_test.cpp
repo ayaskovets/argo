@@ -1,10 +1,10 @@
-#include <sandbox/logging/logger.hpp>
+#include <wip/logging/logger.hpp>
 
 #include <gtest/gtest.h>
 
 namespace tests::logging {
 
-namespace logging = sandbox::logging;
+namespace logging = wip::logging;
 
 TEST(logging_logger, size) {
   static_assert(sizeof(logging::logger) == 48);

@@ -1,10 +1,10 @@
-#include <sandbox/utils/strong_typedef.hpp>
+#include <wip/utils/strong_typedef.hpp>
 
 #include <gtest/gtest.h>
 
 namespace tests::utils {
 
-namespace utils = sandbox::utils;
+namespace utils = wip::utils;
 
 TEST(utils_strong_typedef, size) {
   const utils::strong_typedef<std::string> tdef;

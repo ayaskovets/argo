@@ -1,10 +1,10 @@
-#include <sandbox/utils/leak_detector_allocator.hpp>
+#include <wip/utils/leak_detector_allocator.hpp>
 
 #include <gtest/gtest.h>
 
 namespace tests::utils {
 
-namespace utils = sandbox::utils;
+namespace utils = wip::utils;
 
 TEST(utils_leak_detector_allocator, smoke) {
   utils::leak_detector_allocator<int> allocator;

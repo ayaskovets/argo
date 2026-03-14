@@ -3,7 +3,7 @@
 #include <concepts>
 #include <type_traits>
 
-namespace sandbox::async {
+namespace wip::async {
 
 namespace concepts {
 
@@ -36,4 +36,4 @@ concept channel_lvalue_reference = requires {
 
 }  // namespace concepts
 
-}  // namespace sandbox::async
+}  // namespace wip::async

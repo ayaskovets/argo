@@ -1,5 +1,5 @@
-#include <sandbox/net/unix/dgram/socket.hpp>
-#include <sandbox/net/unix/sockaddr.hpp>
+#include <wip/net/unix/dgram/socket.hpp>
+#include <wip/net/unix/sockaddr.hpp>
 
 #include <benchmark/benchmark.h>
 
@@ -8,7 +8,7 @@
 
 namespace benchmarks::net::unix::dgram {
 
-namespace unix = sandbox::net::unix;
+namespace unix = wip::net::unix;
 
 BENCHMARK_T(net_unix_dgram, dgram_throughput, unix::dgram::socket,
             unix::sockaddr("BM_net_unix_dgram_dgram_throughput"))

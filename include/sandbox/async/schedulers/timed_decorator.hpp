@@ -1,8 +1,8 @@
 #pragma once
 
-#include <sandbox/async/scheduler.hpp>
+#include <wip/async/scheduler.hpp>
 
-namespace sandbox::async::schedulers {
+namespace wip::async::schedulers {
 
 /**
  * @brief Decorator for timed calls to run_once()
@@ -25,4 +25,4 @@ class timed_decorator : public Scheduler {
   }
 };
 
-}  // namespace sandbox::async::schedulers
+}  // namespace wip::async::schedulers

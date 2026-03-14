@@ -1,4 +1,4 @@
-set(TARGET sandbox)
+set(TARGET wip)
 
 find_package(Boost REQUIRED)
 

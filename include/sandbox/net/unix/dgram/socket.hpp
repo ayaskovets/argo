@@ -1,8 +1,8 @@
 #pragma once
 
-#include <sandbox/net/unix/base_socket.hpp>
+#include <wip/net/unix/base_socket.hpp>
 
-namespace sandbox::net::unix::dgram {
+namespace wip::net::unix::dgram {
 
 /**
  * @brief UNIX datagram socket
@@ -13,4 +13,4 @@ class socket final : public net::unix::base_socket {
   socket() noexcept(false);
 };
 
-}  // namespace sandbox::net::unix::dgram
+}  // namespace wip::net::unix::dgram

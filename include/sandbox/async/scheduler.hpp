@@ -1,11 +1,11 @@
 #pragma once
 
-#include <sandbox/async/channel.hpp>
+#include <wip/async/channel.hpp>
 
 #include <concepts>
 #include <stop_token>
 
-namespace sandbox::async {
+namespace wip::async {
 
 /**
  * @brief Common type for all scheduler input parameters to use with any
@@ -66,4 +66,4 @@ co_await or whatever in between of steps
 
 }  // namespace concepts
 
-}  // namespace sandbox::async
+}  // namespace wip::async

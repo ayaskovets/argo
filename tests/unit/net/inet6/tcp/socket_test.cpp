@@ -1,5 +1,5 @@
-#include <sandbox/net/inet6/sockaddr.hpp>
-#include <sandbox/net/inet6/tcp/socket.hpp>
+#include <wip/net/inet6/sockaddr.hpp>
+#include <wip/net/inet6/tcp/socket.hpp>
 
 #include <gtest/gtest.h>
 
@@ -8,8 +8,8 @@
 
 namespace tests::net::inet6::tcp {
 
-namespace inet6 = sandbox::net::inet6;
-namespace net = sandbox::net;
+namespace inet6 = wip::net::inet6;
+namespace net = wip::net;
 
 TEST(net_inet6_tcp_socket, size) {
   static_assert(sizeof(inet6::tcp::socket) == 4);

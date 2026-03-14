@@ -1,12 +1,12 @@
 #pragma once
 
-#include <sandbox/async/channel.hpp>
-#include <sandbox/async/executors/current_executor.hpp>
-#include <sandbox/utils/mixins.hpp>
+#include <wip/async/channel.hpp>
+#include <wip/async/executors/current_executor.hpp>
+#include <wip/utils/mixins.hpp>
 
 #include <coroutine>
 
-namespace sandbox::async::executors {
+namespace wip::async::executors {
 
 template <typename InChannel, typename OutChannel>
 class inline_executor final : public utils::non_copyable,
@@ -60,4 +60,4 @@ class inline_executor final : public utils::non_copyable,
   OutChannel& out_channel_;
 };
 
-}  // namespace sandbox::async::executors
+}  // namespace wip::async::executors

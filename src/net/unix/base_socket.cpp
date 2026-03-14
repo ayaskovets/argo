@@ -1,9 +1,9 @@
-#include <sandbox/net/unix/base_socket.hpp>
-#include <sandbox/utils/syscall.hpp>
+#include <wip/net/unix/base_socket.hpp>
+#include <wip/utils/syscall.hpp>
 
 #include <unistd.h>
 
-namespace sandbox::net::unix {
+namespace wip::net::unix {
 
 namespace {
 
@@ -12,7 +12,7 @@ constexpr int kSyscallError = -1;
 }  // namespace
 
 base_socket::base_socket(io::uninitialized_t) noexcept
-    : net::base_socket(sandbox::io::uninitialized_t{}) {}
+    : net::base_socket(wip::io::uninitialized_t{}) {}
 
 base_socket::base_socket(net::socktype type) noexcept(false)
     : net::base_socket(net::family::kUnix, type, net::protocol::kUnspecified) {}
@@ -80,4 +80,4 @@ net::bind_status base_socket::unlink_bind(
   return net::base_socket::bind(sockaddr);
 }
 
-}  // namespace sandbox::net::unix
+}  // namespace wip::net::unix

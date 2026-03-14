@@ -1,10 +1,10 @@
-#include <sandbox/utils/static_pimpl.hpp>
+#include <wip/utils/static_pimpl.hpp>
 
 #include <gtest/gtest.h>
 
 namespace tests::utils {
 
-namespace utils = sandbox::utils;
+namespace utils = wip::utils;
 
 TEST(utils_static_pimpl, size) {
   class alignas(16) impl final {};

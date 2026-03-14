@@ -3,7 +3,7 @@
 #include <cstddef>
 #include <type_traits>
 
-namespace sandbox::utils {
+namespace wip::utils {
 
 /**
  * @brief Pimpl without dynamic allocations
@@ -42,4 +42,4 @@ class strong_typedef {
   T underlying_;
 };
 
-}  // namespace sandbox::utils
+}  // namespace wip::utils

@@ -5,7 +5,7 @@
 #include <type_traits>
 #include <utility>
 
-namespace sandbox::utils {
+namespace wip::utils {
 
 /**
  * @brief Type-erased pimpl with value semantics
@@ -94,4 +94,4 @@ class unchecked_any final {
   void* ptr_;
 };
 
-}  // namespace sandbox::utils
+}  // namespace wip::utils

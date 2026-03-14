@@ -1,4 +1,4 @@
-#include <sandbox/queues/lockless_mpmc_queue.hpp>
+#include <wip/queues/lockless_mpmc_queue.hpp>
 
 #include <benchmark/benchmark.h>
 
@@ -7,8 +7,8 @@
 
 namespace benchmarks::queues {
 
-namespace queues = sandbox::queues;
-namespace utils = sandbox::utils;
+namespace queues = wip::queues;
+namespace utils = wip::utils;
 
 template <typename Value>
 using queue_t = queues::lockless_mpmc_queue<
