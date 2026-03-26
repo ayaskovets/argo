@@ -1,7 +1,7 @@
 #include <wip/queues/lockfree_spmc_queue.hpp>
-#include <wip/utils/leak_detector_allocator.hpp>
 
 #include <gtest/gtest.h>
+#include <swiss/leak_detector_allocator.hpp>
 
 #include "templates/queues.hpp"
 #include "templates/templates.hpp"
@@ -9,7 +9,6 @@
 namespace tests::queues {
 
 namespace queues = wip::queues;
-namespace utils = wip::utils;
 
 TEST(queues_lockfree_spmc_queue, size) {
   static_assert(sizeof(queues::lockfree_spmc_queue<int, std::size_t, 10>) ==
@@ -62,7 +61,7 @@ TEST_T(queues_lockfree_spmc_queue, non_copyable_item_type,
 
 using allocator_queue_t = queues::lockfree_spmc_queue<
     double, std::size_t, 2,
-    utils::leak_detector_allocator<
+    swiss::leak_detector_allocator<
         queues::detail::lockfree_spmc_queue_entry<double>, true>>;
 TEST_T(queues_lockfree_spmc_queue, allocator, allocator_queue_t);
 

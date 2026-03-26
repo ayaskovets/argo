@@ -4,10 +4,9 @@
 
 #include <chrono>
 #include <format>
+#include <poll.h>
 #include <unordered_map>
 #include <vector>
-
-#include <poll.h>
 
 namespace wip::io {
 
@@ -48,15 +47,15 @@ struct poller::impl final {
 
 poller::poller(callback_t callback) noexcept : callback_(std::move(callback)) {}
 
-poller::poller(poller&& that) noexcept = default;
+poller::poller(poller && that) noexcept = default;
 
-poller& poller::operator=(poller&& that) noexcept = default;
+poller & poller::operator=(poller && that) noexcept = default;
 
 poller::~poller() noexcept = default;
 
-bool poller::insert_or_assign(const io::fd& fd,
+bool poller::insert_or_assign(io::fd const & fd,
                               events_t events) noexcept(false) {
-  auto& [fds, fds_index_by_native_handle, fds_to_insert] = *pimpl_;
+  auto & [fds, fds_index_by_native_handle, fds_to_insert] = *pimpl_;
 
   auto fds_it = fds_index_by_native_handle.find(*fd.native_handle());
   if (fds_it != fds_index_by_native_handle.end()) [[unlikely]] {
@@ -66,7 +65,7 @@ bool poller::insert_or_assign(const io::fd& fd,
 
   auto fds_to_insert_it =
       std::find_if(fds_to_insert.begin(), fds_to_insert.end(),
-                   [&fd](const ::pollfd& pollfd) {
+                   [&fd](::pollfd const & pollfd) {
                      return pollfd.fd == *fd.native_handle();
                    });
   if (fds_to_insert_it != fds_to_insert.end()) [[unlikely]] {
@@ -89,8 +88,8 @@ bool poller::insert_or_assign(const io::fd& fd,
   return true;
 }
 
-bool poller::erase(const io::fd& fd) noexcept {
-  auto& [fds, fds_index_by_native_handle, fds_to_insert] = *pimpl_;
+bool poller::erase(io::fd const & fd) noexcept {
+  auto & [fds, fds_index_by_native_handle, fds_to_insert] = *pimpl_;
 
   auto it = fds_index_by_native_handle.find(*fd.native_handle());
   if (it != fds_index_by_native_handle.end()) [[likely]] {
@@ -101,7 +100,7 @@ bool poller::erase(const io::fd& fd) noexcept {
 
   auto fds_to_insert_it =
       std::find_if(fds_to_insert.begin(), fds_to_insert.end(),
-                   [&fd](const ::pollfd& pollfd) {
+                   [&fd](::pollfd const & pollfd) {
                      return pollfd.fd == *fd.native_handle();
                    });
   if (fds_to_insert_it != fds_to_insert.end()) [[unlikely]] {
@@ -127,7 +126,7 @@ std::size_t poller::poll() noexcept(false) {
 std::size_t poller::poll_for(std::size_t milliseconds) noexcept(false) {
   constexpr int kSyscallError = -1;
 
-  auto& [fds, fds_index_by_native_handle, fds_to_insert] = *pimpl_;
+  auto & [fds, fds_index_by_native_handle, fds_to_insert] = *pimpl_;
 
   if (!fds_to_insert.empty()) [[unlikely]] {
     fds.reserve(fds.size() + fds_to_insert.size());
@@ -163,8 +162,9 @@ std::size_t poller::poll_for(std::size_t milliseconds) noexcept(false) {
     } else {
       try {
         // TODO: remove reinterpret_cast
-        callback_(*std::launder(reinterpret_cast<const io::fd*>(&fds.at(i).fd)),
-                  from_native_events(fds.at(i).revents));
+        callback_(
+            *std::launder(reinterpret_cast<io::fd const *>(&fds.at(i).fd)),
+            from_native_events(fds.at(i).revents));
       } catch (...) {
         unhandled += 1;
       }

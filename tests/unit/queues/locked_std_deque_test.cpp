@@ -1,9 +1,8 @@
 #include <wip/queues/locked_std_deque.hpp>
-#include <wip/utils/leak_detector_allocator.hpp>
-
-#include <new>
 
 #include <gtest/gtest.h>
+#include <new>
+#include <swiss/leak_detector_allocator.hpp>
 
 #include "templates/queues.hpp"
 #include "templates/templates.hpp"
@@ -11,7 +10,6 @@
 namespace tests::queues {
 
 namespace queues = wip::queues;
-namespace utils = wip::utils;
 
 TEST(queues_locked_std_deque, size) {
   static_assert(sizeof(queues::locked_std_deque<int, std::size_t, 10>) == 208);
@@ -58,7 +56,7 @@ TEST_T(queues_locked_std_deque, non_copyable_item_type,
 
 using allocator_queue_t = queues::locked_std_deque<
     double, std::size_t, 2,
-    utils::leak_detector_allocator<
+    swiss::leak_detector_allocator<
         queues::detail::locked_std_deque_entry<
             double, std::hardware_destructive_interference_size>,
         true>>;

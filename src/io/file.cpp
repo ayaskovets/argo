@@ -2,9 +2,8 @@
 #include <wip/io/file.hpp>
 #include <wip/utils/syscall.hpp>
 
-#include <format>
-
 #include <fcntl.h>
+#include <format>
 #include <sys/stat.h>
 #include <unistd.h>
 
@@ -77,9 +76,9 @@ constexpr file::access_mode from_native_mode(int native_mode) noexcept {
   return file::access_mode::kRdonly;
 }
 
-constexpr int native_open(const std::filesystem::path& path, int native_flags,
+constexpr int native_open(std::filesystem::path const & path, int native_flags,
                           std::filesystem::perms perms) noexcept(false) {
-  const int retval = SYSCALL(::open(
+  int const retval = SYSCALL(::open(
       path.c_str(), native_flags,
       static_cast<std::underlying_type_t<std::filesystem::perms>>(perms)));
   if (retval == kSyscallError) {
@@ -92,20 +91,20 @@ constexpr int native_open(const std::filesystem::path& path, int native_flags,
 }  // namespace
 
 file file::open(
-    const std::filesystem::path& path, access_mode mode,
+    std::filesystem::path const & path, access_mode mode,
     open_flags_t open_flags,
     std::common_type_t<fd::flags_t, file::flags_t> flags) noexcept(false) {
-  const int native_flags = to_native_open_flags(open_flags) |
+  int const native_flags = to_native_open_flags(open_flags) |
                            to_native_flags(flags) | to_native_mode(mode);
   return file(io::fd::adopt(io::fd::impl(
       native_open(path, native_flags, std::filesystem::perms::none))));
 }
 
-file file::create(const std::filesystem::path& path, access_mode mode,
+file file::create(std::filesystem::path const & path, access_mode mode,
                   open_flags_t open_flags,
                   std::common_type_t<fd::flags_t, file::flags_t> flags,
                   std::filesystem::perms perms) noexcept(false) {
-  const int native_flags = to_native_open_flags(open_flags) |
+  int const native_flags = to_native_open_flags(open_flags) |
                            to_native_flags(flags) | to_native_mode(mode) |
                            O_CREAT | O_EXCL;
   return file(
@@ -123,7 +122,7 @@ void file::set_flags(
 
 std::common_type_t<fd::flags_t, file::flags_t> file::get_flags() const
     noexcept(false) {
-  const auto retval = SYSCALL(::fcntl(*native_handle(), F_GETFL));
+  auto const retval = SYSCALL(::fcntl(*native_handle(), F_GETFL));
   if (retval == kSyscallError) [[unlikely]] {
     throw std::runtime_error(
         std::format("failed to get flags on file: {}", std::strerror(errno)));
@@ -132,7 +131,7 @@ std::common_type_t<fd::flags_t, file::flags_t> file::get_flags() const
 }
 
 file::access_mode file::get_access_mode() const noexcept(false) {
-  const auto retval = SYSCALL(::fcntl(*native_handle(), F_GETFL));
+  auto const retval = SYSCALL(::fcntl(*native_handle(), F_GETFL));
   if (retval == kSyscallError) [[unlikely]] {
     throw std::runtime_error(std::format(
         "failed to get access mode on file: {}", std::strerror(errno)));
@@ -151,7 +150,7 @@ void file::set_offset(std::int64_t relative_bytes,
 }
 
 std::size_t file::get_offset() noexcept(false) {
-  const ::off_t retval = SYSCALL(::lseek(*native_handle(), 0, SEEK_CUR));
+  ::off_t const retval = SYSCALL(::lseek(*native_handle(), 0, SEEK_CUR));
   if (retval == static_cast<::off_t>(kSyscallError)) {
     throw std::runtime_error(
         std::format("failed to seek fd: {}", std::strerror(errno)));
@@ -176,6 +175,6 @@ void file::truncate(std::size_t bytes) noexcept(false) {
   }
 }
 
-file::file(io::fd&& fd) noexcept : io::fd(std::move(fd)) {}
+file::file(io::fd && fd) noexcept : io::fd(std::move(fd)) {}
 
 }  // namespace wip::io

@@ -1,29 +1,28 @@
 #include <wip/net/inet6/ip.hpp>
 #include <wip/utils/syscall.hpp>
 
+#include <arpa/inet.h>
 #include <cerrno>
 #include <format>
 
-#include <arpa/inet.h>
-
 namespace wip::net::inet6 {
 
-const ip& ip::kLoopback() noexcept {
-  static const ip ip("::1");
+ip const & ip::kLoopback() noexcept {
+  static ip const ip("::1");
   return ip;
 }
 
-const ip& ip::kAny() noexcept {
-  static const ip ip("::");
+ip const & ip::kAny() noexcept {
+  static ip const ip("::");
   return ip;
 }
 
-const ip& ip::kNonRoutable() noexcept {
-  static const ip ip("2001:db8::");  ///< Reserved for documentation
+ip const & ip::kNonRoutable() noexcept {
+  static ip const ip("2001:db8::");  ///< Reserved for documentation
   return ip;
 }
 
-ip::ip(std::span<const std::byte, 16> bytes, network_byte_order_t) noexcept {
+ip::ip(std::span<std::byte const, 16> bytes, network_byte_order_t) noexcept {
   std::memcpy(data_.data(), bytes.data(), bytes.size());
 }
 
@@ -40,7 +39,7 @@ ip::ip(std::string_view string) noexcept(false) {
   }
 }
 
-const std::array<std::byte, 16>& ip::get_bytes(
+std::array<std::byte, 16> const & ip::get_bytes(
     network_byte_order_t) const noexcept {
   return data_;
 }

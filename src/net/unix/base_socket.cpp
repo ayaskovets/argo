@@ -18,7 +18,7 @@ base_socket::base_socket(net::socktype type) noexcept(false)
     : net::base_socket(net::family::kUnix, type, net::protocol::kUnspecified) {}
 
 base_socket::~base_socket() noexcept {
-  static const base_socket kUninitialized(io::uninitialized_t{});
+  static base_socket const kUninitialized(io::uninitialized_t{});
   if (*this == kUninitialized) {
     return;
   }
@@ -27,7 +27,7 @@ base_socket::~base_socket() noexcept {
   try {
     get_bind_sockaddr(sockaddr);
     if (!sockaddr.get_path().empty()) {
-      [[maybe_unused]] const auto retval =
+      [[maybe_unused]] auto const retval =
           SYSCALL(::unlink(sockaddr.get_path().c_str()));
     }
   } catch (...) {
@@ -35,7 +35,7 @@ base_socket::~base_socket() noexcept {
 }
 
 void base_socket::unlink_close() noexcept(false) {
-  static const base_socket kUninitialized(io::uninitialized_t{});
+  static base_socket const kUninitialized(io::uninitialized_t{});
   if (*this == kUninitialized) {
     return;
   }
@@ -43,7 +43,7 @@ void base_socket::unlink_close() noexcept(false) {
   net::unix::sockaddr sockaddr(net::unix::sockaddr::kEmpty());
   get_bind_sockaddr(sockaddr);
   if (!sockaddr.get_path().empty()) {
-    const auto retval = SYSCALL(::unlink(sockaddr.get_path().c_str()));
+    auto const retval = SYSCALL(::unlink(sockaddr.get_path().c_str()));
     if (retval == kSyscallError) {
       if (errno != ENOENT) {
         throw std::runtime_error(
@@ -56,7 +56,7 @@ void base_socket::unlink_close() noexcept(false) {
 }
 
 net::bind_status base_socket::bind(
-    const net::unix::sockaddr& sockaddr) noexcept(false) {
+    net::unix::sockaddr const & sockaddr) noexcept(false) {
   switch (net::base_socket::bind(sockaddr)) {
     case net::bind_status::kInUse:
       if (get_reuseaddr()) {
@@ -69,8 +69,8 @@ net::bind_status base_socket::bind(
 }
 
 net::bind_status base_socket::unlink_bind(
-    const net::unix::sockaddr& sockaddr) noexcept(false) {
-  const auto retval = SYSCALL(::unlink(sockaddr.get_path().c_str()));
+    net::unix::sockaddr const & sockaddr) noexcept(false) {
+  auto const retval = SYSCALL(::unlink(sockaddr.get_path().c_str()));
   if (retval == kSyscallError) {
     if (errno != ENOENT) {
       throw std::runtime_error(

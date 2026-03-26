@@ -1,7 +1,7 @@
 #include <wip/queues/single_threaded_queue.hpp>
-#include <wip/utils/leak_detector_allocator.hpp>
 
 #include <gtest/gtest.h>
+#include <swiss/leak_detector_allocator.hpp>
 
 #include "templates/queues.hpp"
 #include "templates/templates.hpp"
@@ -9,7 +9,6 @@
 namespace tests::queues {
 
 namespace queues = wip::queues;
-namespace utils = wip::utils;
 
 TEST(queues_single_threaded_queue, size) {
   static_assert(sizeof(queues::single_threaded_queue<int, std::size_t, 10>) ==
@@ -61,7 +60,7 @@ TEST_T(queues_single_threaded_queue, non_copyable_item_type,
 
 using allocator_queue_t = queues::single_threaded_queue<
     double, std::size_t, 2,
-    utils::leak_detector_allocator<
+    swiss::leak_detector_allocator<
         queues::detail::single_threaded_queue_entry<double>, true>>;
 TEST_T(queues_single_threaded_queue, allocator, allocator_queue_t);
 

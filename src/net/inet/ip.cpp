@@ -1,30 +1,29 @@
 #include <wip/net/inet/ip.hpp>
 #include <wip/utils/syscall.hpp>
 
+#include <arpa/inet.h>
 #include <cerrno>
 #include <format>
 
-#include <arpa/inet.h>
-
 namespace wip::net::inet {
 
-const ip& ip::kLoopback() noexcept {
-  static const ip ip(INADDR_LOOPBACK);
+ip const & ip::kLoopback() noexcept {
+  static ip const ip(INADDR_LOOPBACK);
   return ip;
 }
 
-const ip& ip::kAny() noexcept {
-  static const ip ip(INADDR_ANY);
+ip const & ip::kAny() noexcept {
+  static ip const ip(INADDR_ANY);
   return ip;
 }
 
-const ip& ip::kBroadcast() noexcept {
-  static const ip ip(INADDR_BROADCAST);
+ip const & ip::kBroadcast() noexcept {
+  static ip const ip(INADDR_BROADCAST);
   return ip;
 }
 
-const ip& ip::kNonRoutable() noexcept {
-  static const ip ip("192.0.2.0");  ///< TEST-NET-1
+ip const & ip::kNonRoutable() noexcept {
+  static ip const ip("192.0.2.0");  ///< TEST-NET-1
   return ip;
 }
 

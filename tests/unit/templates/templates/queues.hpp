@@ -1,17 +1,13 @@
 #pragma once
 
-#include <wip/utils/leak_detector_allocator.hpp>
-
 #include <algorithm>
+#include <gtest/gtest.h>
 #include <latch>
 #include <numeric>
+#include <swiss/leak_detector_allocator.hpp>
 #include <thread>
 
-#include <gtest/gtest.h>
-
 namespace tests::queues::templates {
-
-namespace utils = wip::utils;
 
 template <typename Queue>
   requires(std::is_same_v<typename Queue::value_type, int>)
@@ -92,7 +88,7 @@ constexpr void blocking_push() noexcept {
   queue.push(1);
   queue.push(2);
 
-  const std::jthread consumer([&queue] {
+  std::jthread const consumer([&queue] {
     int value;
     EXPECT_TRUE(queue.try_pop(value));
     EXPECT_EQ(value, 1);
@@ -107,7 +103,7 @@ template <typename Queue>
 constexpr void blocking_pop() noexcept {
   Queue queue(2);
 
-  const std::jthread producer([&queue] { EXPECT_TRUE(queue.try_push(42)); });
+  std::jthread const producer([&queue] { EXPECT_TRUE(queue.try_push(42)); });
 
   EXPECT_EQ(queue.pop(), 42);
 }
@@ -179,7 +175,7 @@ constexpr void non_copyable_item_type() noexcept {
 
 template <typename Queue>
   requires(std::is_same_v<typename Queue::allocator_type,
-                          utils::leak_detector_allocator<
+                          swiss::leak_detector_allocator<
                               typename Queue::allocator_value_type, true>>)
 constexpr void allocator() noexcept {
   typename Queue::allocator_type allocator;
@@ -204,8 +200,8 @@ constexpr void allocator() noexcept {
 
 template <typename Queue>
   requires(std::is_same_v<typename Queue::value_type, int>)
-constexpr void nonblocking(const auto& param) noexcept {
-  const auto& [items_size, queue_size, producers, consumers] = param;
+constexpr void nonblocking(auto const & param) noexcept {
+  auto const & [items_size, queue_size, producers, consumers] = param;
 
   Queue queue(queue_size);
   std::latch latch(producers + consumers);
@@ -213,10 +209,10 @@ constexpr void nonblocking(const auto& param) noexcept {
   std::atomic<std::size_t> pushed_items_count = 0;
   std::vector<int> pushed_items(items_size);
   std::iota(pushed_items.begin(), pushed_items.end(), 0);
-  const auto producer = [&] {
+  auto const producer = [&] {
     latch.arrive_and_wait();
     while (true) {
-      const std::size_t index = pushed_items_count.fetch_add(1);
+      std::size_t const index = pushed_items_count.fetch_add(1);
       if (index >= items_size) {
         return;
       }
@@ -226,10 +222,10 @@ constexpr void nonblocking(const auto& param) noexcept {
 
   std::atomic<std::size_t> popped_items_count = 0;
   std::vector<int> popped_items(items_size);
-  const auto consumer = [&] {
+  auto const consumer = [&] {
     latch.arrive_and_wait();
     while (true) {
-      const std::size_t index = popped_items_count.fetch_add(1);
+      std::size_t const index = popped_items_count.fetch_add(1);
       if (index >= items_size) {
         return;
       }
@@ -245,7 +241,7 @@ constexpr void nonblocking(const auto& param) noexcept {
   for (std::size_t i = 0; i < consumers; ++i) {
     threads.emplace_back(consumer);
   }
-  for (auto& thread : threads) {
+  for (auto & thread : threads) {
     thread.join();
   }
 
@@ -255,8 +251,8 @@ constexpr void nonblocking(const auto& param) noexcept {
 
 template <typename Queue>
   requires(std::is_same_v<typename Queue::value_type, int>)
-constexpr void blocking(const auto& param) noexcept {
-  const auto& [items_size, queue_size, producers, consumers] = param;
+constexpr void blocking(auto const & param) noexcept {
+  auto const & [items_size, queue_size, producers, consumers] = param;
 
   Queue queue(queue_size);
   std::latch latch(producers + consumers);
@@ -264,10 +260,10 @@ constexpr void blocking(const auto& param) noexcept {
   std::atomic<std::size_t> pushed_items_count = 0;
   std::vector<int> pushed_items(items_size);
   std::iota(pushed_items.begin(), pushed_items.end(), 0);
-  const auto producer = [&] {
+  auto const producer = [&] {
     latch.arrive_and_wait();
     while (true) {
-      const std::size_t index = pushed_items_count.fetch_add(1);
+      std::size_t const index = pushed_items_count.fetch_add(1);
       if (index >= items_size) {
         return;
       }
@@ -277,10 +273,10 @@ constexpr void blocking(const auto& param) noexcept {
 
   std::atomic<std::size_t> popped_items_count = 0;
   std::vector<int> popped_items(items_size);
-  const auto consumer = [&] {
+  auto const consumer = [&] {
     latch.arrive_and_wait();
     while (true) {
-      const std::size_t index = popped_items_count.fetch_add(1);
+      std::size_t const index = popped_items_count.fetch_add(1);
       if (index >= items_size) {
         return;
       }
@@ -296,7 +292,7 @@ constexpr void blocking(const auto& param) noexcept {
   for (std::size_t i = 0; i < consumers; ++i) {
     threads.emplace_back(consumer);
   }
-  for (auto& thread : threads) {
+  for (auto & thread : threads) {
     thread.join();
   }
 

@@ -3,9 +3,8 @@
 
 #include <cerrno>
 #include <format>
-#include <span>
-
 #include <netdb.h>
+#include <span>
 
 namespace wip::net {
 
@@ -37,11 +36,11 @@ constexpr int to_native_type(net::protocol protocol) noexcept(false) {
 }
 
 std::variant<net::inet::sockaddr, net::inet6::sockaddr> to_sockaddr(
-    const ::addrinfo &addrinfo) noexcept(false) {
+    ::addrinfo const & addrinfo) noexcept(false) {
   switch (addrinfo.ai_family) {
     case AF_INET: {
-      const ::sockaddr_in *sockaddr =
-          reinterpret_cast<const ::sockaddr_in *>(addrinfo.ai_addr);
+      ::sockaddr_in const * sockaddr =
+          reinterpret_cast<::sockaddr_in const *>(addrinfo.ai_addr);
 
       return net::inet::sockaddr(
           net::inet::ip(static_cast<std::uint32_t>(sockaddr->sin_addr.s_addr),
@@ -49,11 +48,11 @@ std::variant<net::inet::sockaddr, net::inet6::sockaddr> to_sockaddr(
           net::inet::port(sockaddr->sin_port, net::network_byte_order_t{}));
     }
     case AF_INET6: {
-      const ::sockaddr_in6 *sockaddr =
-          reinterpret_cast<const ::sockaddr_in6 *>(addrinfo.ai_addr);
+      ::sockaddr_in6 const * sockaddr =
+          reinterpret_cast<::sockaddr_in6 const *>(addrinfo.ai_addr);
 
       return net::inet6::sockaddr(
-          net::inet6::ip(std::span(reinterpret_cast<const std::byte(&)[16]>(
+          net::inet6::ip(std::span(reinterpret_cast<std::byte const(&)[16]>(
                              sockaddr->sin6_addr)),
                          net::network_byte_order_t{}),
           net::inet6::port(sockaddr->sin6_port, net::network_byte_order_t{}));
@@ -72,13 +71,13 @@ std::vector<std::variant<net::inet::sockaddr, net::inet6::sockaddr>> resolve(
   std::unique_ptr<::addrinfo, decltype(&SYSCALL(::freeaddrinfo))> results_raii(
       nullptr, SYSCALL(::freeaddrinfo));
 
-  const ::addrinfo hints{
+  ::addrinfo const hints{
       .ai_family = to_native_family(family),
       .ai_socktype = to_native_type(protocol),
   };
 
-  ::addrinfo *results = nullptr;
-  const auto retval =
+  ::addrinfo * results = nullptr;
+  auto const retval =
       SYSCALL(::getaddrinfo(hostname.data(), nullptr, &hints, &results));
   switch (retval) {
     case 0:
@@ -96,7 +95,7 @@ std::vector<std::variant<net::inet::sockaddr, net::inet6::sockaddr>> resolve(
 
   std::vector<std::variant<net::inet::sockaddr, net::inet6::sockaddr>>
       sockaddrs;
-  for (const ::addrinfo *ptr = results; ptr; ptr = ptr->ai_next) {
+  for (::addrinfo const * ptr = results; ptr; ptr = ptr->ai_next) {
     sockaddrs.emplace_back(to_sockaddr(*ptr));
   }
   return sockaddrs;

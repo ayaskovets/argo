@@ -1,11 +1,30 @@
-set(TARGET tests)
+cmake_minimum_required(VERSION 3.23.0)
+project(wip-unit-tests LANGUAGES CXX)
+
+# ------------------------------------------------------------------------------
+# dependencies
+# ------------------------------------------------------------------------------
 
 find_package(GTest REQUIRED)
-set(CMAKE_GTEST_DISCOVER_TESTS_DISCOVERY_MODE PRE_TEST)
 
-add_executable(${TARGET})
-target_sources(${TARGET}
-    PRIVATE
+if(PROJECT_IS_TOP_LEVEL)
+  find_package(wip REQUIRED)
+endif()
+
+include(CTest)
+include(GoogleTest)
+
+# ------------------------------------------------------------------------------
+# general settings and options
+# ------------------------------------------------------------------------------
+
+add_executable(wip-unit-tests)
+
+# ------------------------------------------------------------------------------
+# sources
+# ------------------------------------------------------------------------------
+
+set(SOURCES
     datetime/iso8601_test.cpp
     io/fd_test.cpp
     io/file_test.cpp
@@ -35,22 +54,14 @@ target_sources(${TARGET}
     queues/lockless_mpmc_queue_test.cpp
     queues/queue_test.cpp
     queues/single_threaded_queue_test.cpp
-    queues/waitfree_spsc_queue_test.cpp
-    utils/conditionally_runtime_test.cpp
-    utils/leak_detector_allocator_test.cpp
-    utils/predicates_test.cpp
-    utils/static_pimpl_test.cpp
-    utils/strong_typedef_test.cpp
-    utils/unchecked_any_test.cpp
-)
-target_compile_features(${TARGET}
-    PRIVATE cxx_std_23
-)
-target_include_directories(${TARGET}
-    PRIVATE templates
-)
-target_link_libraries(${TARGET}
-    PRIVATE wip GTest::gtest_main
-)
+    queues/waitfree_spsc_queue_test.cpp)
 
-gtest_discover_tests(${TARGET})
+# ------------------------------------------------------------------------------
+# target
+# ------------------------------------------------------------------------------
+
+target_sources(wip-unit-tests PRIVATE ${SOURCES})
+
+target_link_libraries(wip-unit-tests PRIVATE wip::wip GTest::gtest_main)
+
+gtest_discover_tests(wip-unit-tests)
