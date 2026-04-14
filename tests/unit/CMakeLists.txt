@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.23.0)
+cmake_minimum_required(VERSION 3.25.0)
 project(wip-unit-tests LANGUAGES CXX)
 
 # ------------------------------------------------------------------------------
@@ -45,16 +45,7 @@ set(SOURCES
     net/resolve_test.cpp
     net/unix/dgram/socket_test.cpp
     net/unix/sockaddr_test.cpp
-    net/unix/stream/socket_test.cpp
-    queues/locked_mpmc_queue_test.cpp
-    queues/locked_std_deque_test.cpp
-    queues/lockfree_mpmc_queue_test.cpp
-    queues/lockfree_mpsc_queue_test.cpp
-    queues/lockfree_spmc_queue_test.cpp
-    queues/lockless_mpmc_queue_test.cpp
-    queues/queue_test.cpp
-    queues/single_threaded_queue_test.cpp
-    queues/waitfree_spsc_queue_test.cpp)
+    net/unix/stream/socket_test.cpp)
 
 # ------------------------------------------------------------------------------
 # target

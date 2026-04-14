@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.23.0)
+cmake_minimum_required(VERSION 3.25.0)
 project(
   wip
   VERSION 0.0.1
@@ -8,9 +8,7 @@ project(
 # dependencies
 # ------------------------------------------------------------------------------
 
-find_package(
-  swiss REQUIRED PATHS
-  "/Users/ayaskovets/Private/wip_personal/code/swiss/build/install/install")
+find_package(swiss REQUIRED PATHS)
 
 # ------------------------------------------------------------------------------
 # general settings and options
@@ -102,15 +100,6 @@ set(HEADERS
     include/wip/io/uninitialized.hpp
     include/wip/io/poller.hpp
     include/wip/utils/syscall.hpp
-    include/wip/queues/lockfree_mpsc_queue.hpp
-    include/wip/queues/locked_std_deque.hpp
-    include/wip/queues/lockfree_mpmc_queue.hpp
-    include/wip/queues/lockfree_spmc_queue.hpp
-    include/wip/queues/locked_mpmc_queue.hpp
-    include/wip/queues/waitfree_spsc_queue.hpp
-    include/wip/queues/queue.hpp
-    include/wip/queues/lockless_mpmc_queue.hpp
-    include/wip/queues/single_threaded_queue.hpp
     include/wip/logging/logger.hpp
     include/wip/logging/writer.hpp
     include/wip/logging/renderer.hpp
