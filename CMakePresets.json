@@ -2,7 +2,7 @@
     "version": 6,
     "cmakeMinimumRequired": {
         "major": 3,
-        "minor": 23,
+        "minor": 25,
         "patch": 0
     },
     "configurePresets": [
@@ -91,7 +91,7 @@
             "displayName": "Configure static library (release)",
             "inherits": [
                 "base",
-                "config-debug",
+                "config-release",
                 "type-static",
                 "with-tests",
                 "with-benchmarks"
@@ -172,7 +172,7 @@
     ],
     "testPresets": [
         {
-            "name": "base",
+            "name": "base-test",
             "hidden": true,
             "output": {
                 "outputOnFailure": true
@@ -180,27 +180,59 @@
             "execution": {
                 "noTestsAction": "error",
                 "stopOnFailure": false
+            },
+            "filter": {
+                "exclude": {
+                    "label": "benchmark"
+                }
+            }
+        },
+        {
+            "name": "base-benchmark",
+            "hidden": true,
+            "output": {
+                "outputOnFailure": true,
+                "verbosity": "verbose"
+            },
+            "execution": {
+                "noTestsAction": "error",
+                "stopOnFailure": false
+            },
+            "filter": {
+                "include": {
+                    "label": "benchmark"
+                }
             }
         },
         {
             "name": "shared-debug",
             "configurePreset": "shared-debug",
-            "inherits": "base"
+            "inherits": "base-test"
         },
         {
             "name": "shared-release",
             "configurePreset": "shared-release",
-            "inherits": "base"
+            "inherits": "base-test"
         },
         {
             "name": "static-debug",
             "configurePreset": "static-debug",
-            "inherits": "base"
+            "inherits": "base-test"
         },
         {
             "name": "static-release",
             "configurePreset": "static-release",
-            "inherits": "base"
+            "inherits": "base-test"
+        },
+        {
+            "name": "static-benchmark",
+            "configurePreset": "static-release",
+            "inherits": "base-benchmark"
+        },
+        {
+            "name": "shared-benchmark",
+            "configurePreset": "shared-release",
+            "inherits": "base-benchmark"
         }
     ],
     "workflowPresets": [
@@ -235,6 +267,40 @@
                 {
                     "type": "test",
                     "name": "shared-debug"
+                }
+            ]
+        },
+        {
+            "name": "static-benchmark",
+            "steps": [
+                {
+                    "type": "configure",
+                    "name": "static-release"
+                },
+                {
+                    "type": "build",
+                    "name": "static-release"
+                },
+                {
+                    "type": "test",
+                    "name": "static-benchmark"
+                }
+            ]
+        },
+        {
+            "name": "shared-benchmark",
+            "steps": [
+                {
+                    "type": "configure",
+                    "name": "shared-release"
+                },
+                {
+                    "type": "build",
+                    "name": "shared-release"
+                },
+                {
+                    "type": "test",
+                    "name": "shared-benchmark"
                 }
             ]
         },

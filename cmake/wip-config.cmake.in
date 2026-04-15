@@ -1,7 +1,10 @@
 @PACKAGE_INIT@
 
-if(NOT TARGET wip::wip)
-  include("${CMAKE_CURRENT_LIST_DIR}/wip-targets.cmake")
-endif()
+include(CMakeFindDependencyMacro)
+
+find_dependency(swiss)
+find_dependency(flow)
+
+include("${CMAKE_CURRENT_LIST_DIR}/wip-targets.cmake")
 
 check_required_components(wip)

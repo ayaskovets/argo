@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.23.0)
+cmake_minimum_required(VERSION 3.25.0)
 project(wip-benchmarks LANGUAGES CXX)
 
 # ------------------------------------------------------------------------------
@@ -25,7 +25,6 @@ add_executable(wip-benchmarks)
 # ------------------------------------------------------------------------------
 
 set(SOURCES
-    datetime/iso8601_bench.cpp
     logging/logger_bench.cpp
     net/inet/sockaddr_bench.cpp
     net/inet/tcp/socket_bench.cpp
@@ -37,14 +36,8 @@ set(SOURCES
     net/unix/dgram/socket_bench.cpp
     net/unix/sockaddr_bench.cpp
     net/unix/stream/socket_bench.cpp
-    queues/locked_mpmc_queue_bench.cpp
-    queues/locked_std_deque_bench.cpp
-    queues/lockfree_mpmc_queue_bench.cpp
-    queues/lockfree_mpsc_queue_bench.cpp
-    queues/lockfree_spmc_queue_bench.cpp
-    queues/lockless_mpmc_queue_bench.cpp
-    queues/single_threaded_queue_bench.cpp
-    queues/waitfree_spsc_queue_bench.cpp
+    templates/net.hpp
+    templates/templates.hpp
     main.cpp)
 
 # ------------------------------------------------------------------------------
@@ -54,3 +47,12 @@ set(SOURCES
 target_sources(wip-benchmarks PRIVATE ${SOURCES})
 
 target_link_libraries(wip-benchmarks PRIVATE wip::wip benchmark::benchmark)
+
+target_include_directories(wip-benchmarks PRIVATE ${CMAKE_CURRENT_LIST_DIR})
+
+# ------------------------------------------------------------------------------
+# workflow automation
+# ------------------------------------------------------------------------------
+
+add_test(NAME flow-benchmarks COMMAND flow-benchmarks --benchmark_color=true)
+set_tests_properties(flow-benchmarks PROPERTIES LABELS benchmark)

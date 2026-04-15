@@ -25,7 +25,6 @@ add_executable(wip-unit-tests)
 # ------------------------------------------------------------------------------
 
 set(SOURCES
-    datetime/iso8601_test.cpp
     io/fd_test.cpp
     io/file_test.cpp
     io/poller_test.cpp

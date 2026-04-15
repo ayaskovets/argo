@@ -8,7 +8,8 @@ project(
 # dependencies
 # ------------------------------------------------------------------------------
 
-find_package(swiss REQUIRED PATHS)
+find_package(swiss REQUIRED)
+# find_package(flow REQUIRED)
 
 # ------------------------------------------------------------------------------
 # general settings and options
@@ -30,7 +31,6 @@ generate_export_header(wip EXPORT_FILE_NAME
 
 set(SOURCES
     src/async/executors/current_executor.cpp
-    src/datetime/iso8601.cpp
     src/io/fd.cpp
     src/io/file.cpp
     src/io/poller.cpp
@@ -76,7 +76,6 @@ set(HEADERS
     include/wip/net/inet6/tcp/socket.hpp
     include/wip/net/inet6/ip.hpp
     include/wip/net/inet6/sockaddr.hpp
-    include/wip/datetime/iso8601.hpp
     include/wip/async/task.hpp
     include/wip/async/channel.hpp
     include/wip/async/executors/current_executor.hpp
