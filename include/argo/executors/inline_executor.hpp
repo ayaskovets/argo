@@ -19,14 +19,19 @@ class inline_executor final : public swiss::non_copyable,
       : in_channel_(in_channel), out_channel_(out_channel) {}
 
  public:
-  constexpr auto in_channel() noexcept -> InChannel & { return in_channel_; }
-  constexpr auto out_channel() noexcept -> OutChannel & { return out_channel_; }
+  constexpr auto in_channel() const noexcept -> InChannel & {
+    return in_channel_;
+  }
+  constexpr auto out_channel() const noexcept -> OutChannel & {
+    return out_channel_;
+  }
 
  public:
-  constexpr void run_once() noexcept {
+  constexpr void run_once() noexcept(
+      std::is_nothrow_invocable_v<typename InChannel::value_type>) {
     typename InChannel::value_type task{};
     if (in_channel_.try_pop(task)) {
-      this_executor::resume(*this, task);
+      this_executor::resume(*this, std::move(task));
     }
   }
 

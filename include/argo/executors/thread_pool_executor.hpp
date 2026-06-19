@@ -25,19 +25,25 @@ class thread_pool_executor final : public swiss::non_copyable,
   }
 
  public:
-  constexpr auto in_channel() noexcept -> InChannel & { return in_channel_; }
-  constexpr auto out_channel() noexcept -> OutChannel & { return out_channel_; }
+  constexpr auto in_channel() const noexcept -> InChannel & {
+    return in_channel_;
+  }
+  constexpr auto out_channel() const noexcept -> OutChannel & {
+    return out_channel_;
+  }
 
  public:
   constexpr void run_detached(std::stop_token const & stop_token) {
-    auto const worker_task = [this, &stop_token] {
-      while (!stop_token.stop_requested()) {
-        typename InChannel::value_type task{};
-        if (in_channel_.try_pop(task)) {
-          this_executor::resume(*this, task);
-        }
-      }
-    };
+    auto const worker_task =
+        [this, &stop_token] noexcept(
+            std::is_nothrow_invocable_v<typename InChannel::value_type>) {
+          while (!stop_token.stop_requested()) {
+            typename InChannel::value_type task{};
+            if (in_channel_.try_pop(task)) {
+              this_executor::resume(*this, std::move(task));
+            }
+          }
+        };
 
     workers_.clear();
     for (std::size_t i = 0; i < workers_.capacity(); ++i) {
