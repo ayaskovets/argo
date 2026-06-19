@@ -2,7 +2,7 @@
 
 #include <concepts>
 
-namespace wip::concepts {
+namespace argo::concepts {
 
 /**
  * @brief Channel for async communication between schedulers and
@@ -29,4 +29,4 @@ template <typename T,
 concept channel_lvalue_reference =
     std::is_lvalue_reference_v<T> && channel<std::remove_reference_t<T>, Value>;
 
-}  // namespace wip::concepts
+}  // namespace argo::concepts

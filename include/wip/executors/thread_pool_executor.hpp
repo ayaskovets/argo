@@ -8,7 +8,7 @@
 #include "../channel.hpp"
 #include "current_executor.hpp"
 
-namespace wip::executors {
+namespace argo::executors {
 
 /**
  * @brief Thread pool executor
@@ -55,4 +55,4 @@ class thread_pool_executor final : public swiss::non_copyable,
   std::vector<std::jthread> workers_;
 };
 
-}  // namespace wip::executors
+}  // namespace argo::executors

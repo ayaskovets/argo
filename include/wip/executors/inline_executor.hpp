@@ -5,7 +5,7 @@
 #include "../channel.hpp"
 #include "current_executor.hpp"
 
-namespace wip::executors {
+namespace argo::executors {
 
 /**
  * @brief Executor analogous to std::this_thread
@@ -56,4 +56,4 @@ class inline_executor final : public swiss::non_copyable,
   // NOLINTEND(cppcoreguidelines-avoid-const-or-ref-data-members)
 };
 
-}  // namespace wip::executors
+}  // namespace argo::executors

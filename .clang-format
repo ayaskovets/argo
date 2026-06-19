@@ -7,7 +7,7 @@ Language: Cpp
 IncludeBlocks: Regroup
 SortIncludes: true
 IncludeCategories:
-  - Regex: '^<wip/.+>'
+  - Regex: '^<argo/.+>'
     Priority: 1
     SortPriority: 1
   - Regex: '^<[a-z_]+>'
