@@ -4,6 +4,9 @@
 
 namespace argo::awaiters {
 
+/**
+ * @brief Yield execution to another task
+ */
 class yield_awaiter final {
  public:
   [[nodiscard]] constexpr auto await_ready() const noexcept -> bool {
