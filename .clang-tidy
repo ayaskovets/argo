@@ -4,6 +4,10 @@ Checks: "*,
         -google-readability-avoid-underscore-in-googletest-name,
         -readability-redundant-access-specifiers,
         -readability-named-parameter,
-        -hicpp-named-parameter"
+        -hicpp-named-parameter,
+        -hicpp-special-member-functions,
+        -cppcoreguidelines-avoid-magic-numbers,
+        -cppcoreguidelines-non-private-member-variables-in-classes,
+        -altera-unroll-loops"
 FormatStyle: none
 WarningsAsErrors: "*"
