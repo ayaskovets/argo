@@ -6,7 +6,7 @@
 #include <swiss/mixins.hpp>
 
 #include "../channel.hpp"
-#include "current_executor.hpp"
+#include "../this_executor.hpp"
 
 namespace argo::executors {
 
@@ -34,7 +34,7 @@ class thread_pool_executor final : public swiss::non_copyable,
       while (!stop_token.stop_requested()) {
         typename InChannel::value_type task{};
         if (in_channel_.try_pop(task)) {
-          current_executor::resume(*this, task);
+          this_executor::resume(*this, task);
         }
       }
     };

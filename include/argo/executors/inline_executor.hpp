@@ -3,7 +3,7 @@
 #include <swiss/mixins.hpp>
 
 #include "../channel.hpp"
-#include "current_executor.hpp"
+#include "../this_executor.hpp"
 
 namespace argo::executors {
 
@@ -26,27 +26,8 @@ class inline_executor final : public swiss::non_copyable,
   constexpr void run_once() noexcept {
     typename InChannel::value_type task{};
     if (in_channel_.try_pop(task)) {
-      current_executor::resume(*this, task);
+      this_executor::resume(*this, task);
     }
-  }
-
-  template <std::invocable<bool> Predicate>
-  constexpr void run_while(Predicate const & predicate) noexcept(
-      std::is_nothrow_invocable_v<Predicate>) {
-    while (predicate()) {
-      run_once();
-    }
-  }
-
-  template <typename Clock>
-  constexpr void run_until(
-      typename Clock::time_point const time_point) noexcept {
-    run_while([time_point] { return Clock::now() < time_point; });
-  }
-
-  template <typename Duration>
-  constexpr void run_for(Duration duration) noexcept {
-    run_until(std::chrono::steady_clock::now() + duration);
   }
 
  private:
