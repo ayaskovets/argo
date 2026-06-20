@@ -14,21 +14,30 @@ namespace argo::schedulers {
  * @brief Task scheduler for scheduling tasks to run after some specified time
  * point
  */
-template <typename Clock, typename InChannel,
+template <typename Clock,
+          concepts::channel<
+              std::pair<typename Clock::time_point, std::coroutine_handle<>>>
+              InChannel,
           concepts::channel<std::coroutine_handle<>> OutChannel,
           typename Allocator = std::allocator<typename InChannel::value_type>>
-  requires(concepts::channel<InChannel, std::pair<typename Clock::time_point,
-                                                  std::coroutine_handle<>>>)
 class timer_scheduler final : public swiss::non_copyable,
                               public swiss::non_movable {
+ public:
+  using value_type =
+      std::pair<typename Clock::time_point, std::coroutine_handle<>>;
+
  public:
   constexpr timer_scheduler(InChannel & in_channel, OutChannel & out_channel,
                             Allocator const & allocator = Allocator()) noexcept
       : in_channel_(in_channel), out_channel_(out_channel), queue_(allocator) {}
 
  public:
-  constexpr auto in_channel() noexcept -> InChannel & { return in_channel_; }
-  constexpr auto out_channel() noexcept -> OutChannel & { return out_channel_; }
+  constexpr auto in_channel() const noexcept -> InChannel & {
+    return in_channel_;
+  }
+  constexpr auto out_channel() const noexcept -> OutChannel & {
+    return out_channel_;
+  }
 
  public:
   constexpr void run_once() noexcept {
@@ -38,8 +47,9 @@ class timer_scheduler final : public swiss::non_copyable,
        * std::optional::operator= is not marked noexcept for nothrow copyable
        * types unfortunately
        */
-      typename InChannel::value_type in_value{};
-      if (in_channel_.try_pop(in_value)) {
+
+      if (typename InChannel::value_type in_value{};
+          in_channel_.try_pop(in_value)) {
         in_value_.emplace(std::move(in_value));
       }
     }

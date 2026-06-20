@@ -29,8 +29,7 @@ class inline_executor final : public swiss::non_copyable,
  public:
   constexpr void run_once() noexcept(
       std::is_nothrow_invocable_v<typename InChannel::value_type>) {
-    typename InChannel::value_type task{};
-    if (in_channel_.try_pop(task)) {
+    if (typename InChannel::value_type task{}; in_channel_.try_pop(task)) {
       this_executor::resume(*this, std::move(task));
     }
   }
