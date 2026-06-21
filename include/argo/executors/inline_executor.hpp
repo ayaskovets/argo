@@ -44,7 +44,7 @@ class inline_executor final : public swiss::non_copyable,
   /**
    * @brief Block until at least one task from the input channel gets executed
    * or stop is requested
-   * @return True if one task was executed
+   * @return True if a task was executed
    */
   constexpr auto run_once(std::stop_token const & stop_token) noexcept(
       this_executor::resume(*this, in_value_type{})) -> bool {

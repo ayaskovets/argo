@@ -1,4 +1,3 @@
-#include <argo/channel.hpp>
 #include <argo/executor.hpp>
 #include <argo/executors/inline_executor.hpp>
 #include <argo/executors/thread_pool_executor.hpp>

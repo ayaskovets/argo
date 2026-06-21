@@ -38,28 +38,9 @@ class thread_pool_executor final : public swiss::non_copyable,
 
  public:
   constexpr void run_detached(std::stop_token const & stop_token) {
-    /**
-     * @note Noexcept not to fail worker threads in case of an exception while
-     * resuming a task
-     */
-    auto const worker_task = [this, &stop_token] noexcept {
-      in_value_type in_value{};
-      while (true) {
-        try {
-          if (!in_channel_.pop(stop_token, in_value)) {
-            return false;
-          }
-
-          this_executor::resume(*this, std::move(in_value));
-        } catch (std::exception const &) {
-          // TODO: bugprone-empty-catch
-        }
-      }
-    };
-
     workers_.clear();
     for (std::size_t i = 0; i < workers_.capacity(); ++i) {
-      workers_.emplace_back(worker_task);
+      workers_.emplace_back([this, &stop_token]() { worker_task(stop_token); });
     }
   }
 
@@ -71,6 +52,26 @@ class thread_pool_executor final : public swiss::non_copyable,
 
  private:
   std::vector<std::jthread> workers_;
+
+ private:
+  constexpr void worker_task(std::stop_token const & stop_token) noexcept {
+    in_value_type in_value{};
+    while (true) {
+      /**
+       * @note Noexcept not to fail worker threads in case of an exception
+       * while resuming a task
+       */
+      try {
+        if (!in_channel_.pop(stop_token, in_value)) {
+          return;
+        }
+
+        this_executor::resume(*this, std::move(in_value));
+      } catch (std::exception const &) {
+        // TODO: bugprone-empty-catch
+      }
+    }
+  }
 };
 
 }  // namespace argo::executors
