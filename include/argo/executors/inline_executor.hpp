@@ -14,6 +14,10 @@ template <concepts::channel InChannel, concepts::channel OutChannel>
 class inline_executor final : public swiss::non_copyable,
                               public swiss::non_movable {
  public:
+  using in_value_type  = typename InChannel::value_type;
+  using out_value_type = typename OutChannel::value_type;
+
+ public:
   constexpr inline_executor(InChannel & in_channel,
                             OutChannel & out_channel) noexcept
       : in_channel_(in_channel), out_channel_(out_channel) {}
@@ -27,11 +31,30 @@ class inline_executor final : public swiss::non_copyable,
   }
 
  public:
-  constexpr void run_once() noexcept(
-      std::is_nothrow_invocable_v<typename InChannel::value_type>) {
-    if (typename InChannel::value_type task{}; in_channel_.try_pop(task)) {
-      this_executor::resume(*this, std::move(task));
+  /**
+   * @brief Run the next task if there is any in the input channel
+   */
+  constexpr void run_once() noexcept(this_executor::resume(*this,
+                                                           in_value_type{})) {
+    if (in_value_type in_value{}; in_channel_.try_pop(in_value)) {
+      this_executor::resume(*this, std::move(in_value));
     }
+  }
+
+  /**
+   * @brief Block until at least one task from the input channel gets executed
+   * or stop is requested
+   * @return True if one task was executed
+   */
+  constexpr auto run_once(std::stop_token const & stop_token) noexcept(
+      this_executor::resume(*this, in_value_type{})) -> bool {
+    in_value_type in_value{};
+    if (!in_channel_.pop(in_value, stop_token)) {
+      return false;
+    }
+
+    this_executor::resume(*this, std::move(in_value));
+    return true;
   }
 
  private:
