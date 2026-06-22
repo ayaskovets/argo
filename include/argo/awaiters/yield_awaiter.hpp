@@ -5,7 +5,8 @@
 namespace argo::awaiters {
 
 /**
- * @brief Yield execution to another task
+ * @brief A special kind of awaiter that puts task back onto the executor input
+ * queue bypassing any scheduler
  */
 class yield_awaiter final {
  public:
