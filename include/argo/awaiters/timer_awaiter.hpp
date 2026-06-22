@@ -1,9 +1,11 @@
 #pragma once
 
-#include <argo/task.hpp>
-#include <argo/this_executor.hpp>
+#include <coroutine>
 
 #include <swiss/mixins.hpp>
+
+#include "../task.hpp"
+#include "../this_executor.hpp"
 
 namespace argo::awaiters {
 
@@ -13,51 +15,60 @@ namespace argo::awaiters {
 template <typename Clock, typename T>
 class timer_awaiter final : public swiss::non_copyable,
                             public swiss::non_movable {
- private:
-  static constexpr std::optional<typename Clock::time_point> kScheduleNow =
-      std::nullopt;
+ public:
+  using clock_type = Clock;
+  using task_type  = std::coroutine_handle<>;
 
  public:
   constexpr timer_awaiter(typename Clock::time_point time_point,
-                          task<T> && child) noexcept
-      : schedule_on_(time_point > Clock::now() ? time_point : kScheduleNow),
+                          task<T> child) noexcept
+      : schedule_at_(time_point > Clock::now()
+                         ? time_point
+                         : std::optional<typename Clock::time_point>()),
         child_(std::move(child)) {}
 
   template <typename Duration>
-  constexpr timer_awaiter(Duration duration, task<T> && child) noexcept
-      : schedule_on_(duration > static_cast<Duration>(0)
+  constexpr timer_awaiter(Duration duration, task<T> child) noexcept
+      : schedule_at_(duration > static_cast<Duration>(0)
                          ? Clock::now() + duration
-                         : kScheduleNow),
+                         : std::optional<typename Clock::time_point>()),
         child_(std::move(child)) {}
 
  public:
-  [[nodiscard]] constexpr auto await_ready() const noexcept -> bool {
-    return schedule_on_ == kScheduleNow;
+  constexpr auto schedule_at() const noexcept -> typename Clock::time_point {
+    return *schedule_at_;
+  }
+
+  constexpr auto schedule_task() const noexcept -> std::coroutine_handle<> {
+    return child_.handle();
+  }
+
+ public:
+  constexpr auto await_ready() const noexcept -> bool {
+    return !schedule_at_.has_value();
   }
 
   constexpr void await_suspend(
       std::coroutine_handle<> const parent) const noexcept {
-    // TODO: rework this method
-
-    child_.get_handle().promise().set_parent(parent);
-    this_executor::suspend(*schedule_on_, child_.get_handle());
+    child_.set_continuation(parent);
+    this_executor::schedule(*schedule_at_, child_.handle());
   }
 
   constexpr auto await_resume() const -> T { return child_.get(); }
 
  private:
-  std::optional<typename Clock::time_point> schedule_on_;
+  std::optional<typename Clock::time_point> schedule_at_;
   task<T> child_;
 };
 
 template <typename Clock, typename T>
 constexpr auto on(typename Clock::time_point time_point,
-                  task<T> && child) noexcept {
+                  task<T> child) noexcept {
   return timer_awaiter<Clock, T>(time_point, std::move(child));
 }
 
 template <typename Clock, typename Duration, typename T>
-constexpr auto after(Duration duration, task<T> && child) noexcept {
+constexpr auto after(Duration duration, task<T> child) noexcept {
   return timer_awaiter<Clock, T>(duration, std::move(child));
 }
 
