@@ -26,6 +26,19 @@ concept channel = requires(T channel, Value value, std::stop_token stop_token) {
   requires std::is_same_v<typename T::value_type, Value>;
 };
 
+template <typename T, typename Value = typename T::value_type>
+concept noexcept_channel =
+    channel<T, Value> &&
+    requires(T channel, Value value, std::stop_token stop_token) {
+      requires noexcept(channel.try_emplace(value));
+      requires noexcept(channel.try_push(value));
+      requires noexcept(channel.try_pop(value));
+
+      requires noexcept(channel.emplace(value));
+      requires noexcept(channel.push(value));
+      requires noexcept(channel.pop(value));
+    };
+
 /**
  * @brief Lvalue reference to channel
  */

@@ -40,7 +40,8 @@ class thread_pool_executor final : public swiss::non_copyable,
   constexpr void run_detached(std::stop_token const & stop_token) {
     workers_.clear();
     for (std::size_t i = 0; i < workers_.capacity(); ++i) {
-      workers_.emplace_back([this, &stop_token]() { worker_task(stop_token); });
+      workers_.emplace_back(
+          [this, &stop_token]() noexcept { worker_task(stop_token); });
     }
   }
 
@@ -54,7 +55,9 @@ class thread_pool_executor final : public swiss::non_copyable,
   std::vector<std::jthread> workers_;
 
  private:
-  constexpr void worker_task(std::stop_token const & stop_token) noexcept {
+  constexpr void worker_task(std::stop_token const & stop_token) noexcept(
+      concepts::noexcept_channel<InChannel> &&
+      concepts::noexcept_channel<OutChannel>) {
     in_value_type in_value{};
     while (true) {
       /**
@@ -67,8 +70,8 @@ class thread_pool_executor final : public swiss::non_copyable,
         }
 
         this_executor::resume(*this, std::move(in_value));
-      } catch (std::exception const &) {
-        // TODO: bugprone-empty-catch
+        // NOLINTNEXTLINE(bugprone-empty-catch)
+      } catch (...) {
       }
     }
   }
