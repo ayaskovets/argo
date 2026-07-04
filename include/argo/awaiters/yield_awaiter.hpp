@@ -12,8 +12,10 @@ class yield_awaiter final {
  public:
   constexpr auto await_ready() const noexcept -> bool { return false; }
 
-  constexpr void await_suspend(
-      std::coroutine_handle<> const parent) const noexcept {
+  /**
+   * @note Noexcept if input channel of the current executor is noexcept
+   */
+  constexpr void await_suspend(std::coroutine_handle<> const parent) const {
     this_executor::yield(parent);
   }
 

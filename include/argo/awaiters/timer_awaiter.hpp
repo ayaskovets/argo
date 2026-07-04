@@ -15,6 +15,10 @@ namespace argo::awaiters {
 template <typename Clock, typename T>
 class timer_awaiter final : public swiss::non_copyable,
                             public swiss::non_movable {
+ private:
+  static constexpr std::optional<typename Clock::time_point> kScheduleNow =
+      std::nullopt;
+
  public:
   using clock_type = Clock;
   using task_type  = std::coroutine_handle<>;
@@ -22,16 +26,14 @@ class timer_awaiter final : public swiss::non_copyable,
  public:
   constexpr timer_awaiter(typename Clock::time_point time_point,
                           task<T> child) noexcept
-      : schedule_at_(time_point > Clock::now()
-                         ? time_point
-                         : std::optional<typename Clock::time_point>()),
+      : schedule_at_(time_point > Clock::now() ? time_point : kScheduleNow),
         child_(std::move(child)) {}
 
   template <typename Duration>
   constexpr timer_awaiter(Duration duration, task<T> child) noexcept
       : schedule_at_(duration > static_cast<Duration>(0)
                          ? Clock::now() + duration
-                         : std::optional<typename Clock::time_point>()),
+                         : kScheduleNow),
         child_(std::move(child)) {}
 
  public:
@@ -48,13 +50,15 @@ class timer_awaiter final : public swiss::non_copyable,
     return !schedule_at_.has_value();
   }
 
-  constexpr void await_suspend(
-      std::coroutine_handle<> const parent) const noexcept {
+  /**
+   * @note Noexcept if output channel of the current executor is noexcept
+   */
+  constexpr void await_suspend(std::coroutine_handle<> const parent) {
     child_.set_continuation(parent);
-    this_executor::schedule(*schedule_at_, child_.handle());
+    this_executor::schedule(*this);
   }
 
-  constexpr auto await_resume() const -> T { return child_.get(); }
+  constexpr auto await_resume() && -> T { return std::move(child_).get(); }
 
  private:
   std::optional<typename Clock::time_point> schedule_at_;
@@ -63,12 +67,13 @@ class timer_awaiter final : public swiss::non_copyable,
 
 template <typename Clock, typename T>
 constexpr auto on(typename Clock::time_point time_point,
-                  task<T> child) noexcept {
+                  task<T> && child) noexcept -> timer_awaiter<Clock, T> {
   return timer_awaiter<Clock, T>(time_point, std::move(child));
 }
 
 template <typename Clock, typename Duration, typename T>
-constexpr auto after(Duration duration, task<T> child) noexcept {
+constexpr auto after(Duration duration, task<T> && child) noexcept
+    -> timer_awaiter<Clock, T> {
   return timer_awaiter<Clock, T>(duration, std::move(child));
 }
 
