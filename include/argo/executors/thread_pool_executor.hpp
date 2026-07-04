@@ -17,6 +17,9 @@ template <concepts::channel InChannel, concepts::channel OutChannel>
 class thread_pool_executor final : public swiss::non_copyable,
                                    public swiss::non_movable {
  public:
+  using in_channel_type  = InChannel;
+  using out_channel_type = OutChannel;
+
   using in_value_type  = typename InChannel::value_type;
   using out_value_type = typename OutChannel::value_type;
 
@@ -55,9 +58,7 @@ class thread_pool_executor final : public swiss::non_copyable,
   std::vector<std::jthread> workers_;
 
  private:
-  constexpr void worker_task(std::stop_token const & stop_token) noexcept(
-      concepts::noexcept_channel<InChannel> &&
-      concepts::noexcept_channel<OutChannel>) {
+  constexpr void worker_task(std::stop_token const & stop_token) noexcept {
     in_value_type in_value{};
     while (true) {
       /**
@@ -66,7 +67,7 @@ class thread_pool_executor final : public swiss::non_copyable,
        */
       try {
         if (!in_channel_.pop(stop_token, in_value)) {
-          return;
+          break;
         }
 
         this_executor::resume(*this, std::move(in_value));

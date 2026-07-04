@@ -15,6 +15,13 @@ concept executor = requires(T executor) {
   { executor.out_channel() } -> channel_lvalue_reference<>;
 
   requires std::is_same_v<
+      typename T::in_channel_type,
+      typename std::decay_t<decltype(executor.in_channel())>>;
+  requires std::is_same_v<
+      typename T::out_channel_type,
+      typename std::decay_t<decltype(executor.out_channel())>>;
+
+  requires std::is_same_v<
       typename T::in_value_type,
       typename std::decay_t<decltype(executor.in_channel())>::value_type>;
   requires std::is_same_v<

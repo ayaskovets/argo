@@ -14,6 +14,9 @@ template <concepts::channel InChannel, concepts::channel OutChannel>
 class inline_executor final : public swiss::non_copyable,
                               public swiss::non_movable {
  public:
+  using in_channel_type  = InChannel;
+  using out_channel_type = OutChannel;
+
   using in_value_type  = typename InChannel::value_type;
   using out_value_type = typename OutChannel::value_type;
 
@@ -34,8 +37,7 @@ class inline_executor final : public swiss::non_copyable,
   /**
    * @brief Run the next task if there is any in the input channel
    */
-  constexpr void run_once() noexcept(concepts::noexcept_channel<InChannel> &&
-                                     concepts::noexcept_channel<OutChannel>) {
+  constexpr void run_once() noexcept(concepts::noexcept_channel<InChannel>) {
     if (in_value_type in_value{}; in_channel_.try_pop(in_value)) {
       this_executor::resume(*this, std::move(in_value));
     }
@@ -47,8 +49,7 @@ class inline_executor final : public swiss::non_copyable,
    * @return True if a task was executed
    */
   constexpr auto run_once(std::stop_token const & stop_token) noexcept(
-      concepts::noexcept_channel<InChannel> &&
-      concepts::noexcept_channel<OutChannel>) -> bool {
+      concepts::noexcept_channel<InChannel>) -> bool {
     in_value_type in_value{};
     if (!in_channel_.pop(in_value, stop_token)) {
       return false;
