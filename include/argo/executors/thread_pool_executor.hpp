@@ -44,7 +44,7 @@ class thread_pool_executor final : public swiss::non_copyable,
     workers_.clear();
     for (std::size_t i = 0; i < workers_.capacity(); ++i) {
       workers_.emplace_back(
-          [this, &stop_token]() noexcept { worker_task(stop_token); });
+          [this, &stop_token]() noexcept -> void { worker_task(stop_token); });
     }
   }
 
