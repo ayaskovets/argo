@@ -58,7 +58,12 @@ class timer_awaiter final : public swiss::non_copyable,
     this_executor::schedule(*this);
   }
 
-  constexpr auto await_resume() && -> T { return std::move(child_).get(); }
+  /**
+   * @note Value gets moved out from the awaiter and this method is one-shot
+   */
+  constexpr auto await_resume() noexcept -> T {
+    return std::move(std::move(child_).get());
+  }
 
  private:
   std::optional<typename Clock::time_point> schedule_at_;
