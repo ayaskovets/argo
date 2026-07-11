@@ -51,7 +51,8 @@ class timer_awaiter final : public swiss::non_copyable,
   }
 
   /**
-   * @note Noexcept if output channel of the current executor is noexcept
+   * @note Noexcept if output channel of the current executor is noexcept and
+   * the channel is compatible with this awaiter
    */
   constexpr void await_suspend(std::coroutine_handle<> const parent) {
     child_.set_continuation(parent);
