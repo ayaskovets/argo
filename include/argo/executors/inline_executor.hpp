@@ -40,11 +40,12 @@ class inline_executor final : public swiss::non_copyable,
    */
   constexpr auto run_once() noexcept(concepts::noexcept_channel<InChannel>)
       -> bool {
-    if (in_value_type in_value{}; in_channel_.try_pop(in_value)) {
-      this_executor::resume(*this, std::move(in_value));
+    in_value_type in_value{};
+    if (!in_channel_.try_pop(in_value)) {
       return true;
     }
 
+    this_executor::resume(*this, std::move(in_value));
     return false;
   }
 
