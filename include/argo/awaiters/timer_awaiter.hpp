@@ -9,6 +9,8 @@
 
 namespace argo::awaiters {
 
+// TODO: support non-coroutine tasks
+
 /**
  * @brief Suspend execution until some time point in future
  */
@@ -51,8 +53,7 @@ class timer_awaiter final : public swiss::non_copyable,
   }
 
   /**
-   * @note Noexcept if output channel of the current executor is noexcept and
-   * the channel is compatible with this awaiter
+   * @note Noexcept if this_executor::schedule is noexcept
    */
   constexpr void await_suspend(std::coroutine_handle<> const parent) {
     child_.set_continuation(parent);

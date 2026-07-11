@@ -16,7 +16,6 @@ namespace detail {
  * @brief Set park function before resuming a task on an executor. Call the
  * function after the task is suspended by an awaiter thus parking the suspended
  * task until it becomes ready and gets re-scheduled
- * @note Noexcept if output channel of the current executor is noexcept
  */
 extern thread_local void (*park)(void const * awaiter,
                                  std::type_info const & type_info);
@@ -25,7 +24,6 @@ extern thread_local void (*park)(void const * awaiter,
  * @brief Set yield function before resuming a task on an executor. Call the
  * function after the task is suspended thus re-scheduling the task immediately
  * and bypassing the real task scheduler
- * @note Noexcept if input channel of the current executor is noexcept
  */
 extern thread_local void (*yield)(std::coroutine_handle<> const);
 
@@ -49,10 +47,18 @@ constexpr void yield(std::coroutine_handle<> const task) {
 }
 
 /**
- * @note Noexcept if output channel of the current executor is noexcept
+ * @note Noexcept if output channel of the current executor is noexcept and the
+ * channel value type is the same as const pointer to the awaiter
  */
 template <typename Awaiter>
 constexpr void schedule(Awaiter const & awaiter) {
+  /**
+   * @note Pass a const pointer to the awaiter along with its typeid. Park
+   * functions verifies that typeid(const awaiter ptr) is the same as
+   * typeid(current executor's output channel value type) and thus a scheduler
+   * on the output channel's receiving end is compatible with the current
+   * awaiter
+   */
   detail::park(&awaiter, typeid(Awaiter const *));
 
   detail::this_executor = nullptr;
@@ -84,10 +90,6 @@ constexpr void resume(Executor const & executor,
   if (detail::this_executor != &executor) [[unlikely]] {
     detail::this_executor = &executor;
 
-    /**
-     * @note Noexcept if
-     * noexcept(concepts::noexcept_channel<typename Executor::out_channel_type>)
-     */
     detail::park = [](void const * awaiter,
                       std::type_info const & type_info) -> void {
       auto const & this_executor =
