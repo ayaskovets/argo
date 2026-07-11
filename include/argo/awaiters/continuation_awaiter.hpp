@@ -22,11 +22,12 @@ class continuation_awaiter final : public swiss::non_copyable,
     return !continuation_ || continuation_.done();
   }
 
-  constexpr auto await_suspend(std::coroutine_handle<>) const noexcept {
+  constexpr auto await_suspend([[maybe_unused]] std::coroutine_handle<> parent)
+      const noexcept -> std::coroutine_handle<> {
     return continuation_ ? continuation_ : std::noop_coroutine();
   }
 
-  constexpr auto await_resume() const noexcept {}
+  constexpr void await_resume() const noexcept {}
 
  private:
   std::coroutine_handle<> continuation_;
