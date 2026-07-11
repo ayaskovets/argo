@@ -71,13 +71,13 @@ class timer_awaiter final : public swiss::non_copyable,
 };
 
 template <typename Clock, typename T>
-constexpr auto on(typename Clock::time_point time_point,
-                  task<T> && child) noexcept -> timer_awaiter<Clock, T> {
+constexpr auto on(typename Clock::time_point time_point, task<T> child) noexcept
+    -> timer_awaiter<Clock, T> {
   return timer_awaiter<Clock, T>(time_point, std::move(child));
 }
 
 template <typename Clock, typename Duration, typename T>
-constexpr auto after(Duration duration, task<T> && child) noexcept
+constexpr auto after(Duration duration, task<T> child) noexcept
     -> timer_awaiter<Clock, T> {
   return timer_awaiter<Clock, T>(duration, std::move(child));
 }
