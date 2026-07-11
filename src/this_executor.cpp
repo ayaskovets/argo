@@ -1,10 +1,14 @@
 #include <argo/this_executor.hpp>
 
-namespace argo::this_executor {
+namespace argo::this_executor::detail {
+// NOLINTBEGIN(cppcoreguidelines-avoid-non-const-global-variables)
 
-thread_local std::function<bool(
-    std::chrono::steady_clock::time_point time_point,
-    std::coroutine_handle<> const handle)>
-    try_push = nullptr;
+thread_local void (*park)(void const *,
+                          std::type_info const & type_info) = nullptr;
 
-}  // namespace argo::this_executor
+thread_local void (*yield)(std::coroutine_handle<> const) = nullptr;
+
+thread_local void const * this_executor = nullptr;
+
+// NOLINTEND(cppcoreguidelines-avoid-non-const-global-variables)
+}  // namespace argo::this_executor::detail
