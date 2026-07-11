@@ -36,11 +36,16 @@ class inline_executor final : public swiss::non_copyable,
  public:
   /**
    * @brief Run the next task if there is any in the input channel
+   * @return True if a task was executed
    */
-  constexpr void run_once() noexcept(concepts::noexcept_channel<InChannel>) {
+  constexpr auto run_once() noexcept(concepts::noexcept_channel<InChannel>)
+      -> bool {
     if (in_value_type in_value{}; in_channel_.try_pop(in_value)) {
       this_executor::resume(*this, std::move(in_value));
+      return true;
     }
+
+    return false;
   }
 
   /**
