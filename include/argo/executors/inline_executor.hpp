@@ -17,19 +17,16 @@ class inline_executor final : public swiss::non_copyable,
   using in_channel_type  = InChannel;
   using out_channel_type = OutChannel;
 
-  using in_value_type  = typename InChannel::value_type;
-  using out_value_type = typename OutChannel::value_type;
-
  public:
-  constexpr inline_executor(InChannel & in_channel,
-                            OutChannel & out_channel) noexcept
+  constexpr inline_executor(in_channel_type & in_channel,
+                            out_channel_type & out_channel) noexcept
       : in_channel_(in_channel), out_channel_(out_channel) {}
 
  public:
-  constexpr auto in_channel() const noexcept -> InChannel & {
+  constexpr auto in_channel() const noexcept -> in_channel_type & {
     return in_channel_;
   }
-  constexpr auto out_channel() const noexcept -> OutChannel & {
+  constexpr auto out_channel() const noexcept -> out_channel_type & {
     return out_channel_;
   }
 
@@ -38,9 +35,9 @@ class inline_executor final : public swiss::non_copyable,
    * @brief Run the next task if there is any in the input channel
    * @return True if a task was executed
    */
-  constexpr auto run_once() noexcept(concepts::noexcept_channel<InChannel>)
-      -> bool {
-    in_value_type in_value{};
+  constexpr auto run_once() noexcept(
+      concepts::noexcept_channel<in_channel_type>) -> bool {
+    typename in_channel_type::value_type in_value{};
     if (!in_channel_.try_pop(in_value)) {
       return true;
     }
@@ -55,8 +52,8 @@ class inline_executor final : public swiss::non_copyable,
    * @return True if a task was executed
    */
   constexpr auto run_once(std::stop_token const & stop_token) noexcept(
-      concepts::noexcept_channel<InChannel>) -> bool {
-    in_value_type in_value{};
+      concepts::noexcept_channel<in_channel_type>) -> bool {
+    typename in_channel_type::value_type in_value{};
     if (!in_channel_.pop(in_value, stop_token)) {
       return false;
     }
@@ -67,8 +64,8 @@ class inline_executor final : public swiss::non_copyable,
 
  private:
   // NOLINTBEGIN(cppcoreguidelines-avoid-const-or-ref-data-members)
-  InChannel & in_channel_;
-  OutChannel & out_channel_;
+  in_channel_type & in_channel_;
+  out_channel_type & out_channel_;
   // NOLINTEND(cppcoreguidelines-avoid-const-or-ref-data-members)
 };
 

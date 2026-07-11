@@ -20,22 +20,19 @@ class thread_pool_executor final : public swiss::non_copyable,
   using in_channel_type  = InChannel;
   using out_channel_type = OutChannel;
 
-  using in_value_type  = typename InChannel::value_type;
-  using out_value_type = typename OutChannel::value_type;
-
  public:
   constexpr thread_pool_executor(
-      InChannel & in_channel, OutChannel & out_channel,
+      in_channel_type & in_channel, out_channel_type & out_channel,
       std::size_t workers_size = std::thread::hardware_concurrency()) noexcept
       : in_channel_(in_channel), out_channel_(out_channel) {
     workers_.reserve(workers_size);
   }
 
  public:
-  constexpr auto in_channel() const noexcept -> InChannel & {
+  constexpr auto in_channel() const noexcept -> in_channel_type & {
     return in_channel_;
   }
-  constexpr auto out_channel() const noexcept -> OutChannel & {
+  constexpr auto out_channel() const noexcept -> out_channel_type & {
     return out_channel_;
   }
 
@@ -50,8 +47,8 @@ class thread_pool_executor final : public swiss::non_copyable,
 
  private:
   // NOLINTBEGIN(cppcoreguidelines-avoid-const-or-ref-data-members)
-  InChannel & in_channel_;
-  OutChannel & out_channel_;
+  in_channel_type & in_channel_;
+  out_channel_type & out_channel_;
   // NOLINTEND(cppcoreguidelines-avoid-const-or-ref-data-members)
 
  private:
@@ -59,7 +56,7 @@ class thread_pool_executor final : public swiss::non_copyable,
 
  private:
   constexpr void worker_task(std::stop_token const & stop_token) noexcept {
-    in_value_type in_value{};
+    typename in_channel_type::value_type in_value{};
     while (true) {
       /**
        * @note Noexcept not to fail worker threads in case of an exception
