@@ -13,12 +13,9 @@ namespace detail {
 // NOLINTBEGIN(cppcoreguidelines-avoid-non-const-global-variables)
 
 /**
- * @brief Set park function before resuming a task on an executor. Call the
- * function after the task is suspended by an awaiter thus parking the suspended
- * task until it becomes ready and gets re-scheduled
+ * @brief Set the executor to this variable before resuming any task
  */
-extern thread_local void (*park)(void const * params,
-                                 std::type_info const & type_info);
+extern thread_local void const * this_executor;
 
 /**
  * @brief Set yield function before resuming a task on an executor. Call the
@@ -28,9 +25,12 @@ extern thread_local void (*park)(void const * params,
 extern thread_local void (*yield)(std::coroutine_handle<> handle);
 
 /**
- * @brief Set the executor to this variable before resuming any task
+ * @brief Set park function before resuming a task on an executor. Call the
+ * function after the task is suspended by an awaiter thus parking the suspended
+ * task until it becomes ready and gets re-scheduled
  */
-extern thread_local void const * this_executor;
+extern thread_local void (*park)(void const * params,
+                                 std::type_info const & type_info);
 
 // NOLINTEND(cppcoreguidelines-avoid-non-const-global-variables)
 }  // namespace detail
