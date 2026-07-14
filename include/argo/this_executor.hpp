@@ -66,25 +66,6 @@ constexpr void schedule(Params const & params) {
   detail::yield         = nullptr;
 }
 
-template <concepts::executor Executor, swiss::nothrow_invocable Task>
-constexpr void resume(Executor const &, Task && invocable) noexcept {
-  /**
-   * @note Inapplicable for non-coroutines
-   */
-  if (detail::this_executor != nullptr) [[unlikely]] {
-    detail::this_executor = nullptr;
-    detail::park          = nullptr;
-    detail::yield         = nullptr;
-  }
-
-  /**
-   * @note For simplicity a non-coroutine task is required to be noexcept and
-   * handle exceptions asynchronously in a similar way they are handled with
-   * coroutines
-   */
-  std::invoke(std::forward<Task>(invocable));
-}
-
 template <concepts::executor Executor>
 // NOLINTNEXTLINE(bugprone-exception-escape)
 constexpr void resume(Executor const & executor,
