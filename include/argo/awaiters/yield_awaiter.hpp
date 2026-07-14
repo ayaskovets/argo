@@ -26,3 +26,12 @@ class yield_awaiter final : public swiss::non_copyable,
 };
 
 }  // namespace argo::awaiters
+
+/**
+ * @section Utility awaiter constructors
+ */
+namespace argo::awaiters {
+
+constexpr auto yield() noexcept -> yield_awaiter { return {}; }
+
+}  // namespace argo::awaiters
