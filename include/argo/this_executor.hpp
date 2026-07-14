@@ -17,7 +17,7 @@ namespace detail {
  * function after the task is suspended by an awaiter thus parking the suspended
  * task until it becomes ready and gets re-scheduled
  */
-extern thread_local void (*park)(void const * awaiter,
+extern thread_local void (*park)(void const * params,
                                  std::type_info const & type_info);
 
 /**
@@ -76,21 +76,21 @@ constexpr void resume(Executor const & executor,
   if (detail::this_executor != &executor) [[unlikely]] {
     detail::this_executor = &executor;
 
-    detail::park = [](void const * awaiter,
+    detail::park = [](void const * params,
                       std::type_info const & type_info) -> void {
       auto const & this_executor =
           *static_cast<Executor const *>(detail::this_executor);
-      auto const * typed_awaiter =
-          static_cast<typename Executor::out_channel_type::value_type>(awaiter);
+      auto const * typed_params =
+          static_cast<typename Executor::out_channel_type::value_type>(params);
 
-      if (type_info != typeid(typed_awaiter)) [[unlikely]] {
+      if (type_info != typeid(typed_params)) [[unlikely]] {
         throw std::runtime_error(
-            std::format("resume(): incompatible awaiter {}, expected {}",
-                        type_info.name(), typeid(typed_awaiter).name()));
+            std::format("resume(): incompatible type {}, expected {}",
+                        type_info.name(), typeid(typed_params).name()));
       }
 
       // TODO: handle cancellation
-      this_executor.out_channel().push(typed_awaiter);
+      this_executor.out_channel().push(typed_params);
     };
 
     detail::yield =
