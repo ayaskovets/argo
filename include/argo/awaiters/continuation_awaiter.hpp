@@ -14,7 +14,7 @@ class continuation_awaiter final : public swiss::non_copyable,
                                    public swiss::non_movable {
  public:
   explicit constexpr continuation_awaiter(
-      std::coroutine_handle<> const continuation) noexcept
+      std::coroutine_handle<> continuation) noexcept
       : continuation_(continuation) {}
 
  public:

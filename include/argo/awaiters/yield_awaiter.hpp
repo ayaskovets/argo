@@ -18,7 +18,7 @@ class yield_awaiter final : public swiss::non_copyable,
   /**
    * @note Noexcept if this_executor::yield is noexcept
    */
-  constexpr void await_suspend(std::coroutine_handle<> const parent) const {
+  constexpr void await_suspend(std::coroutine_handle<> parent) const {
     this_executor::yield(parent);
   }
 
