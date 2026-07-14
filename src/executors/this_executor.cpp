@@ -6,7 +6,7 @@ namespace argo::this_executor::detail {
 thread_local void (*park)(void const * awaiter,
                           std::type_info const & type_info) = nullptr;
 
-thread_local void (*yield)(std::coroutine_handle<> const handle) = nullptr;
+thread_local void (*yield)(std::coroutine_handle<> handle) = nullptr;
 
 thread_local void const * this_executor = nullptr;
 

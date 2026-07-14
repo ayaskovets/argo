@@ -25,7 +25,7 @@ extern thread_local void (*park)(void const * params,
  * function after the task is suspended thus re-scheduling the task immediately
  * and bypassing the real task scheduler
  */
-extern thread_local void (*yield)(std::coroutine_handle<> const handle);
+extern thread_local void (*yield)(std::coroutine_handle<> handle);
 
 /**
  * @brief Set the executor to this variable before resuming any task
@@ -38,7 +38,7 @@ extern thread_local void const * this_executor;
 /**
  * @note Noexcept if input channel of the current executor is noexcept
  */
-constexpr void yield(std::coroutine_handle<> const handle) {
+constexpr void yield(std::coroutine_handle<> handle) {
   detail::yield(handle);
 
   detail::this_executor = nullptr;
@@ -69,7 +69,7 @@ constexpr void schedule(Params const & params) {
 template <concepts::executor Executor>
 // NOLINTNEXTLINE(bugprone-exception-escape)
 constexpr void resume(Executor const & executor,
-                      std::coroutine_handle<> const handle) noexcept {
+                      std::coroutine_handle<> handle) noexcept {
   /**
    * @note Condition to decrease memory writes when using a single executor
    */
@@ -94,7 +94,7 @@ constexpr void resume(Executor const & executor,
     };
 
     detail::yield =
-        [](std::coroutine_handle<> const handle) noexcept(
+        [](std::coroutine_handle<> handle) noexcept(
             concepts::noexcept_channel<typename Executor::in_channel_type>)
         -> void {
       auto const & this_executor =
