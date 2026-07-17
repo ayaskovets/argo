@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cassert>
 #include <coroutine>
 #include <format>
 
@@ -39,11 +40,11 @@ extern thread_local void (*park)(void const * params,
  * @note Noexcept if input channel of the current executor is noexcept
  */
 constexpr void yield(std::coroutine_handle<> handle) {
+  assert(detail::yield &&
+         "yield(): coroutines should be resumed via resume() from an executor "
+         "instance");
   detail::yield(handle);
-
-  detail::this_executor = nullptr;
-  detail::park          = nullptr;
-  detail::yield         = nullptr;
+  detail::yield = nullptr;
 }
 
 /**
@@ -59,11 +60,12 @@ constexpr void schedule(Params const & params) {
    * value and thus there is a compatible scheduler on the output channel's
    * receiving end
    */
+  assert(
+      detail::park &&
+      "schedule(): coroutines should be resumed via resume() from an executor "
+      "instance");
   detail::park(&params, typeid(&params));
-
-  detail::this_executor = nullptr;
-  detail::park          = nullptr;
-  detail::yield         = nullptr;
+  detail::park = nullptr;
 }
 
 template <concepts::executor Executor>
@@ -78,8 +80,11 @@ constexpr void resume(Executor const & executor,
 
     detail::park = [](void const * params,
                       std::type_info const & type_info) -> void {
+      assert(detail::this_executor &&
+             "park(): this function should not be called directly");
       auto const & this_executor =
           *static_cast<Executor const *>(detail::this_executor);
+
       auto const * typed_params =
           static_cast<typename Executor::out_channel_type::value_type const *>(
               params);
@@ -99,6 +104,8 @@ constexpr void resume(Executor const & executor,
         [](std::coroutine_handle<> handle) noexcept(
             concepts::noexcept_channel<typename Executor::in_channel_type>)
         -> void {
+      assert(detail::this_executor &&
+             "yield(): this function should not be called directly");
       auto const & this_executor =
           *static_cast<Executor const *>(detail::this_executor);
 
