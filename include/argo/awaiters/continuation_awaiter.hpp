@@ -34,3 +34,15 @@ class continuation_awaiter final : public swiss::non_copyable,
 };
 
 }  // namespace argo::awaiters
+
+/**
+ * @section Utility awaiter constructors
+ */
+namespace argo::awaiters {
+
+constexpr auto continuation(std::coroutine_handle<> continuation) noexcept
+    -> continuation_awaiter {
+  return continuation_awaiter(continuation);
+}
+
+}  // namespace argo::awaiters
