@@ -12,8 +12,8 @@ namespace tests::unit {
 
 TEST(scheduler, timer_scheduler) {
   using scheduler_t = argo::schedulers::timer_scheduler<
-      flow::mpmc_queue<argo::awaiters::timer_awaiter<
-          std::chrono::steady_clock, std::coroutine_handle<>> const *>,
+      flow::mpmc_queue<std::pair<std::chrono::steady_clock,
+                                 std::coroutine_handle<>> const *>,
       flow::mpmc_queue<std::coroutine_handle<>>>;
 
   static_assert(argo::concepts::scheduler<scheduler_t>);
