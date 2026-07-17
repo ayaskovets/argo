@@ -59,7 +59,7 @@ constexpr void schedule(Params const & params) {
    * value and thus there is a compatible scheduler on the output channel's
    * receiving end
    */
-  detail::park(&params, typeid(Params const *));
+  detail::park(&params, typeid(&params));
 
   detail::this_executor = nullptr;
   detail::park          = nullptr;
@@ -81,8 +81,10 @@ constexpr void resume(Executor const & executor,
       auto const & this_executor =
           *static_cast<Executor const *>(detail::this_executor);
       auto const * typed_params =
-          static_cast<typename Executor::out_channel_type::value_type>(params);
+          static_cast<typename Executor::out_channel_type::value_type const *>(
+              params);
 
+      // TODO: support variant
       if (type_info != typeid(typed_params)) [[unlikely]] {
         throw std::runtime_error(
             std::format("resume(): incompatible type {}, expected {}",
@@ -90,7 +92,7 @@ constexpr void resume(Executor const & executor,
       }
 
       // TODO: handle cancellation
-      this_executor.out_channel().push(typed_params);
+      this_executor.out_channel().push(*typed_params);
     };
 
     detail::yield =
