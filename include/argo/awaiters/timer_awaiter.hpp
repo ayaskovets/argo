@@ -9,8 +9,6 @@
 
 namespace argo::awaiters {
 
-// TODO: support non-coroutine tasks
-
 /**
  * @brief Suspend execution until some time point in future
  */
@@ -18,59 +16,70 @@ template <typename Clock, typename T>
 class timer_awaiter final : public swiss::non_copyable,
                             public swiss::non_movable {
  private:
-  static constexpr std::optional<typename Clock::time_point> kScheduleNow =
-      std::nullopt;
+  /**
+   * @brief A value indicating that the time point is in the past which means
+   * that scheduler can be bypassed
+   */
+  static constexpr typename Clock::time_point kScheduleNow{};
 
- public:
-  using clock_type = Clock;
-  using task_type  = std::coroutine_handle<>;
+  /**
+   * @brief A flag indicating that awaiter has to task attached to it and has to
+   * simply reschedule the current coroutine at the specified timepoint. Task
+   * with nullopt_t value is used in the utility awaiter constructors below
+   */
+  static constexpr bool kHasChildTask = !std::is_same_v<T, std::nullopt_t>;
 
  public:
   constexpr timer_awaiter(typename Clock::time_point time_point,
                           task<T> child) noexcept
-      : schedule_at_(time_point > Clock::now() ? time_point : kScheduleNow),
+      : params_(time_point > Clock::now() ? time_point : kScheduleNow,
+                child.handle()),
         child_(std::move(child)) {}
 
   template <typename Duration>
   constexpr timer_awaiter(Duration duration, task<T> child) noexcept
-      : schedule_at_(duration > static_cast<Duration>(0)
-                         ? Clock::now() + duration
-                         : kScheduleNow),
+      : params_(duration > Duration(0) ? Clock::now() + duration : kScheduleNow,
+                child.handle()),
         child_(std::move(child)) {}
 
  public:
-  constexpr auto schedule_at() const noexcept -> typename Clock::time_point {
-    return *schedule_at_;
-  }
-
-  constexpr auto schedule_task() const noexcept -> std::coroutine_handle<> {
-    return child_.handle();
-  }
-
- public:
   constexpr auto await_ready() const noexcept -> bool {
-    return !schedule_at_.has_value();
+    return std::get<0>(params_) == kScheduleNow;
   }
 
   /**
+   * @brief Reschedule current task at the specified time point or set
+   * continuation if there is a child task and schedule the child task it at the
+   * specified time point
    * @note Noexcept if this_executor::schedule is noexcept
    */
-  constexpr void await_suspend(std::coroutine_handle<> const parent) {
-    child_.set_continuation(parent);
-    this_executor::schedule(*this);
+  constexpr void await_suspend(std::coroutine_handle<> parent) {
+    if constexpr (kHasChildTask) {
+      child_.set_continuation(parent);
+    } else {
+      params_.handle = parent;
+    }
+
+    this_executor::schedule(&static_cast<timer_awaiter const *>(this)->params_);
   }
 
-  /**
-   * @note Value gets moved out from the awaiter and this method is one-shot
-   */
-  constexpr auto await_resume() noexcept -> T {
-    return std::move(std::move(child_).get());
+  constexpr auto await_resume() noexcept(!kHasChildTask) -> decltype(auto) {
+    if constexpr (kHasChildTask) {
+      return std::move(child_).get();
+    }
   }
 
  private:
-  std::optional<typename Clock::time_point> schedule_at_;
+  std::pair<typename Clock::time_point, std::coroutine_handle<>> params_;
   task<T> child_;
 };
+
+}  // namespace argo::awaiters
+
+/**
+ * @section Utility awaiter constructors
+ */
+namespace argo::awaiters {
 
 template <typename Clock, typename T>
 constexpr auto on(typename Clock::time_point time_point, task<T> child) noexcept
@@ -78,10 +87,22 @@ constexpr auto on(typename Clock::time_point time_point, task<T> child) noexcept
   return timer_awaiter<Clock, T>(time_point, std::move(child));
 }
 
+template <typename Clock>
+constexpr auto sleep_until(typename Clock::time_point time_point) noexcept
+    -> timer_awaiter<Clock, std::nullopt_t> {
+  return timer_awaiter<Clock, std::nullopt_t>(time_point, {});
+}
+
 template <typename Clock, typename Duration, typename T>
 constexpr auto after(Duration duration, task<T> child) noexcept
     -> timer_awaiter<Clock, T> {
   return timer_awaiter<Clock, T>(duration, std::move(child));
+}
+
+template <typename Clock, typename Duration>
+constexpr auto sleep_for(Duration duration) noexcept
+    -> timer_awaiter<Clock, std::nullopt_t> {
+  return timer_awaiter<Clock, std::nullopt_t>(duration, {});
 }
 
 }  // namespace argo::awaiters
