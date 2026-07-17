@@ -24,7 +24,8 @@ add_executable(argo-unit-tests)
 # sources
 # ------------------------------------------------------------------------------
 
-set(SOURCES channel_test.cpp executor_test.cpp scheduler_test.cpp tmp_test.cpp)
+set(SOURCES awaiters/yield_awaiter_test.cpp channel_test.cpp executor_test.cpp
+            scheduler_test.cpp)
 
 # ------------------------------------------------------------------------------
 # target
