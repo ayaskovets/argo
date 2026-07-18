@@ -16,9 +16,9 @@ class const_coroutine_handle<void> final : private std::coroutine_handle<> {
 
  public:
   /**
-   * @warning This method is intended to be used only as at the last point of
-   * usage of a handle where it's constness has to be dropped for handle to be
-   * resumed e.g. in await_suspend
+   * @warning This method dangerous and is intended to be used only as at the
+   * last point of usage of a handle where it's constness has to be dropped for
+   * handle to be resumed e.g. in await_suspend
    */
   constexpr auto to_mutable_handle() const noexcept -> std::coroutine_handle<> {
     return *this;

@@ -8,6 +8,9 @@ namespace argo::awaiters {
 
 /**
  * @brief A special kind of awaiter that implements symmetric transfer
+ * @note Does not store task<T> as the intended usage of the awaiter is
+ * generally within the initial_suspend(), final_suspend(), await_suspend()
+ * functions and not directly with co_await in the user code
  */
 class continuation_awaiter final : public swiss::non_copyable,
                                    public swiss::non_movable {
