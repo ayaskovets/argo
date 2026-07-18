@@ -18,9 +18,7 @@ class continuation_awaiter final : public swiss::non_copyable,
       : continuation_(continuation) {}
 
  public:
-  constexpr auto await_ready() const noexcept -> bool {
-    return !continuation_ || continuation_.done();
-  }
+  constexpr auto await_ready() const noexcept -> bool { return false; }
 
   constexpr auto await_suspend([[maybe_unused]] std::coroutine_handle<> parent)
       const noexcept -> std::coroutine_handle<> {

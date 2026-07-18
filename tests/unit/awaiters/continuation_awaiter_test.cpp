@@ -42,6 +42,14 @@ TEST(continuation_awaiter, smoke) {
 
   snd_handle.resume();
   EXPECT_EQ(log, "1234");
+
+  EXPECT_TRUE(fst_handle);
+  EXPECT_TRUE(fst_handle.done());
+  EXPECT_NO_THROW(fst.get());
+
+  EXPECT_TRUE(snd_handle);
+  EXPECT_TRUE(snd_handle.done());
+  EXPECT_NO_THROW(snd.get());
 }
 
 // NOLINTEND(cppcoreguidelines-avoid-reference-coroutine-parameters)
