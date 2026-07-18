@@ -1,8 +1,6 @@
 #include <argo/awaiters/continuation_awaiter.hpp>
 #include <argo/task.hpp>
 
-#include <coroutine>
-
 #include <gtest/gtest.h>
 
 namespace tests::unit::awaiters {
@@ -10,46 +8,37 @@ namespace tests::unit::awaiters {
 // NOLINTBEGIN(cppcoreguidelines-avoid-reference-coroutine-parameters)
 
 TEST(continuation_awaiter, smoke) {
+  auto const make_task =
+      [](int taskid, std::string & log,
+         argo::const_coroutine_handle<> & continuation) -> argo::task<void> {
+    log.append(std::format("{}::enter;", taskid));
+    co_await argo::awaiters::continuation(continuation);
+    log.append(std::format("{}::exit;", taskid));
+    co_return;
+  };
+
   std::string log;
-  std::coroutine_handle<> fst_handle = nullptr;
-  std::coroutine_handle<> snd_handle = nullptr;
 
-  auto const fst =
-      [](std::string & log,
-         std::coroutine_handle<> & snd_handle) -> argo::task<void> {
-    log.append("1");
-    co_await argo::awaiters::continuation(snd_handle);
-    log.append("3");
-    co_return;
-  }(log, snd_handle);
-
-  auto const snd =
-      [](std::string & log,
-         std::coroutine_handle<> & fst_handle) -> argo::task<void> {
-    log.append("2");
-    co_await argo::awaiters::continuation(fst_handle);
-    log.append("4");
-    co_return;
-  }(log, fst_handle);
-
-  fst_handle = fst.handle();
-  snd_handle = snd.handle();
+  argo::const_coroutine_handle<> task1_handle = nullptr;
+  argo::const_coroutine_handle<> task2_handle = nullptr;
+  auto task1                                  = make_task(1, log, task2_handle);
+  auto task2                                  = make_task(2, log, task1_handle);
+  task1_handle                                = task1.handle();
+  task2_handle                                = task2.handle();
 
   EXPECT_TRUE(log.empty());
 
-  fst_handle.resume();
-  EXPECT_EQ(log, "123");
+  task1.resume();
+  EXPECT_EQ(log, "1::enter;2::enter;1::exit;");
 
-  snd_handle.resume();
-  EXPECT_EQ(log, "1234");
+  task2.resume();
+  EXPECT_EQ(log, "1::enter;2::enter;1::exit;2::exit;");
 
-  EXPECT_TRUE(fst_handle);
-  EXPECT_TRUE(fst_handle.done());
-  EXPECT_NO_THROW(fst.get());
+  EXPECT_TRUE(task1.done());
+  EXPECT_NO_THROW(task1.get());
 
-  EXPECT_TRUE(snd_handle);
-  EXPECT_TRUE(snd_handle.done());
-  EXPECT_NO_THROW(snd.get());
+  EXPECT_TRUE(task2.done());
+  EXPECT_NO_THROW(task2.get());
 }
 
 // NOLINTEND(cppcoreguidelines-avoid-reference-coroutine-parameters)
