@@ -9,33 +9,32 @@ namespace tests::unit::awaiters {
 // NOLINTBEGIN(readability-magic-numbers)
 
 TEST(yield_awaiter, smoke) {
-  int stage = 0;
+  std::string log;
 
   // NOLINTNEXTLINE(cppcoreguidelines-avoid-reference-coroutine-parameters)
-  auto const task = [](int & stage) -> argo::task<void> {
-    ++stage;
+  auto const task = [](std::string & log) -> argo::task<void> {
+    log.append("1");
     co_await argo::awaiters::yield();
-    ++stage;
+    log.append("2");
     co_return;
-  }(stage);
-
-  EXPECT_EQ(stage, 0);
+  }(log);
 
   flow::spsc_queue<std::coroutine_handle<>> in_channel(2);
   flow::spsc_queue<std::coroutine_handle<>> out_channel(2);
   argo::executors::inline_executor executor(in_channel, out_channel);
 
-  EXPECT_EQ(stage, 0);
-
+  EXPECT_TRUE(log.empty());
   in_channel.push(task.handle());
-
-  EXPECT_EQ(stage, 0);
-
-  executor.run_once();
-  EXPECT_EQ(stage, 1);
+  EXPECT_TRUE(log.empty());
 
   executor.run_once();
-  EXPECT_EQ(stage, 2);
+  EXPECT_EQ(log, "1");
+
+  executor.run_once();
+  EXPECT_EQ(log, "12");
+
+  executor.run_once();
+  EXPECT_EQ(log, "12");
 }
 
 // NOLINTEND(readability-magic-numbers)
