@@ -27,7 +27,8 @@ class timer_awaiter final : public swiss::non_copyable,
    * simply reschedule the current coroutine at the specified timepoint. Task
    * with nullopt_t value is used in the utility awaiter constructors below
    */
-  static constexpr bool kHasChildTask = !std::is_same_v<T, std::nullopt_t>;
+  static constexpr bool kHasChildTask =
+      !std::is_same_v<T, noop_task_value_type>;
 
  public:
   constexpr timer_awaiter(typename Clock::time_point time_point,
@@ -57,21 +58,19 @@ class timer_awaiter final : public swiss::non_copyable,
     if constexpr (kHasChildTask) {
       child_.set_continuation(parent);
     } else {
-      params_.handle = parent;
+      std::get<1>(params_) = parent;
     }
 
     this_executor::schedule(&static_cast<timer_awaiter const *>(this)->params_);
   }
 
-  constexpr auto await_resume() noexcept(!kHasChildTask) -> decltype(auto) {
-    if constexpr (kHasChildTask) {
-      return std::move(child_).get();
-    }
+  constexpr auto await_resume() -> decltype(auto) {
+    return std::move(child_).get();
   }
 
  private:
   std::pair<typename Clock::time_point, std::coroutine_handle<>> params_;
-  task<T> child_;
+  [[no_unique_address]] task<T> child_;
 };
 
 }  // namespace argo::awaiters
@@ -83,26 +82,25 @@ namespace argo::awaiters {
 
 template <typename Clock, typename T>
 constexpr auto on(typename Clock::time_point time_point, task<T> child) noexcept
-    -> timer_awaiter<Clock, T> {
+    -> decltype(auto) {
   return timer_awaiter<Clock, T>(time_point, std::move(child));
 }
 
 template <typename Clock>
 constexpr auto sleep_until(typename Clock::time_point time_point) noexcept
-    -> timer_awaiter<Clock, std::nullopt_t> {
-  return timer_awaiter<Clock, std::nullopt_t>(time_point, {});
+    -> decltype(auto) {
+  return timer_awaiter<Clock, noop_task_value_type>(time_point, noop_task());
 }
 
 template <typename Clock, typename Duration, typename T>
 constexpr auto after(Duration duration, task<T> child) noexcept
-    -> timer_awaiter<Clock, T> {
+    -> decltype(auto) {
   return timer_awaiter<Clock, T>(duration, std::move(child));
 }
 
 template <typename Clock, typename Duration>
-constexpr auto sleep_for(Duration duration) noexcept
-    -> timer_awaiter<Clock, std::nullopt_t> {
-  return timer_awaiter<Clock, std::nullopt_t>(duration, {});
+constexpr auto sleep_for(Duration duration) noexcept -> decltype(auto) {
+  return timer_awaiter<Clock, noop_task_value_type>(duration, noop_task());
 }
 
 }  // namespace argo::awaiters
