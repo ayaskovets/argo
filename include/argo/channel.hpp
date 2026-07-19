@@ -37,6 +37,10 @@ concept noexcept_channel =
       requires noexcept(channel.emplace(value));
       requires noexcept(channel.push(value));
       requires noexcept(channel.pop(value));
+
+      requires noexcept(channel.emplace(stop_token, value));
+      requires noexcept(channel.push(stop_token, value));
+      requires noexcept(channel.pop(stop_token, value));
     };
 
 /**
