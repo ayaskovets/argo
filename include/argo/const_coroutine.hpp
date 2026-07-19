@@ -4,6 +4,11 @@
 
 namespace argo {
 
+/**
+ * @brief There are a few pretty straightforward ways to extract the coroutine
+ * handle from a task and do something unintended. This wrapper does at least
+ * some hiding of the mutable part of the handle interface
+ */
 template <typename Promise = void>
 class const_coroutine_handle;
 
