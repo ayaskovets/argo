@@ -16,7 +16,8 @@ namespace argo {
  * to distinguish threads and to manage context automatically
  */
 class execution_context {
- private:
+ protected:
+  // NOLINTBEGIN(misc-non-private-member-variables-in-classes)
   /**
    * @brief This pointer is set when a task is resumed by an executor to
    * access the executor instance
@@ -45,6 +46,7 @@ class execution_context {
   void (*park_)(execution_context const & ctx, void const * params,
                 std::type_info const & type_info) = nullptr;
 
+  // NOLINTEND(misc-non-private-member-variables-in-classes)
  public:
   /**
    * @brief Yield execution to another task adding handle to the back of
