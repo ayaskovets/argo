@@ -1,7 +1,5 @@
 #pragma once
 
-#include <swiss/mixins.hpp>
-
 #include "../this_executor.hpp"
 
 namespace argo::awaiters {
@@ -10,8 +8,7 @@ namespace argo::awaiters {
  * @brief A special kind of awaiter that puts task back onto the executor input
  * queue bypassing any scheduler
  */
-class yield_awaiter final : public swiss::non_copyable,
-                            public swiss::non_movable {
+class yield_awaiter final {
  public:
   constexpr auto await_ready() const noexcept -> bool { return false; }
 
