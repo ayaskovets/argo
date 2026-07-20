@@ -1,14 +1,8 @@
 #include <argo/this_executor.hpp>
 
-namespace argo::this_executor::detail {
-// NOLINTBEGIN(cppcoreguidelines-avoid-non-const-global-variables)
+namespace argo {
 
-thread_local void const * this_executor = nullptr;
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
+thread_local execution_context this_executor;
 
-thread_local void (*yield)(std::coroutine_handle<> handle) = nullptr;
-
-thread_local void (*park)(void const * awaiter,
-                          std::type_info const & type_info) = nullptr;
-
-// NOLINTEND(cppcoreguidelines-avoid-non-const-global-variables)
-}  // namespace argo::this_executor::detail
+}  // namespace argo

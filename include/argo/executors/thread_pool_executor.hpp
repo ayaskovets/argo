@@ -67,7 +67,7 @@ class thread_pool_executor final : public swiss::non_copyable,
           break;
         }
 
-        this_executor::resume(*this, std::move(in_value));
+        this_executor.resume(*this, std::move(in_value));
         // NOLINTNEXTLINE(bugprone-empty-catch)
       } catch (...) {
       }

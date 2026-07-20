@@ -42,7 +42,7 @@ class inline_executor final : public swiss::non_copyable,
       return true;
     }
 
-    this_executor::resume(*this, std::move(in_value));
+    this_executor.resume(*this, std::move(in_value));
     return false;
   }
 
@@ -58,7 +58,7 @@ class inline_executor final : public swiss::non_copyable,
       return false;
     }
 
-    this_executor::resume(*this, std::move(in_value));
+    this_executor.resume(*this, std::move(in_value));
     return true;
   }
 
