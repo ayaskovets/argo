@@ -33,6 +33,7 @@ set(SOURCES src/executors/this_executor.cpp)
 set(HEADERS
     "${CMAKE_CURRENT_BINARY_DIR}/include/argo/export.hpp"
     include/argo/awaiters/continuation_awaiter.hpp
+    include/argo/awaiters/proxy_awaiter.hpp
     include/argo/awaiters/timer_awaiter.hpp
     include/argo/awaiters/yield_awaiter.hpp
     include/argo/channel.hpp
