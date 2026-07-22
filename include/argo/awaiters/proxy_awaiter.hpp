@@ -2,6 +2,7 @@
 
 #include <concepts>
 #include <coroutine>
+#include <type_traits>
 
 namespace argo::awaiters {
 
@@ -24,7 +25,9 @@ class proxy_awaiter final {
 
   template <typename Promise>
   constexpr auto await_suspend(std::coroutine_handle<Promise> parent) noexcept(
-      noexcept(awaiter_.await_suspend(parent))) -> decltype(auto) {
+      noexcept(awaiter_.await_suspend(parent)) &&
+      std::is_nothrow_invocable_v<Proxy, std::coroutine_handle<Promise>>)
+      -> decltype(auto) {
     static_assert(std::invocable<Proxy, std::coroutine_handle<Promise>>,
                   "proxy_awaiter::await_suspend(): proxy object must be an "
                   "invocable accepting std::coroutine_handle");
