@@ -58,7 +58,6 @@ class execution_context {
            "execution_context::yield(): coroutines first have be resumed by "
            "from an executor");
     yield_(*this, handle);
-    yield_ = nullptr;
   }
 
   /**
@@ -72,7 +71,6 @@ class execution_context {
            "execution_context::schedule(): coroutines first have be resumed by "
            "an executor");
     park_(*this, &params, typeid(&params));
-    park_ = nullptr;
   }
 
   /**
