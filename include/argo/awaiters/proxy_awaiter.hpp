@@ -54,8 +54,22 @@ namespace argo::awaiters {
 
 template <typename Awaiter, typename Proxy>
 constexpr auto proxy(Awaiter && awaiter, Proxy && proxy) noexcept
-    -> proxy_awaiter<Awaiter, Proxy> {
-  return proxy_awaiter(std::forward<Awaiter>(awaiter),
+    -> decltype(auto) {
+  auto underlying_awaiter = [](auto && awaiter) noexcept -> decltype(auto) {
+    if constexpr (requires {
+                    std::forward<Awaiter>(awaiter).operator co_await();
+                  }) {
+      return std::forward<Awaiter>(awaiter).operator co_await();
+    } else if constexpr (requires {
+                           operator co_await(std::forward<Awaiter>(awaiter));
+                         }) {
+      return operator co_await(std::forward<Awaiter>(awaiter));
+    } else {
+      return std::forward<Awaiter>(awaiter);
+    }
+  }(std::forward<Awaiter>(awaiter));
+
+  return proxy_awaiter(std::move(underlying_awaiter),
                        std::forward<Proxy>(proxy));
 }
 
