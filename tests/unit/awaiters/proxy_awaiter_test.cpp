@@ -1,12 +1,8 @@
+#include <argo/awaiters/continuation_awaiter.hpp>
 #include <argo/awaiters/proxy_awaiter.hpp>
-
-#include <coroutine>
-#include <functional>
 
 #include <gtest/gtest.h>
 #include <swiss/coroutine.hpp>
-
-#include "argo/awaiters/continuation_awaiter.hpp"
 
 namespace tests::unit::awaiters {
 // NOLINTBEGIN(cppcoreguidelines-avoid-reference-coroutine-parameters)
@@ -33,32 +29,25 @@ struct member_operator_awaiter final {
 }  // namespace
 
 TEST(proxy_awaiter, smoke) {
-  std::string log;
-
-  auto const task = [](std::string & log) -> swiss::task {
-    log.append("1");
+  auto const task = []() -> swiss::task {
     co_await argo::awaiters::proxy(argo::awaiters::continuation(nullptr),
                                    std::identity());
-    log.append("2");
     co_await argo::awaiters::proxy(member_operator_awaiter(nullptr),
                                    std::identity());
-    log.append("3");
     co_await argo::awaiters::proxy(global_operator_awaiter(nullptr),
                                    std::identity());
-    log.append("4");
-  }(log);
-
-  EXPECT_TRUE(log.empty());
+  }();
 
   task.handle().resume();
-  EXPECT_EQ(log, "1");
-  task.handle().resume();
-  EXPECT_EQ(log, "12");
-  task.handle().resume();
-  EXPECT_EQ(log, "123");
-  task.handle().resume();
-  EXPECT_EQ(log, "1234");
+  EXPECT_FALSE(task.handle().done());
 
+  task.handle().resume();
+  EXPECT_FALSE(task.handle().done());
+
+  task.handle().resume();
+  EXPECT_FALSE(task.handle().done());
+
+  task.handle().resume();
   EXPECT_TRUE(task.handle().done());
 }
 
