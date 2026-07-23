@@ -39,11 +39,11 @@ class inline_executor final : public swiss::non_copyable,
       concepts::noexcept_channel<in_channel_type>) -> bool {
     typename in_channel_type::value_type in_value{};
     if (!in_channel_.try_pop(in_value)) {
-      return true;
+      return false;
     }
 
     this_executor.resume(*this, std::move(in_value));
-    return false;
+    return true;
   }
 
   /**
