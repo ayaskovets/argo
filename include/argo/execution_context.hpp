@@ -51,6 +51,7 @@ class execution_context {
   /**
    * @brief Yield execution to another task adding handle to the back of
    * the execution queue
+   * @note Can be treated as a end of an step execution for a certain coroutine
    * @note Noexcept if input channel of the current executor is noexcept
    */
   constexpr void yield(std::coroutine_handle<> handle) {
@@ -63,6 +64,7 @@ class execution_context {
   /**
    * @brief Move task to a task scheduler. The specific scheduler is selected
    * based on the function argument
+   * @note Can be treated as a end of an step execution for a certain coroutine
    * @note Noexcept if input channel of the current executor is noexcept
    */
   template <typename Params>
@@ -76,6 +78,8 @@ class execution_context {
   /**
    * @brief Resume task by the passed executor instance. Sets up all internal
    * machinery needed for awaiters and task scheduling to work
+   * @note Can be treated as a start of an execution step for a certain
+   * coroutine
    */
   template <concepts::executor Executor>
   // NOLINTNEXTLINE(bugprone-exception-escape)
