@@ -22,14 +22,14 @@ class execution_context {
    * @brief This pointer is set when a task is resumed by an executor to
    * access the executor instance
    */
-  void const * this_executor_ = nullptr;
+  void const * executor_ = nullptr;
 
   /**
    * @brief Yield function is set when a task is resumed by an executor. This
    * called when a coroutine encounters a co_await with the
    * awaiters::yield_awaiter
-   * @note The main reason for this function is to bypass scheduler and add the
-   * task back to the execution queue
+   * @note The rationale for this function is a mechanisn to bypass scheduler
+   * and add the task back to the execution queue of an executor
    */
   void (*yield_)(execution_context const & ctx,
                  std::coroutine_handle<> handle) = nullptr;
@@ -88,17 +88,16 @@ class execution_context {
     /**
      * @note Condition to decrease memory writes when using a single executor
      */
-    if (this_executor_ != &executor) [[unlikely]] {
-      this_executor_ = &executor;
+    if (executor_ != &executor) [[unlikely]] {
+      executor_ = &executor;
 
       // NOLINTNEXTLINE(bugprone-easily-swappable-parameters)
       park_ = [](execution_context const & ctx, void const * params,
                  std::type_info const & type_info) -> void {
-        assert(ctx.this_executor_ &&
+        assert(ctx.executor_ &&
                "execution_context::park(): this function should not be called "
                "directly");
-        auto const & this_executor =
-            *static_cast<Executor const *>(ctx.this_executor_);
+        auto const & executor = *static_cast<Executor const *>(ctx.executor_);
 
         auto const * typed_params = static_cast<
             typename Executor::out_channel_type::value_type const *>(params);
@@ -112,7 +111,7 @@ class execution_context {
         }
 
         // TODO: handle infinite wait, handle exception
-        this_executor.out_channel().push(*typed_params);
+        executor.out_channel().push(*typed_params);
       };
 
       yield_ =
@@ -122,14 +121,13 @@ class execution_context {
                                       noexcept_channel<
                                           typename Executor::in_channel_type>)
           -> void {
-        assert(ctx.this_executor_ &&
+        assert(ctx.executor_ &&
                "execution_context::yield(): this function should not be called "
                "directly");
-        auto const & this_executor =
-            *static_cast<Executor const *>(ctx.this_executor_);
+        auto const & executor = *static_cast<Executor const *>(ctx.executor_);
 
         // TODO: handle infinite wait, handle exception
-        this_executor.in_channel().push(handle);
+        executor.in_channel().push(handle);
       };
     }
 
