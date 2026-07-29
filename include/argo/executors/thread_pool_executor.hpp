@@ -6,7 +6,7 @@
 #include <swiss/mixins.hpp>
 
 #include "../channel.hpp"
-#include "../this_executor.hpp"
+#include "../execution_context.hpp"
 
 namespace argo::executors {
 
@@ -56,6 +56,8 @@ class thread_pool_executor final : public swiss::non_copyable,
 
  private:
   constexpr void worker_task(std::stop_token const & stop_token) noexcept {
+    execution_context const ctx(*this);
+
     typename in_channel_type::value_type in_value{};
     while (true) {
       /**
@@ -66,11 +68,11 @@ class thread_pool_executor final : public swiss::non_copyable,
         if (!in_channel_.pop(stop_token, in_value)) {
           break;
         }
-
-        this_executor.resume(*this, std::move(in_value));
         // NOLINTNEXTLINE(bugprone-empty-catch)
       } catch (...) {
       }
+
+      ctx.resume(std::move(in_value));
     }
   }
 };

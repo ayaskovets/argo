@@ -1,6 +1,5 @@
 #pragma once
 
-#include <cassert>
 #include <coroutine>
 #include <format>
 
@@ -9,20 +8,79 @@
 namespace argo {
 
 /**
- * @brief Engine execution context. All scheduling and context switching should
- * be done through the functions defined in this namespace
+ * @brief Context for a single thread of execution. All scheduling and context
+ * switching should be done through the functions defined in this namespace
  * @note With multiple threads of execution each thread needs its own context to
  * function properly as it is difficult and unnecessary to implement this class
- * to distinguish threads and to manage context automatically
+ * in a way that does distinguishing between threads automatically
  */
 class execution_context {
+ protected:
+  /**
+   * @brief TLS execution context
+   */
+  static thread_local inline execution_context * this_executor_ = nullptr;
+
+ public:
+  /**
+   * @brief Somewhat analogous to std::this_thread for accessing the current
+   * thread local execution context
+   */
+  static constexpr auto this_executor() noexcept -> execution_context * {
+    return this_executor_;
+  }
+
+ public:
+  template <concepts::executor Executor>
+  explicit constexpr execution_context(Executor const & executor) noexcept
+      : executor_(&executor), yield_(yield<Executor>), park_(park<Executor>) {}
+
+ public:
+  /**
+   * @brief Yield execution to another task adding handle to the back of
+   * the execution queue
+   * @note Can be treated as a end of an step execution for a certain coroutine
+   * @note Noexcept if input channel of the current executor is noexcept
+   */
+  constexpr void yield(std::coroutine_handle<> handle) {
+    yield_(*this, handle);
+  }
+
+  /**
+   * @brief Hand over the task parameters to a task scheduler. The specific
+   * scheduler type is selected based on the type of the function argument
+   * @note Can be treated as a end of an step execution for a certain coroutine
+   * @note Noexcept if input channel of the current executor is noexcept
+   */
+  template <typename Params>
+  constexpr void schedule(Params const & params) {
+    park_(*this, &params, typeid(&params));
+  }
+
+  /**
+   * @brief Resume task by the passed executor instance. Sets up all internal
+   * machinery needed for awaiters and task scheduling to work
+   * @note Can be treated as a start of an execution step for a certain
+   * coroutine
+   */
+  // NOLINTNEXTLINE(bugprone-exception-escape)
+  constexpr void resume(std::coroutine_handle<> handle) noexcept {
+    this_executor_ = this;
+
+    /**
+     * @note Task exception handling is done asynchronously with the standard
+     * unhandled_exception method
+     */
+    handle.resume();
+  }
+
  protected:
   // NOLINTBEGIN(misc-non-private-member-variables-in-classes)
   /**
    * @brief This pointer is set when a task is resumed by an executor to
    * access the executor instance
    */
-  void const * executor_ = nullptr;
+  void const * executor_;
 
   /**
    * @brief Yield function is set when a task is resumed by an executor. This
@@ -31,8 +89,7 @@ class execution_context {
    * @note The rationale for this function is a mechanisn to bypass scheduler
    * and add the task back to the execution queue of an executor
    */
-  void (*yield_)(execution_context const & ctx,
-                 std::coroutine_handle<> handle) = nullptr;
+  void (*yield_)(execution_context const & ctx, std::coroutine_handle<> handle);
 
   /**
    * @brief Park function is set when a task is resumed by an executor. This
@@ -44,98 +101,39 @@ class execution_context {
    * is going to be used with a certain awaiter
    */
   void (*park_)(execution_context const & ctx, void const * params,
-                std::type_info const & type_info) = nullptr;
+                std::type_info const & type_info);
 
   // NOLINTEND(misc-non-private-member-variables-in-classes)
- public:
-  /**
-   * @brief Yield execution to another task adding handle to the back of
-   * the execution queue
-   * @note Can be treated as a end of an step execution for a certain coroutine
-   * @note Noexcept if input channel of the current executor is noexcept
-   */
-  constexpr void yield(std::coroutine_handle<> handle) {
-    assert(yield_ &&
-           "execution_context::yield(): coroutines first have be resumed by "
-           "from an executor");
-    yield_(*this, handle);
-  }
-
-  /**
-   * @brief Move task to a task scheduler. The specific scheduler is selected
-   * based on the function argument
-   * @note Can be treated as a end of an step execution for a certain coroutine
-   * @note Noexcept if input channel of the current executor is noexcept
-   */
-  template <typename Params>
-  constexpr void schedule(Params const & params) {
-    assert(park_ &&
-           "execution_context::schedule(): coroutines first have be resumed by "
-           "an executor");
-    park_(*this, &params, typeid(&params));
-  }
-
-  /**
-   * @brief Resume task by the passed executor instance. Sets up all internal
-   * machinery needed for awaiters and task scheduling to work
-   * @note Can be treated as a start of an execution step for a certain
-   * coroutine
-   */
+ private:
   template <concepts::executor Executor>
-  // NOLINTNEXTLINE(bugprone-exception-escape)
-  constexpr void resume(Executor const & executor,
-                        std::coroutine_handle<> handle) noexcept {
-    /**
-     * @note Condition to decrease memory writes when using a single executor
-     */
-    if (executor_ != &executor) [[unlikely]] {
-      executor_ = &executor;
+  constexpr void yield(std::coroutine_handle<> handle) noexcept(
+      concepts::noexcept_channel<typename Executor::in_channel_type>) {
+    auto const & typed_executor = *static_cast<Executor const *>(executor_);
 
-      // NOLINTNEXTLINE(bugprone-easily-swappable-parameters)
-      park_ = [](execution_context const & ctx, void const * params,
-                 std::type_info const & type_info) -> void {
-        assert(ctx.executor_ &&
-               "execution_context::park(): this function should not be called "
-               "directly");
-        auto const & executor = *static_cast<Executor const *>(ctx.executor_);
+    // TODO: handle infinite wait
+    // TODO: handle exception
+    typed_executor.in_channel().push(handle);
+  }
 
-        auto const * typed_params = static_cast<
-            typename Executor::out_channel_type::value_type const *>(params);
+  template <concepts::executor Executor>
+  constexpr void park(void const * params, std::type_info const & type_info) {
+    auto const & typed_params =
+        *static_cast<typename Executor::out_channel_type::value_type const *>(
+            params);
 
-        // TODO: support variant
-        if (type_info != typeid(typed_params)) [[unlikely]] {
-          throw std::runtime_error(std::format(
-              "execution_context::park(): incompatible awaiter parameters type "
-              "({}) and output channel value type ({})",
-              type_info.name(), typeid(typed_params).name()));
-        }
-
-        // TODO: handle infinite wait, handle exception
-        executor.out_channel().push(*typed_params);
-      };
-
-      yield_ =
-          [](execution_context const & ctx,
-             std::coroutine_handle<>
-                 handle) noexcept(concepts::
-                                      noexcept_channel<
-                                          typename Executor::in_channel_type>)
-          -> void {
-        assert(ctx.executor_ &&
-               "execution_context::yield(): this function should not be called "
-               "directly");
-        auto const & executor = *static_cast<Executor const *>(ctx.executor_);
-
-        // TODO: handle infinite wait, handle exception
-        executor.in_channel().push(handle);
-      };
+    // TODO: support multiple types
+    if (type_info != typeid(&typed_params)) [[unlikely]] {
+      throw std::runtime_error(
+          std::format("execution_context::park(): incompatible awaiter "
+                      "parameters type ({}) and output channel value type ({})",
+                      type_info.name(), typeid(&typed_params).name()));
     }
 
-    /**
-     * @note Task exception handling is done asynchronously with the standard
-     * unhandled_exception method
-     */
-    handle.resume();
+    auto const & typed_executor = *static_cast<Executor const *>(executor_);
+
+    // TODO: handle infinite wait
+    // TODO: handle exception
+    typed_executor.out_channel().push(typed_params);
   }
 };
 
