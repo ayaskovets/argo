@@ -5,7 +5,6 @@
 #include <swiss/coroutine.hpp>
 
 namespace tests::unit::awaiters {
-// NOLINTBEGIN(cppcoreguidelines-avoid-reference-coroutine-parameters)
 
 namespace {
 
@@ -51,5 +50,4 @@ TEST(proxy_awaiter, smoke) {
   EXPECT_TRUE(task.handle().done());
 }
 
-// NOLINTEND(cppcoreguidelines-avoid-reference-coroutine-parameters)
 }  // namespace tests::unit::awaiters
