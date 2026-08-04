@@ -16,7 +16,7 @@ class continuation_awaiter final {
  public:
   constexpr auto await_ready() const noexcept -> bool { return false; }
 
-  constexpr auto await_suspend(std::coroutine_handle<>) const noexcept
+  constexpr auto await_suspend(auto &&) const noexcept
       -> std::coroutine_handle<> {
     return continuation_ ? continuation_ : std::noop_coroutine();
   }
