@@ -7,6 +7,8 @@
 
 namespace argo {
 
+// TODO: temporarily change this_executor to impl transfer to other ctx
+
 /**
  * @brief Context for a single thread of execution. All scheduling and context
  * switching should be done through the functions defined in this namespace
@@ -37,6 +39,19 @@ class execution_context {
 
  public:
   /**
+   * @brief Resume task by the passed executor instance. Sets up all internal
+   * machinery needed for awaiters and task scheduling to work
+   * @note Can be treated as a start of an execution step for a certain
+   * coroutine
+   * @warning This functions expects handle being valid and non-null
+   */
+  // NOLINTNEXTLINE(bugprone-exception-escape)
+  constexpr void resume(std::coroutine_handle<> handle) noexcept {
+    this_executor_ = this;
+    handle.resume();
+  }
+
+  /**
    * @brief Yield execution to another task adding handle to the back of
    * the execution queue
    * @note Can be treated as a end of an step execution for a certain coroutine
@@ -44,6 +59,7 @@ class execution_context {
    */
   constexpr void yield(std::coroutine_handle<> handle) {
     yield_(*this, handle);
+    this_executor_ = nullptr;
   }
 
   /**
@@ -55,23 +71,7 @@ class execution_context {
   template <typename Params>
   constexpr void schedule(Params const & params) {
     park_(*this, &params, typeid(&params));
-  }
-
-  /**
-   * @brief Resume task by the passed executor instance. Sets up all internal
-   * machinery needed for awaiters and task scheduling to work
-   * @note Can be treated as a start of an execution step for a certain
-   * coroutine
-   */
-  // NOLINTNEXTLINE(bugprone-exception-escape)
-  constexpr void resume(std::coroutine_handle<> handle) noexcept {
-    this_executor_ = this;
-
-    /**
-     * @note Task exception handling is done asynchronously with the standard
-     * unhandled_exception method
-     */
-    handle.resume();
+    this_executor_ = nullptr;
   }
 
  protected:
@@ -111,7 +111,6 @@ class execution_context {
     auto const & typed_executor = *static_cast<Executor const *>(executor_);
 
     // TODO: handle infinite wait
-    // TODO: handle exception
     typed_executor.in_channel().push(handle);
   }
 
@@ -132,7 +131,6 @@ class execution_context {
     auto const & typed_executor = *static_cast<Executor const *>(executor_);
 
     // TODO: handle infinite wait
-    // TODO: handle exception
     typed_executor.out_channel().push(typed_params);
   }
 };
