@@ -29,10 +29,11 @@ set(SOURCES
     awaiters/proxy_awaiter_test.cpp
     awaiters/suspend_always_awaiter_test.cpp
     awaiters/suspend_never_awaiter_test.cpp
-    channel_test.cpp executor_test.cpp
+    # awaiters/yield_awaiter_test.cpp
+    channel_test.cpp
+    executor_test.cpp
     # scheduler_test.cpp
-    task_test.cpp
-    )
+    task_test.cpp)
 
 # ------------------------------------------------------------------------------
 # target
