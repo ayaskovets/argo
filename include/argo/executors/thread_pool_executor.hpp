@@ -56,7 +56,7 @@ class thread_pool_executor final : public swiss::non_copyable,
 
  private:
   constexpr void worker_task(std::stop_token const & stop_token) noexcept {
-    execution_context const ctx(*this);
+    execution_context ctx(*this);
 
     typename in_channel_type::value_type in_value{};
     while (true) {
