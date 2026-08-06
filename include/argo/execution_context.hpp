@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cassert>
 #include <coroutine>
 #include <format>
 
@@ -8,6 +9,7 @@
 namespace argo {
 
 // TODO: temporarily change this_executor to impl transfer to other ctx
+// TODO: replace coroutine_handle
 
 /**
  * @brief Context for a single thread of execution. All scheduling and context
@@ -28,14 +30,17 @@ class execution_context {
    * @brief Somewhat analogous to std::this_thread for accessing the current
    * thread local execution context
    */
-  static constexpr auto this_executor() noexcept -> execution_context * {
-    return this_executor_;
+  static constexpr auto this_executor() noexcept -> execution_context & {
+    assert(this_executor_ && "this_executor(): no resumed coroutine");
+    return *this_executor_;
   }
 
  public:
   template <concepts::executor Executor>
   explicit constexpr execution_context(Executor const & executor) noexcept
-      : executor_(&executor), yield_(yield<Executor>), park_(park<Executor>) {}
+      : executor_(&executor),
+        yield_(&execution_context::yield<Executor>),
+        park_(&execution_context::park<Executor>) {}
 
  public:
   /**
@@ -58,7 +63,7 @@ class execution_context {
    * @note Noexcept if input channel of the current executor is noexcept
    */
   constexpr void yield(std::coroutine_handle<> handle) {
-    yield_(*this, handle);
+    (this->*yield_)(handle);
     this_executor_ = nullptr;
   }
 
@@ -68,9 +73,10 @@ class execution_context {
    * @note Can be treated as a end of an step execution for a certain coroutine
    * @note Noexcept if input channel of the current executor is noexcept
    */
+  // TODO: split params into params and task view
   template <typename Params>
   constexpr void schedule(Params const & params) {
-    park_(*this, &params, typeid(&params));
+    (this->*park_)(&params, typeid(&params));
     this_executor_ = nullptr;
   }
 
@@ -89,7 +95,7 @@ class execution_context {
    * @note The rationale for this function is a mechanisn to bypass scheduler
    * and add the task back to the execution queue of an executor
    */
-  void (*yield_)(execution_context const & ctx, std::coroutine_handle<> handle);
+  void (execution_context::*yield_)(std::coroutine_handle<> handle);
 
   /**
    * @brief Park function is set when a task is resumed by an executor. This
@@ -100,8 +106,8 @@ class execution_context {
    * same type as the one passed as it is impossible to know what scheduler type
    * is going to be used with a certain awaiter
    */
-  void (*park_)(execution_context const & ctx, void const * params,
-                std::type_info const & type_info);
+  void (execution_context::*park_)(void const * params,
+                                   std::type_info const & type_info);
 
   // NOLINTEND(misc-non-private-member-variables-in-classes)
  private:
