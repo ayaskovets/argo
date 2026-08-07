@@ -1,5 +1,3 @@
-# TODO: make header-only
-
 cmake_minimum_required(VERSION 3.25.0)
 project(
   argo
@@ -17,23 +15,14 @@ find_package(flow REQUIRED)
 # general settings and options
 # ------------------------------------------------------------------------------
 
-option(BUILD_BENCHMARKS "Build the benchmarks tree." OFF)
-
-add_library(argo)
+add_library(argo INTERFACE)
 add_library(argo::argo ALIAS argo)
 
 # ------------------------------------------------------------------------------
 # sources
 # ------------------------------------------------------------------------------
 
-include(GenerateExportHeader)
-
-generate_export_header(argo EXPORT_FILE_NAME
-                       "${CMAKE_CURRENT_BINARY_DIR}/include/argo/export.hpp")
-
-set(SOURCES del.cpp)
 set(HEADERS
-    "${CMAKE_CURRENT_BINARY_DIR}/include/argo/export.hpp"
     include/argo/awaiters/continuation_awaiter.hpp
     include/argo/awaiters/proxy_awaiter.hpp
     include/argo/awaiters/suspend_always_awaiter.hpp
@@ -53,30 +42,13 @@ set(HEADERS
 # ------------------------------------------------------------------------------
 
 target_sources(
-  argo
-  PRIVATE ${SOURCES}
-  PUBLIC FILE_SET
-         HEADERS
-         BASE_DIRS
-         "${CMAKE_CURRENT_SOURCE_DIR}/include"
-         "${CMAKE_CURRENT_BINARY_DIR}/include"
-         FILES
-         ${HEADERS})
-target_compile_features(argo PUBLIC cxx_std_23)
-set_target_properties(
-  argo
-  PROPERTIES SOVERSION ${PROJECT_VERSION_MAJOR}
-             VERSION ${PROJECT_VERSION}
-             POSITION_INDEPENDENT_CODE ON
-             CXX_VISIBILITY_PRESET hidden
-             VISIBILITY_INLINES_HIDDEN ON)
+  argo INTERFACE FILE_SET HEADERS BASE_DIRS
+                 "${CMAKE_CURRENT_SOURCE_DIR}/include" FILES ${HEADERS})
 
-if(NOT BUILD_SHARED_LIBS)
-  target_compile_definitions(argo PUBLIC argo_STATIC_DEFINE)
-endif()
+target_compile_features(argo INTERFACE cxx_std_23)
 
-target_link_libraries(argo PUBLIC swiss::swiss)
-target_link_libraries(argo PUBLIC flow::flow)
+target_link_libraries(argo INTERFACE swiss::swiss)
+target_link_libraries(argo INTERFACE flow::flow)
 
 # ------------------------------------------------------------------------------
 # install
@@ -96,39 +68,23 @@ if(PROJECT_IS_TOP_LEVEL)
   install(
     TARGETS argo
     EXPORT argo_export
-    RUNTIME COMPONENT argo
-    LIBRARY COMPONENT argo NAMELINK_COMPONENT argo-dev
-    ARCHIVE COMPONENT argo-dev
-            FILE_SET HEADERS
-            COMPONENT argo-dev)
+    FILE_SET HEADERS)
 
   install(
     EXPORT argo_export
-    COMPONENT argo-dev
     FILE "argo-targets.cmake"
     DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/argo"
     NAMESPACE argo::)
 
-  install(
-    FILES "${CMAKE_CURRENT_BINARY_DIR}/argo-config.cmake"
-          "${CMAKE_CURRENT_BINARY_DIR}/argo-config-version.cmake"
-    COMPONENT argo-dev
-    DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/argo")
-endif()
-
-# ------------------------------------------------------------------------------
-# benchmarks
-# ------------------------------------------------------------------------------
-
-if(PROJECT_IS_TOP_LEVEL)
-  if(BUILD_BENCHMARKS)
-    add_subdirectory(benchmarks)
-  endif()
+  install(FILES "${CMAKE_CURRENT_BINARY_DIR}/argo-config.cmake"
+                "${CMAKE_CURRENT_BINARY_DIR}/argo-config-version.cmake"
+          DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/argo")
 endif()
 
 # ------------------------------------------------------------------------------
 # tests
 # ------------------------------------------------------------------------------
+
 if(PROJECT_IS_TOP_LEVEL)
   include(CTest)
 
