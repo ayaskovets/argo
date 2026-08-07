@@ -9,6 +9,7 @@
 
 #include "awaiters/continuation_awaiter.hpp"
 #include "awaiters/proxy_awaiter.hpp"
+#include "task_ref.hpp"
 
 namespace argo {
 
@@ -20,6 +21,12 @@ namespace argo {
 template <typename T>
 // NOLINTNEXTLINE(cppcoreguidelines-special-member-functions)
 class task : public swiss::non_copyable {
+ private:
+  /**
+   * @note Required for passing coroutine handle to task ref in constructor
+   */
+  friend class task_ref;
+
  public:
   using value_type = T;
   class promise_type;
@@ -74,7 +81,7 @@ class task : public swiss::non_copyable {
   }
 
  public:
-  constexpr explicit operator bool() const noexcept {
+  explicit constexpr operator bool() const noexcept {
     return static_cast<bool>(handle_);
   }
 
@@ -143,14 +150,25 @@ class task<T>::promise_type : public swiss::non_copyable,
   }
 
  public:
+  template <typename U>
+  constexpr auto await_transform(task<U> & task) const noexcept
+      -> decltype(auto) {
+    return task;
+  }
+
+  template <typename U>
+  constexpr auto await_transform(task<U> && task) const noexcept
+      -> decltype(auto) {
+    return std::move(task);
+  }
+
   template <typename Awaiter>
   constexpr auto await_transform(Awaiter && awaiter) const noexcept
       -> decltype(auto) {
     return awaiters::proxy(
         std::forward<Awaiter>(awaiter),
         [](std::coroutine_handle<> caller) noexcept -> decltype(auto) {
-          // TODO: hide coroutine_handle
-          return caller;
+          return task_ref(caller);
         });
   }
 
@@ -213,14 +231,25 @@ class task<void>::promise_type : public swiss::non_copyable,
   }
 
  public:
+  template <typename U>
+  constexpr auto await_transform(task<U> & task) const noexcept
+      -> decltype(auto) {
+    return task;
+  }
+
+  template <typename U>
+  constexpr auto await_transform(task<U> && task) const noexcept
+      -> decltype(auto) {
+    return std::move(task);
+  }
+
   template <typename Awaiter>
   constexpr auto await_transform(Awaiter && awaiter) const noexcept
       -> decltype(auto) {
     return awaiters::proxy(
         std::forward<Awaiter>(awaiter),
         [](std::coroutine_handle<> caller) noexcept -> decltype(auto) {
-          // TODO: hide coroutine_handle
-          return caller;
+          return task_ref(caller);
         });
   }
 

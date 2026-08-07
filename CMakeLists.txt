@@ -1,3 +1,5 @@
+# TODO: make header-only
+
 cmake_minimum_required(VERSION 3.25.0)
 project(
   argo
@@ -29,12 +31,13 @@ include(GenerateExportHeader)
 generate_export_header(argo EXPORT_FILE_NAME
                        "${CMAKE_CURRENT_BINARY_DIR}/include/argo/export.hpp")
 
-set(SOURCES src/executors/this_executor.cpp)
+set(SOURCES del.cpp)
 set(HEADERS
     "${CMAKE_CURRENT_BINARY_DIR}/include/argo/export.hpp"
     include/argo/awaiters/continuation_awaiter.hpp
     include/argo/awaiters/proxy_awaiter.hpp
-    include/argo/awaiters/timer_awaiter.hpp
+    include/argo/awaiters/suspend_always_awaiter.hpp
+    include/argo/awaiters/suspend_never_awaiter.hpp
     include/argo/awaiters/yield_awaiter.hpp
     include/argo/channel.hpp
     include/argo/execution_context.hpp
@@ -42,8 +45,8 @@ set(HEADERS
     include/argo/executors/inline_executor.hpp
     include/argo/executors/thread_pool_executor.hpp
     include/argo/scheduler.hpp
-    include/argo/schedulers/timer_scheduler.hpp
-    include/argo/this_executor.hpp)
+    include/argo/task_ref.hpp
+    include/argo/task.hpp)
 
 # ------------------------------------------------------------------------------
 # target

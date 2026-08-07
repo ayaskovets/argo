@@ -1,15 +1,14 @@
 #pragma once
 
 #include <cassert>
-#include <coroutine>
 #include <format>
 
 #include "executor.hpp"
+#include "task_ref.hpp"
 
 namespace argo {
 
 // TODO: temporarily change this_executor to impl transfer to other ctx
-// TODO: replace coroutine_handle
 
 /**
  * @brief Context for a single thread of execution. All scheduling and context
@@ -51,9 +50,9 @@ class execution_context {
    * @warning This functions expects handle being valid and non-null
    */
   // NOLINTNEXTLINE(bugprone-exception-escape)
-  constexpr void resume(std::coroutine_handle<> handle) noexcept {
+  constexpr void resume(task_ref task) noexcept {
     this_executor_ = this;
-    handle.resume();
+    task.resume();
   }
 
   /**
@@ -62,8 +61,8 @@ class execution_context {
    * @note Can be treated as a end of an step execution for a certain coroutine
    * @note Noexcept if input channel of the current executor is noexcept
    */
-  constexpr void yield(std::coroutine_handle<> handle) {
-    (this->*yield_)(handle);
+  constexpr void yield(task_ref task) {
+    (this->*yield_)(task);
     this_executor_ = nullptr;
   }
 
@@ -95,7 +94,7 @@ class execution_context {
    * @note The rationale for this function is a mechanisn to bypass scheduler
    * and add the task back to the execution queue of an executor
    */
-  void (execution_context::*yield_)(std::coroutine_handle<> handle);
+  void (execution_context::*yield_)(task_ref);
 
   /**
    * @brief Park function is set when a task is resumed by an executor. This
@@ -112,12 +111,12 @@ class execution_context {
   // NOLINTEND(misc-non-private-member-variables-in-classes)
  private:
   template <concepts::executor Executor>
-  constexpr void yield(std::coroutine_handle<> handle) noexcept(
+  constexpr void yield(task_ref task) noexcept(
       concepts::noexcept_channel<typename Executor::in_channel_type>) {
     auto const & typed_executor = *static_cast<Executor const *>(executor_);
 
     // TODO: handle infinite wait
-    typed_executor.in_channel().push(handle);
+    typed_executor.in_channel().push(task);
   }
 
   template <concepts::executor Executor>
@@ -142,3 +141,20 @@ class execution_context {
 };
 
 }  // namespace argo
+
+/**
+ * @brief Utility namespace for accessing current executor same way as
+ * std::this_thread
+ */
+namespace argo::this_executor {
+
+constexpr void yield(task_ref handle) {
+  execution_context::this_executor().yield(handle);
+}
+
+template <typename Params>
+constexpr void schedule(Params const & params) {
+  execution_context::this_executor().schedule(params);
+}
+
+}  // namespace argo::this_executor
