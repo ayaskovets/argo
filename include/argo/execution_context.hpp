@@ -30,7 +30,8 @@ class execution_context {
    * thread local execution context
    */
   static constexpr auto this_executor() noexcept -> execution_context & {
-    assert(this_executor_ && "this_executor(): no resumed coroutine");
+    assert(this_executor_ &&
+           "execution_context::this_executor(): no resumed coroutine");
     return *this_executor_;
   }
 
