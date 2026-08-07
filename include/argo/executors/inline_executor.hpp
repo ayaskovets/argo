@@ -20,7 +20,7 @@ class inline_executor final : public swiss::non_copyable,
  public:
   constexpr inline_executor(in_channel_type & in_channel,
                             out_channel_type & out_channel) noexcept
-      : in_channel_(in_channel), out_channel_(out_channel) {}
+      : in_channel_(in_channel), out_channel_(out_channel), ctx_(*this) {}
 
  public:
   constexpr auto in_channel() const noexcept -> in_channel_type & {
@@ -28,6 +28,9 @@ class inline_executor final : public swiss::non_copyable,
   }
   constexpr auto out_channel() const noexcept -> out_channel_type & {
     return out_channel_;
+  }
+  constexpr auto context() const noexcept -> execution_context & {
+    return ctx_;
   }
 
  public:
@@ -37,14 +40,12 @@ class inline_executor final : public swiss::non_copyable,
    */
   constexpr auto run_once() noexcept(
       concepts::noexcept_channel<in_channel_type>) -> bool {
-    execution_context ctx(*this);
-
     typename in_channel_type::value_type in_value{};
     if (!in_channel_.try_pop(in_value)) {
       return false;
     }
 
-    ctx.resume(std::move(in_value));
+    ctx_.resume(std::move(in_value));
     return true;
   }
 
@@ -55,14 +56,12 @@ class inline_executor final : public swiss::non_copyable,
    */
   constexpr auto run_once(std::stop_token const & stop_token) noexcept(
       concepts::noexcept_channel<in_channel_type>) -> bool {
-    execution_context ctx(*this);
-
     typename in_channel_type::value_type in_value{};
     if (!in_channel_.pop(in_value, stop_token)) {
       return false;
     }
 
-    ctx.resume(std::move(in_value));
+    ctx_.resume(std::move(in_value));
     return true;
   }
 
@@ -71,6 +70,7 @@ class inline_executor final : public swiss::non_copyable,
   in_channel_type & in_channel_;
   out_channel_type & out_channel_;
   // NOLINTEND(cppcoreguidelines-avoid-const-or-ref-data-members)
+  execution_context ctx_;
 };
 
 }  // namespace argo::executors

@@ -23,7 +23,7 @@ template <typename T>
 class task : public swiss::non_copyable {
  private:
   /**
-   * @note Required for passing coroutine handle to task ref in constructor
+   * @note For passing coroutine handle to task ref in constructor
    */
   friend class task_ref;
 
