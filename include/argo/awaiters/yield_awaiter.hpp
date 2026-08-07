@@ -1,6 +1,7 @@
 #pragma once
 
-#include "../this_executor.hpp"
+#include "../execution_context.hpp"
+#include "../task_ref.hpp"
 
 namespace argo::awaiters {
 
@@ -13,10 +14,10 @@ class yield_awaiter final {
   constexpr auto await_ready() const noexcept -> bool { return false; }
 
   /**
-   * @note Noexcept if this_executor::yield is noexcept
+   * @note Noexcept if this_executor().yield is noexcept
    */
-  constexpr void await_suspend(std::coroutine_handle<> parent) const {
-    this_executor::yield(parent);
+  constexpr void await_suspend(task_ref caller) const {
+    this_executor::yield(caller);
   }
 
   constexpr void await_resume() const noexcept {}
