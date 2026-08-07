@@ -25,7 +25,7 @@ class proxy_awaiter final {
 
   template <typename Promise>
   constexpr auto await_suspend(std::coroutine_handle<Promise> caller) noexcept(
-      noexcept(awaiter_.await_suspend(caller)) &&
+      noexcept(awaiter_.await_suspend(proxy_(caller))) &&
       std::is_nothrow_invocable_v<Proxy, std::coroutine_handle<Promise>>)
       -> decltype(auto) {
     static_assert(std::invocable<Proxy, std::coroutine_handle<Promise>>,
