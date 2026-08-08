@@ -71,7 +71,7 @@ class task : public swiss::non_copyable {
 
       constexpr auto await_resume() -> T {
         if (!handle) [[unlikely]] {
-          throw std::runtime_error("task::await_resume(): no state");
+          throw std::runtime_error("task_awaiter::await_resume(): no state");
         }
 
         return std::move(handle.promise()).get();

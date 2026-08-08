@@ -1,7 +1,6 @@
 #pragma once
 
 #include <concepts>
-#include <coroutine>
 #include <type_traits>
 
 namespace argo::awaiters {
@@ -23,16 +22,15 @@ class proxy_awaiter final {
     return awaiter_.await_ready();
   }
 
-  template <typename Promise>
-  constexpr auto await_suspend(std::coroutine_handle<Promise> caller) noexcept(
+  template <typename T>
+  constexpr auto await_suspend(T && caller) noexcept(
       noexcept(awaiter_.await_suspend(proxy_(caller))) &&
-      std::is_nothrow_invocable_v<Proxy, std::coroutine_handle<Promise>>)
-      -> decltype(auto) {
-    static_assert(std::invocable<Proxy, std::coroutine_handle<Promise>>,
+      std::is_nothrow_invocable_v<Proxy, T &&>) -> decltype(auto) {
+    static_assert(std::invocable<Proxy, T &&>,
                   "proxy_awaiter::await_suspend(): proxy object must be an "
                   "invocable accepting std::coroutine_handle");
 
-    return awaiter_.await_suspend(proxy_(caller));
+    return awaiter_.await_suspend(proxy_(std::forward<T>(caller)));
   }
 
   constexpr auto await_resume() noexcept(noexcept(awaiter_.await_resume()))

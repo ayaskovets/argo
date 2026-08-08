@@ -14,7 +14,7 @@ class yield_awaiter final {
   constexpr auto await_ready() const noexcept -> bool { return false; }
 
   /**
-   * @note Noexcept if this_executor().yield is noexcept
+   * @note Noexcept if this_executor::yield is noexcept
    */
   constexpr void await_suspend(task_ref caller) const {
     this_executor::yield(caller);
