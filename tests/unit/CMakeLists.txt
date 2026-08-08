@@ -27,8 +27,7 @@ add_executable(argo-unit-tests)
 set(SOURCES
     awaiters/continuation_awaiter_test.cpp
     awaiters/proxy_awaiter_test.cpp
-    awaiters/suspend_always_awaiter_test.cpp
-    awaiters/suspend_never_awaiter_test.cpp
+    awaiters/switch_to_awaiter_test.cpp
     awaiters/yield_awaiter_test.cpp
     channel_test.cpp
     executor_test.cpp

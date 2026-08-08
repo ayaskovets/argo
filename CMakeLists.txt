@@ -25,8 +25,7 @@ add_library(argo::argo ALIAS argo)
 set(HEADERS
     include/argo/awaiters/continuation_awaiter.hpp
     include/argo/awaiters/proxy_awaiter.hpp
-    include/argo/awaiters/suspend_always_awaiter.hpp
-    include/argo/awaiters/suspend_never_awaiter.hpp
+    include/argo/awaiters/switch_to_awaiter.hpp
     include/argo/awaiters/yield_awaiter.hpp
     include/argo/channel.hpp
     include/argo/execution_context.hpp

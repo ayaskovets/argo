@@ -24,7 +24,7 @@ class thread_pool_executor final : public swiss::non_copyable,
   constexpr thread_pool_executor(
       in_channel_type & in_channel, out_channel_type & out_channel,
       std::size_t workers_size = std::thread::hardware_concurrency()) noexcept
-      : in_channel_(in_channel), out_channel_(out_channel), ctx_(*this) {
+      : ctx_(*this), in_channel_(in_channel), out_channel_(out_channel) {
     workers_.reserve(workers_size);
   }
 
@@ -49,12 +49,13 @@ class thread_pool_executor final : public swiss::non_copyable,
   }
 
  private:
+  std::vector<std::jthread> workers_;
+  mutable execution_context ctx_;
+
   // NOLINTBEGIN(cppcoreguidelines-avoid-const-or-ref-data-members)
   in_channel_type & in_channel_;
   out_channel_type & out_channel_;
   // NOLINTEND(cppcoreguidelines-avoid-const-or-ref-data-members)
-  execution_context ctx_;
-  std::vector<std::jthread> workers_;
 
  private:
   constexpr void worker_task(std::stop_token const & stop_token) noexcept {

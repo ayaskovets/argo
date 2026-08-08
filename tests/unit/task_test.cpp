@@ -1,13 +1,26 @@
-#include <argo/awaiters/suspend_always_awaiter.hpp>
 #include <argo/task.hpp>
 
 #include <gtest/gtest.h>
 
 namespace tests::unit::awaiters {
 
+namespace {
+
+/**
+ * @note Mock implementation of the yield awaiter
+ */
+class suspend_awaiter final {
+ public:
+  constexpr auto await_ready() const noexcept -> bool { return false; }
+  constexpr void await_suspend(auto &&) const noexcept {}
+  constexpr void await_resume() const noexcept {}
+};
+
+}  // namespace
+
 TEST(task, nonvoid_smoke) {
   auto task = []() -> argo::task<int> {
-    co_await argo::awaiters::suspend_always();
+    co_await suspend_awaiter();
     co_return 1;
   }();
 
@@ -22,7 +35,7 @@ TEST(task, nonvoid_smoke) {
 
 TEST(task, void_smoke) {
   auto task = []() -> argo::task<void> {
-    co_await argo::awaiters::suspend_always();
+    co_await suspend_awaiter();
     co_return;
   }();
 

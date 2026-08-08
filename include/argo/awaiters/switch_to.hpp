@@ -1,0 +1,34 @@
+#pragma once
+
+#include "../execution_context.hpp"
+
+namespace argo::awaiters {
+
+/**
+ * @brief Utility awaiter that implements symmetric transfer
+ */
+class switch_to_awaiter final {
+ public:
+  explicit constexpr switch_to_awaiter(execution_context & ctx) noexcept {
+    execution_context::this_executor_ = &ctx;
+  }
+
+ public:
+  constexpr auto await_ready() const noexcept -> bool { return true; }
+  constexpr void await_suspend(auto &&) const noexcept {}
+  constexpr void await_resume() const noexcept {}
+};
+
+}  // namespace argo::awaiters
+
+/**
+ * @section Utility awaiter constructors
+ */
+namespace argo::awaiters {
+
+constexpr auto switch_to(execution_context & ctx) noexcept
+    -> switch_to_awaiter {
+  return switch_to_awaiter(ctx);
+}
+
+}  // namespace argo::awaiters

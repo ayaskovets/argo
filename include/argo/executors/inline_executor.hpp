@@ -20,7 +20,7 @@ class inline_executor final : public swiss::non_copyable,
  public:
   constexpr inline_executor(in_channel_type & in_channel,
                             out_channel_type & out_channel) noexcept
-      : in_channel_(in_channel), out_channel_(out_channel), ctx_(*this) {}
+      : ctx_(*this), in_channel_(in_channel), out_channel_(out_channel) {}
 
  public:
   constexpr auto in_channel() const noexcept -> in_channel_type & {
@@ -66,11 +66,12 @@ class inline_executor final : public swiss::non_copyable,
   }
 
  private:
+  mutable execution_context ctx_;
+
   // NOLINTBEGIN(cppcoreguidelines-avoid-const-or-ref-data-members)
   in_channel_type & in_channel_;
   out_channel_type & out_channel_;
   // NOLINTEND(cppcoreguidelines-avoid-const-or-ref-data-members)
-  execution_context ctx_;
 };
 
 }  // namespace argo::executors

@@ -8,7 +8,9 @@
 
 namespace argo {
 
-// TODO: temporarily change this_executor to impl transfer to other ctx
+namespace awaiters {
+class switch_to_awaiter;
+}  // namespace awaiters
 
 /**
  * @brief Context for a single thread of execution. All scheduling and context
@@ -18,9 +20,17 @@ namespace argo {
  * in a way that does distinguishing between threads automatically
  */
 class execution_context {
+ private:
+  /**
+   * @brief To implement changing executors for a task through a single
+   * incapsulated awaiter type
+   */
+  friend class awaiters::switch_to_awaiter;
+
  protected:
   /**
-   * @brief TLS execution context
+   * @brief TLS execution context. Set by resume(). Each co_await that suspends
+   * a coroutine will use this execution context for scheduling
    */
   static thread_local inline execution_context * this_executor_ = nullptr;
 

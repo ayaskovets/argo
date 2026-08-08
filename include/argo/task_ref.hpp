@@ -19,7 +19,7 @@ class task_ref final {
   constexpr task_ref() noexcept : handle_(nullptr) {}
 
   template <typename T>
-  explicit constexpr task_ref(task<T> const & task) noexcept
+  explicit constexpr task_ref(task<T> & task) noexcept
       : handle_(task.handle_) {}
 
   explicit constexpr task_ref(std::coroutine_handle<> handle) noexcept
