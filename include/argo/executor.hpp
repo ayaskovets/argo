@@ -5,9 +5,7 @@
 #include "channel.hpp"
 
 namespace argo {
-
 class execution_context;
-
 }  // namespace argo
 
 namespace argo::concepts {
