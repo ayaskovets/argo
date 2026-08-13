@@ -151,6 +151,9 @@ class execution_context {
       typed_executor.out_channel().push(typed_params);
     } else if constexpr (concepts::multichannel<
                              typename Executor::out_channel_type>) {
+      /**
+       * @note Linear search through all possible output types of the executor
+       */
       bool const match = [&]<typename... Args>(std::variant<Args...>) -> bool {
         return ([&]() -> bool {
           if (type_info != typeid(Args const *)) {
