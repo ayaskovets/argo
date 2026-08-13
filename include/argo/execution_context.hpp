@@ -2,6 +2,7 @@
 
 #include <cassert>
 #include <format>
+#include <variant>
 
 #include "executor.hpp"
 #include "task_ref.hpp"
@@ -132,22 +133,48 @@ class execution_context {
 
   template <concepts::executor Executor>
   constexpr void park(void const * params, std::type_info const & type_info) {
-    auto const & typed_params =
-        *static_cast<typename Executor::out_channel_type::value_type const *>(
-            params);
-
-    // TODO: support multiple types
-    if (type_info != typeid(&typed_params)) [[unlikely]] {
-      throw std::runtime_error(
-          std::format("execution_context::park(): incompatible awaiter "
-                      "parameters type ({}) and output channel value type ({})",
-                      type_info.name(), typeid(&typed_params).name()));
-    }
-
     auto const & typed_executor = *static_cast<Executor const *>(executor_);
 
-    // TODO: handle infinite wait
-    typed_executor.out_channel().push(typed_params);
+    if constexpr (concepts::monochannel<typename Executor::out_channel_type>) {
+      auto const & typed_params =
+          *static_cast<typename Executor::out_channel_type::value_type const *>(
+              params);
+
+      if (type_info != typeid(&typed_params)) [[unlikely]] {
+        throw std::runtime_error(std::format(
+            "execution_context::park(): incompatible awaiter "
+            "parameters type ({}) and output channel value type ({})",
+            type_info.name(), typeid(&typed_params).name()));
+      }
+
+      // TODO: handle infinite wait
+      typed_executor.out_channel().push(typed_params);
+    } else if constexpr (concepts::multichannel<
+                             typename Executor::out_channel_type>) {
+      bool const match = [&]<typename... Args>(std::variant<Args...>) -> bool {
+        return ([&]() -> bool {
+          if (type_info != typeid(Args const *)) {
+            return false;
+          }
+
+          auto const & typed_params = *static_cast<Args const *>(params);
+
+          // TODO: handle infinite wait
+          typed_executor.out_channel().push(typed_params);
+
+          return true;
+        } || ...);
+      }(typename Executor::out_channel_type::value_types{});
+
+      if (!match) [[unlikely]] {
+        throw std::runtime_error(
+            "execution_context::park(): incompatible awaiter parameters type "
+            "({}) and output channel value types");
+      }
+    } else {
+      static_assert(false,
+                    "execution_context::park(): unimplemented channel type");
+    }
   }
 };
 

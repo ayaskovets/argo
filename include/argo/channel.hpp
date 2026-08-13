@@ -54,10 +54,10 @@ concept noexcept_monochannel =
 template <typename T, typename... Values>
 concept multichannel =
     ((sizeof...(Values) == 0 &&
-          []<typename... Args>(std::variant<Args...>) noexcept -> bool {
+          []<typename... Args>(std::variant<Args...>) -> bool {
        return (monochannel<T, Args> && ...);
      }(typename T::value_types{})) ||
-     ((sizeof...(Values) >= 1 && (monochannel<T, Values> && ...)))) &&
+     (sizeof...(Values) >= 1 && (monochannel<T, Values> && ...))) &&
     std::is_same_v<std::variant<Values...>, typename T::value_types>;
 
 /**
@@ -66,7 +66,7 @@ concept multichannel =
 template <typename T, typename... Values>
 concept noexcept_multichannel =
     ((sizeof...(Values) == 0 &&
-          []<typename... Args>(std::variant<Args...>) noexcept -> bool {
+          []<typename... Args>(std::variant<Args...>) -> bool {
        return (noexcept_monochannel<T, Args> && ...);
      }(typename T::value_types{})) ||
      (sizeof...(Values) >= 1 && (noexcept_monochannel<T, Values> && ...))) &&
