@@ -17,6 +17,10 @@ class inline_executor final : public swiss::non_copyable,
   using in_channel_type  = InChannel;
   using out_channel_type = OutChannel;
 
+ private:
+  using in_value_type  = in_channel_type::value_type;
+  using out_value_type = out_channel_type::value_type;
+
  public:
   constexpr inline_executor(in_channel_type & in_channel,
                             out_channel_type & out_channel) noexcept
@@ -40,7 +44,7 @@ class inline_executor final : public swiss::non_copyable,
    */
   constexpr auto run_once() noexcept(
       concepts::noexcept_channel<in_channel_type>) -> bool {
-    typename in_channel_type::value_type in_value{};
+    in_value_type in_value{};
     if (!in_channel_.try_pop(in_value)) {
       return false;
     }
@@ -56,7 +60,7 @@ class inline_executor final : public swiss::non_copyable,
    */
   constexpr auto run_once(std::stop_token const & stop_token) noexcept(
       concepts::noexcept_channel<in_channel_type>) -> bool {
-    typename in_channel_type::value_type in_value{};
+    in_value_type in_value{};
     if (!in_channel_.pop(in_value, stop_token)) {
       return false;
     }

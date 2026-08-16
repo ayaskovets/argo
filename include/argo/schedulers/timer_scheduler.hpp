@@ -1,10 +1,12 @@
 #pragma once
 
 #include <flat_map>
-#include <type_traits>
 
+#include <swiss/concepts.hpp>
 #include <swiss/mixins.hpp>
+#include <swiss/scope_exit.hpp>
 
+#include "../awaiters/timer_awaiter.hpp"
 #include "../channel.hpp"
 
 namespace argo::schedulers {
@@ -21,13 +23,16 @@ class timer_scheduler final : public swiss::non_copyable,
   using out_channel_type = OutChannel;
 
  private:
-  static_assert(std::is_pointer_v<typename in_channel_type::value_type>);
-  using clock_t =
-      std::decay_t<decltype(std::declval<typename in_channel_type::value_type>()
-                                ->time_point())>::clock;
-  using task_t =
-      std::decay_t<decltype(std::declval<typename in_channel_type::value_type>()
-                                ->task_ref())>;
+  using in_value_type  = in_channel_type::value_type;
+  using out_value_type = out_channel_type::value_type;
+  using clock_type     = std::remove_pointer_t<in_value_type>::clock_type;
+  using time_point_type =
+      std::remove_pointer_t<in_value_type>::clock_type::time_point;
+
+ private:
+  static_assert(std::is_pointer_v<in_value_type>);
+  static_assert(swiss::instantiation_of<std::remove_pointer_t<in_value_type>,
+                                        awaiters::timer_awaiter>);
 
  public:
   constexpr timer_scheduler(in_channel_type & in_channel,
@@ -53,20 +58,17 @@ class timer_scheduler final : public swiss::non_copyable,
     while (try_consume_in_value()) {
     }
 
-    auto const now = clock_t::now();
+    auto const now = clock_type::now();
     auto iter      = queue_.begin();
-    try {
-      for (; iter != queue_.end(); ++iter) {
-        auto const & [time_point, task] = *iter;
-        if (time_point > now || !out_channel_.try_push(task)) {
-          break;
-        }
-      }
 
-      queue_.erase(queue_.begin(), iter);
-    } catch (std::exception const &) {
-      queue_.erase(queue_.begin(), iter);
-      throw;
+    swiss::scope_exit const scope_exit(
+        [&]() noexcept -> void { queue_.erase(queue_.begin(), iter); });
+
+    for (; iter != queue_.end(); ++iter) {
+      auto const & [time_point, task] = *iter;
+      if (time_point > now || !out_channel_.try_push(task)) {
+        break;
+      }
     }
   }
 
@@ -76,32 +78,27 @@ class timer_scheduler final : public swiss::non_copyable,
    * scheduled tasks are going to be executed
    * @return False if no tasks were scheduled
    */
-  constexpr auto run_once(std::stop_token const & stop_token) -> bool {
+  constexpr void run_once(std::stop_token const & stop_token) {
     while (consume_in_value(stop_token)) {
     }
 
-    auto const now = clock_t::now();
+    auto const now = clock_type::now();
     auto iter      = queue_.begin();
-    try {
-      for (; iter < queue_.end(); ++iter) {
-        auto const & [time_point, task] = *iter;
-        if (time_point > now || !out_channel_.push(stop_token, task)) {
-          break;
-        }
+
+    swiss::scope_exit const scope_exit(
+        [&]() noexcept -> void { queue_.erase(queue_.begin(), iter); });
+
+    for (; iter < queue_.end(); ++iter) {
+      auto const & [time_point, task] = *iter;
+      if (time_point > now || !out_channel_.push(stop_token, task)) {
+        break;
       }
-
-      queue_.erase(queue_.begin(), iter);
-    } catch (std::exception const &) {
-      queue_.erase(queue_.begin(), iter);
-      throw;
     }
-
-    return std::distance(queue_.begin(), iter) != 0;
   }
 
  private:
-  typename in_channel_type::value_type in_value_;
-  std::flat_map<typename clock_t::time_point, task_t> queue_;
+  in_value_type in_value_;
+  std::flat_map<time_point_type, task_ref> queue_;
 
   // NOLINTBEGIN(cppcoreguidelines-avoid-const-or-ref-data-members)
   in_channel_type & in_channel_;

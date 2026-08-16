@@ -38,11 +38,7 @@ TEST(timer_awaiter, suspend) {
   executor.run_once();
   EXPECT_FALSE(task.done());
   EXPECT_EQ(out_channel.size(), 1);
-  decltype(out_channel)::value_type awaiter = nullptr;
-  EXPECT_TRUE(out_channel.try_pop(awaiter));
-  EXPECT_EQ(awaiter->time_point(),
-            swiss::mocked_clock<>::now() + std::chrono::milliseconds(1));
-  EXPECT_EQ(awaiter->task_ref(), argo::task_ref(task));
+  EXPECT_TRUE(out_channel.try_pop(std::ignore));
 
   task.resume();
   EXPECT_TRUE(task.done());

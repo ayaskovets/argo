@@ -10,22 +10,27 @@ namespace argo::awaiters {
  */
 template <typename Clock = std::chrono::steady_clock>
 class timer_awaiter final {
+ public:
+  using clock_type = Clock;
+
+ private:
+  using time_point_type = clock_type::time_point;
+
  private:
   /**
    * @brief A value indicating that the time point is in the past which means
    * that scheduler can be bypassed
    */
-  static constexpr typename Clock::time_point kScheduleImmediately{};
+  static constexpr time_point_type kScheduleImmediately{};
 
  public:
-  explicit constexpr timer_awaiter(
-      typename Clock::time_point time_point) noexcept
-      : schedule_at_(time_point > Clock::now() ? time_point
-                                               : kScheduleImmediately) {}
+  explicit constexpr timer_awaiter(time_point_type time_point) noexcept
+      : schedule_at_(time_point > clock_type::now() ? time_point
+                                                    : kScheduleImmediately) {}
 
   template <typename Duration>
   explicit constexpr timer_awaiter(Duration duration) noexcept
-      : schedule_at_(duration > Duration(0) ? Clock::now() + duration
+      : schedule_at_(duration > Duration(0) ? clock_type::now() + duration
                                             : kScheduleImmediately) {}
 
  public:
@@ -37,8 +42,9 @@ class timer_awaiter final {
    * @brief Reschedule current task at the specified time point
    * @note Noexcept if this_executor::schedule is noexcept
    */
-  constexpr void await_suspend(task_ref caller) const {
-    caller_ = caller;
+  template <typename Caller>
+  constexpr void await_suspend(Caller && caller) const {
+    caller_ = std::forward<Caller>(caller);
     this_executor::schedule(this);
   }
 
@@ -48,7 +54,7 @@ class timer_awaiter final {
   /**
    * @brief Time point to schedule the task at
    */
-  constexpr auto time_point() const noexcept -> typename Clock::time_point {
+  constexpr auto time_point() const noexcept -> time_point_type {
     return schedule_at_;
   }
 
@@ -58,7 +64,7 @@ class timer_awaiter final {
   constexpr auto task_ref() const noexcept -> task_ref { return caller_; }
 
  private:
-  typename Clock::time_point schedule_at_;
+  time_point_type schedule_at_;
   mutable class task_ref caller_;
 };
 
@@ -76,8 +82,8 @@ constexpr auto sleep_until(typename Clock::time_point time_point) noexcept
 }
 
 template <typename Clock = std::chrono::steady_clock>
-constexpr auto sleep_for(auto && duration) noexcept -> decltype(auto) {
-  return timer_awaiter<Clock>(std::forward<decltype(duration)>(duration));
+constexpr auto sleep_for(auto duration) noexcept -> decltype(auto) {
+  return timer_awaiter<Clock>(duration);
 }
 
 }  // namespace argo::awaiters

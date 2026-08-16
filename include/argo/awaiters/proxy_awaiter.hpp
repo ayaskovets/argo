@@ -1,7 +1,7 @@
 #pragma once
 
-#include <concepts>
 #include <type_traits>
+#include <utility>
 
 namespace argo::awaiters {
 
@@ -22,15 +22,11 @@ class proxy_awaiter final {
     return awaiter_.await_ready();
   }
 
-  template <typename T>
-  constexpr auto await_suspend(T && caller) noexcept(
+  template <typename Caller>
+  constexpr auto await_suspend(Caller && caller) noexcept(
       noexcept(awaiter_.await_suspend(proxy_(caller))) &&
-      std::is_nothrow_invocable_v<Proxy, T &&>) -> decltype(auto) {
-    static_assert(std::invocable<Proxy, T &&>,
-                  "proxy_awaiter::await_suspend(): proxy object must be an "
-                  "invocable accepting std::coroutine_handle");
-
-    return awaiter_.await_suspend(proxy_(std::forward<T>(caller)));
+      std::is_nothrow_invocable_v<Proxy, Caller>) -> decltype(auto) {
+    return awaiter_.await_suspend(proxy_(std::forward<Caller>(caller)));
   }
 
   constexpr auto await_resume() noexcept(noexcept(awaiter_.await_resume()))
@@ -50,25 +46,22 @@ class proxy_awaiter final {
  */
 namespace argo::awaiters {
 
+/**
+ * @note This constructor supports awaiters with user-defined co_await operators
+ */
 template <typename Awaiter, typename Proxy>
 constexpr auto proxy(Awaiter && awaiter, Proxy && proxy) noexcept
     -> decltype(auto) {
-  auto underlying_awaiter = [](auto && awaiter) noexcept -> decltype(auto) {
-    if constexpr (requires {
-                    std::forward<Awaiter>(awaiter).operator co_await();
-                  }) {
-      return std::forward<Awaiter>(awaiter).operator co_await();
-    } else if constexpr (requires {
-                           operator co_await(std::forward<Awaiter>(awaiter));
-                         }) {
-      return operator co_await(std::forward<Awaiter>(awaiter));
-    } else {
-      return std::forward<Awaiter>(awaiter);
-    }
-  }(std::forward<Awaiter>(awaiter));
-
-  return proxy_awaiter(std::move(underlying_awaiter),
-                       std::forward<Proxy>(proxy));
+  if constexpr (requires { awaiter.operator co_await(); }) {
+    return proxy_awaiter(std::forward<Awaiter>(awaiter).operator co_await(),
+                         std::forward<Proxy>(proxy));
+  } else if constexpr (requires { operator co_await(awaiter); }) {
+    return proxy_awaiter(operator co_await(std::forward<Awaiter>(awaiter)),
+                         std::forward<Proxy>(proxy));
+  } else {
+    return proxy_awaiter(std::forward<Awaiter>(awaiter),
+                         std::forward<Proxy>(proxy));
+  }
 }
 
 }  // namespace argo::awaiters

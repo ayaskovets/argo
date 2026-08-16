@@ -130,51 +130,59 @@ class execution_context {
     typed_executor.in_channel().push(task);
   }
 
+  /**
+   * @brief Type safety check and push the task to the output channel of current
+   * executor
+   */
   template <concepts::executor Executor>
+    requires(concepts::monochannel<typename Executor::out_channel_type>)
   constexpr void park(void const * awaiter, std::type_info const & type_info) {
+    if (type_info != typeid(Executor::out_channel_type::value_type const *))
+        [[unlikely]] {
+      throw std::runtime_error(std::format(
+          "execution_context::park(): incompatible awaiter ({}) "
+          "and output channel value type ({})",
+          type_info.name(),
+          typeid(Executor::out_channel_type::value_type const *).name()));
+    }
+
     auto const & typed_executor = *static_cast<Executor const *>(executor_);
+    auto const & typed_awaiter =
+        *static_cast<Executor::out_channel_type::value_type const *>(awaiter);
 
-    if constexpr (concepts::monochannel<typename Executor::out_channel_type>) {
-      using out_value_t = Executor::out_channel_type::value_type;
-      if (type_info != typeid(out_value_t const *)) [[unlikely]] {
-        throw std::runtime_error(
-            std::format("execution_context::park(): incompatible awaiter ({}) "
-                        "and output channel value type ({})",
-                        type_info.name(), typeid(out_value_t const *).name()));
-      }
+    // TODO: handle infinite wait
+    typed_executor.out_channel().push(typed_awaiter);
+  }
 
-      auto const & typed_awaiter = *static_cast<out_value_t const *>(awaiter);
+  /**
+   * @brief Type safety check and linear search through all possible output
+   * types of the executor. If there is a type in the output channel which is
+   * the same as the awaiter type the awaiter is pushed to the output channel of
+   * current executor
+   */
+  template <typename Executor>
+    requires(concepts::multichannel<typename Executor::out_channel_type>)
+  constexpr void park(void const * awaiter, std::type_info const & type_info) {
+    bool const match = [&]<typename... Args>(std::variant<Args...>) -> bool {
+      return ([&]() -> bool {
+        if (type_info != typeid(Args const *)) {
+          return false;
+        }
 
-      // TODO: handle infinite wait
-      typed_executor.out_channel().push(typed_awaiter);
-    } else if constexpr (concepts::multichannel<
-                             typename Executor::out_channel_type>) {
-      /**
-       * @note Linear search through all possible output types of the executor
-       */
-      bool const match = [&]<typename... Args>(std::variant<Args...>) -> bool {
-        return ([&]() -> bool {
-          if (type_info != typeid(Args const *)) {
-            return false;
-          }
+        auto const & typed_executor = *static_cast<Executor const *>(executor_);
+        auto const & typed_awaiter  = *static_cast<Args const *>(awaiter);
 
-          auto const & typed_awaiter = *static_cast<Args const *>(awaiter);
+        // TODO: handle infinite wait
+        typed_executor.out_channel().push(typed_awaiter);
 
-          // TODO: handle infinite wait
-          typed_executor.out_channel().push(typed_awaiter);
+        return true;
+      } || ...);
+    }(typename Executor::out_channel_type::value_types{});
 
-          return true;
-        } || ...);
-      }(typename Executor::out_channel_type::value_types{});
-
-      if (!match) [[unlikely]] {
-        throw std::runtime_error(
-            "execution_context::park(): incompatible awaiter ({}) and output "
-            "channel value types");
-      }
-    } else {
-      static_assert(false,
-                    "execution_context::park(): unimplemented channel type");
+    if (!match) [[unlikely]] {
+      throw std::runtime_error(
+          "execution_context::park(): incompatible awaiter ({}) and output "
+          "channel value types");
     }
   }
 };

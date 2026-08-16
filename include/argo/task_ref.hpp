@@ -8,6 +8,9 @@ namespace argo {
 template <typename T>
 class task;
 
+// TODO: make task unique ptr owner and pass it around to fix lifetime problems,
+// impl some kind of future for when task result is needed
+
 /**
  * @brief Non-owning trivially copyable task reference with reduced interface
  * intended for passing type-erase tasks to a scheduler or an executor without

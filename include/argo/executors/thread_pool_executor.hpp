@@ -20,6 +20,10 @@ class thread_pool_executor final : public swiss::non_copyable,
   using in_channel_type  = InChannel;
   using out_channel_type = OutChannel;
 
+ private:
+  using in_value_type  = in_channel_type::value_type;
+  using out_value_type = out_channel_type::value_type;
+
  public:
   constexpr thread_pool_executor(
       in_channel_type & in_channel, out_channel_type & out_channel,
@@ -59,7 +63,7 @@ class thread_pool_executor final : public swiss::non_copyable,
 
  private:
   constexpr void worker_task(std::stop_token const & stop_token) noexcept {
-    typename in_channel_type::value_type in_value{};
+    in_value_type in_value{};
     while (true) {
       /**
        * @note Noexcept not to fail worker threads in case of an exception
