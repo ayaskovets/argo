@@ -53,8 +53,4 @@ TEST(timer_awaiter, overflow) {
   // TODO: channel is full
 }
 
-TEST(timer_awaiter, exception) {
-  // TODO: exception in push
-}
-
 }  // namespace tests::unit::awaiters

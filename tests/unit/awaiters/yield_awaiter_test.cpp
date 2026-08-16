@@ -46,8 +46,4 @@ TEST(yield_awaiter, overflow) {
   // TODO: overflow in push
 }
 
-TEST(yield_awaiter, exception) {
-  // TODO: overflow in push
-}
-
 }  // namespace tests::unit::awaiters

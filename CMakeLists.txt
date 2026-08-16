@@ -34,6 +34,7 @@ set(HEADERS
     include/argo/executors/inline_executor.hpp
     include/argo/executors/thread_pool_executor.hpp
     include/argo/scheduler.hpp
+    include/argo/schedulers/timer_scheduler.hpp
     include/argo/task_ref.hpp
     include/argo/task.hpp)
 
