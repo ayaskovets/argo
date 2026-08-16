@@ -32,6 +32,9 @@ class task_ref final {
 
   constexpr void operator()() { resume(); }
 
+  constexpr auto operator<=>(task_ref const & that) const noexcept
+      -> bool = default;
+
  public:
   /**
    * @note True only if task reference has a valid and done handle

@@ -84,10 +84,9 @@ class execution_context {
    * @note Can be treated as a end of an step execution for a certain coroutine
    * @note Noexcept if input channel of the current executor is noexcept
    */
-  // TODO: split params into params and task view
-  template <typename Params>
-  constexpr void schedule(Params const & params) {
-    (this->*park_)(&params, typeid(&params));
+  template <typename Awaiter>
+  constexpr void schedule(Awaiter const & awaiter) {
+    (this->*park_)(&awaiter, typeid(&awaiter));
     this_executor_ = nullptr;
   }
 
@@ -113,11 +112,11 @@ class execution_context {
    * function gets called when a coroutine encounters a co_await that causes it
    * to suspend. This function is expected to do
    * @note Type info is passed for type safety to ensure that either scheduler
-   * input channel or any other place that the awaiter params go to expect the
+   * input channel or any other place that the awaiter go to expect the
    * same type as the one passed as it is impossible to know what scheduler type
    * is going to be used with a certain awaiter
    */
-  void (execution_context::*park_)(void const * params,
+  void (execution_context::*park_)(void const * awaiter,
                                    std::type_info const & type_info);
 
   // NOLINTEND(misc-non-private-member-variables-in-classes)
@@ -132,23 +131,22 @@ class execution_context {
   }
 
   template <concepts::executor Executor>
-  constexpr void park(void const * params, std::type_info const & type_info) {
+  constexpr void park(void const * awaiter, std::type_info const & type_info) {
     auto const & typed_executor = *static_cast<Executor const *>(executor_);
 
     if constexpr (concepts::monochannel<typename Executor::out_channel_type>) {
-      auto const & typed_params =
-          *static_cast<typename Executor::out_channel_type::value_type const *>(
-              params);
-
-      if (type_info != typeid(&typed_params)) [[unlikely]] {
-        throw std::runtime_error(std::format(
-            "execution_context::park(): incompatible awaiter "
-            "parameters type ({}) and output channel value type ({})",
-            type_info.name(), typeid(&typed_params).name()));
+      using out_value_t = Executor::out_channel_type::value_type;
+      if (type_info != typeid(out_value_t const *)) [[unlikely]] {
+        throw std::runtime_error(
+            std::format("execution_context::park(): incompatible awaiter ({}) "
+                        "and output channel value type ({})",
+                        type_info.name(), typeid(out_value_t const *).name()));
       }
 
+      auto const & typed_awaiter = *static_cast<out_value_t const *>(awaiter);
+
       // TODO: handle infinite wait
-      typed_executor.out_channel().push(typed_params);
+      typed_executor.out_channel().push(typed_awaiter);
     } else if constexpr (concepts::multichannel<
                              typename Executor::out_channel_type>) {
       /**
@@ -160,10 +158,10 @@ class execution_context {
             return false;
           }
 
-          auto const & typed_params = *static_cast<Args const *>(params);
+          auto const & typed_awaiter = *static_cast<Args const *>(awaiter);
 
           // TODO: handle infinite wait
-          typed_executor.out_channel().push(typed_params);
+          typed_executor.out_channel().push(typed_awaiter);
 
           return true;
         } || ...);
@@ -171,8 +169,8 @@ class execution_context {
 
       if (!match) [[unlikely]] {
         throw std::runtime_error(
-            "execution_context::park(): incompatible awaiter parameters type "
-            "({}) and output channel value types");
+            "execution_context::park(): incompatible awaiter ({}) and output "
+            "channel value types");
       }
     } else {
       static_assert(false,
@@ -193,9 +191,9 @@ constexpr void yield(task_ref handle) {
   execution_context::this_executor().yield(handle);
 }
 
-template <typename Params>
-constexpr void schedule(Params const & params) {
-  execution_context::this_executor().schedule(params);
+template <typename Awaiter>
+constexpr void schedule(Awaiter const & awaiter) {
+  execution_context::this_executor().schedule(awaiter);
 }
 
 }  // namespace argo::this_executor

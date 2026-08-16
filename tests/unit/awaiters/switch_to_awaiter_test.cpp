@@ -11,10 +11,7 @@ namespace tests::unit::awaiters {
 TEST(switch_to_awaiter, smoke) {
   flow::spsc_queue<argo::task_ref> in_channel1(1);
   flow::spsc_queue<argo::task_ref> in_channel2(1);
-  /**
-   * @note Output channel is irrelevant for this test
-   */
-  flow::spsc_queue<argo::task_ref> out_channel(1);
+  flow::spsc_queue<std::nullptr_t> out_channel(1);
   argo::executors::inline_executor executor1(in_channel1, out_channel);
   argo::executors::inline_executor executor2(in_channel2, out_channel);
 

@@ -26,6 +26,7 @@ set(HEADERS
     include/argo/awaiters/continuation_awaiter.hpp
     include/argo/awaiters/proxy_awaiter.hpp
     include/argo/awaiters/switch_to_awaiter.hpp
+    include/argo/awaiters/timer_awaiter.hpp
     include/argo/awaiters/yield_awaiter.hpp
     include/argo/channel.hpp
     include/argo/execution_context.hpp
