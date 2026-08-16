@@ -32,6 +32,8 @@ set(SOURCES
     awaiters/yield_awaiter_test.cpp
     channel_test.cpp
     executor_test.cpp
+    executors/inline_executor_test.cpp
+    executors/thread_pool_executor_test.cpp
     scheduler_test.cpp
     schedulers/timer_scheduler_test.cpp
     task_test.cpp)
