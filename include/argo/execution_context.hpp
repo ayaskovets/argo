@@ -64,7 +64,7 @@ class execution_context {
   // NOLINTNEXTLINE(bugprone-exception-escape)
   constexpr void resume(task_ref task) noexcept {
     this_executor_ = this;
-    task.resume();
+    task();
   }
 
   /**
@@ -140,8 +140,8 @@ class execution_context {
     if (type_info != typeid(Executor::out_channel_type::value_type const *))
         [[unlikely]] {
       throw std::runtime_error(std::format(
-          "execution_context::park(): incompatible awaiter ({}) "
-          "and output channel value type ({})",
+          "execution_context::park(): incompatible awaiter ({}) and output "
+          "channel value type ({})",
           type_info.name(),
           typeid(Executor::out_channel_type::value_type const *).name()));
     }
