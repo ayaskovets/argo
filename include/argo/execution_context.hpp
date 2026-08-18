@@ -59,12 +59,12 @@ class execution_context {
    * machinery needed for awaiters and task scheduling to work
    * @note Can be treated as a start of an execution step for a certain
    * coroutine
-   * @warning This functions expects handle being valid and non-null
+   * @warning This functions expects task being valid and non-null
    */
   // NOLINTNEXTLINE(bugprone-exception-escape)
-  constexpr void resume(task_ref task) noexcept {
+  constexpr void resume(std::invocable auto && task) noexcept {
     this_executor_ = this;
-    task();
+    std::forward<decltype(task)>(task)();
   }
 
   /**
