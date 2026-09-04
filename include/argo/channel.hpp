@@ -48,8 +48,7 @@ concept noexcept_monochannel =
 
 /**
  * @brief Channel handling multiple value types. Concept does not imply that the
- * values go through a single pipe or multiple independent for each type or
- * anyhow
+ * values go through a single pipe or multiple independent ones for each type
  * @note Differs from a monochanel in the way value type alias is defined. For
  * multichannel it is expected to have std::variant<Types...> where Types is the
  * variadic pack of all valid types the channel is able to work with

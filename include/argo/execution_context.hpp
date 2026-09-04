@@ -21,13 +21,6 @@ class switch_to_awaiter;
  * in a way that does distinguishing between threads automatically
  */
 class execution_context {
- private:
-  /**
-   * @brief To implement changing executors for a task through a single
-   * incapsulated awaiter type
-   */
-  friend class awaiters::switch_to_awaiter;
-
  protected:
   /**
    * @brief TLS execution context. Set by resume(). Each co_await that suspends
@@ -185,6 +178,13 @@ class execution_context {
           "channel value types");
     }
   }
+
+ private:
+  /**
+   * @brief To implement changing executors for a task through a single
+   * incapsulated awaiter type
+   */
+  friend class awaiters::switch_to_awaiter;
 };
 
 }  // namespace argo

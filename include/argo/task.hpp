@@ -21,12 +21,6 @@ namespace argo {
 template <typename T>
 // NOLINTNEXTLINE(cppcoreguidelines-special-member-functions)
 class task : public swiss::non_copyable {
- private:
-  /**
-   * @note For passing coroutine handle to task ref in constructor
-   */
-  friend class task_ref;
-
  public:
   using value_type = T;
   class promise_type;
@@ -39,10 +33,13 @@ class task : public swiss::non_copyable {
       : handle_(std::exchange(that.handle_, nullptr)) {}
 
   constexpr auto operator=(task && that) noexcept -> task & {
-    /**
-     * @note Assume destroy() does not throw
-     */
-    handle_.destroy();
+    if (handle_) {
+      /**
+       * @note Assume destroy() does not throw
+       */
+      handle_.destroy();
+    }
+
     handle_ = std::exchange(that.handle_, nullptr);
     return *this;
   }
@@ -119,6 +116,12 @@ class task : public swiss::non_copyable {
 
  private:
   std::coroutine_handle<promise_type> handle_;
+
+ private:
+  /**
+   * @note For passing coroutine handle to task ref in constructor
+   */
+  friend class task_ref;
 };
 
 /**

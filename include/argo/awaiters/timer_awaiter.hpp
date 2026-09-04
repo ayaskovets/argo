@@ -45,6 +45,7 @@ class timer_awaiter final {
   template <typename Caller>
   constexpr void await_suspend(Caller && caller) const {
     caller_ = std::forward<Caller>(caller);
+    // TODO: pass caller to schedule and pass around pairs
     this_executor::schedule(this);
   }
 
