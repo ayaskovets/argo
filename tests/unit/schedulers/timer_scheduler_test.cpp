@@ -11,13 +11,14 @@ namespace tests::unit::schedulers {
 
 TEST(timer_scheduler, smoke) {
   flow::spsc_queue<argo::task_ref> in_channel(1);
-  flow::spsc_queue<argo::awaiters::timer_awaiter<swiss::mocked_clock<>> const *>
+  flow::spsc_queue<
+      argo::awaiters::timer_awaiter<swiss::tls_mocked_clock<>> const *>
       out_channel(1);
   argo::executors::inline_executor executor(in_channel, out_channel);
   argo::schedulers::timer_scheduler scheduler(out_channel, in_channel);
 
   auto task = []() -> argo::task<void> {
-    co_await argo::awaiters::sleep_for<swiss::mocked_clock<>>(
+    co_await argo::awaiters::sleep_for<swiss::tls_mocked_clock<>>(
         std::chrono::milliseconds(1));
     co_return;
   }();
@@ -33,7 +34,7 @@ TEST(timer_scheduler, smoke) {
   EXPECT_TRUE(in_channel.empty());
   EXPECT_TRUE(out_channel.empty());
 
-  swiss::mocked_clock<>::shift(std::chrono::milliseconds(1));
+  swiss::tls_mocked_clock<>::shift(std::chrono::milliseconds(1));
   scheduler.run_once();
   EXPECT_EQ(in_channel.size(), 1);
   EXPECT_TRUE(out_channel.empty());

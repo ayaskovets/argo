@@ -55,9 +55,10 @@ class execution_context {
    * @warning This functions expects task being valid and non-null
    */
   // NOLINTNEXTLINE(bugprone-exception-escape)
-  constexpr void resume(std::invocable auto && task) noexcept {
+  template <std::invocable Task>
+  constexpr void resume(Task && task) noexcept {
     this_executor_ = this;
-    std::forward<decltype(task)>(task)();
+    std::forward<Task>(task)();
   }
 
   /**
