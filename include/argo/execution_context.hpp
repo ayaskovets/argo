@@ -67,8 +67,9 @@ class execution_context {
    * @note Can be treated as a end of an step execution for a certain coroutine
    * @note Noexcept if input channel of the current executor is noexcept
    */
-  constexpr void yield(task_ref task) {
-    (this->*yield_)(task);
+  template <std::invocable Task>
+  constexpr void yield(Task && task) {
+    (this->*yield_)(std::forward<Task>(task));
     this_executor_ = nullptr;
   }
 
@@ -196,8 +197,9 @@ class execution_context {
  */
 namespace argo::this_executor {
 
-constexpr void yield(task_ref handle) {
-  execution_context::this_executor().yield(handle);
+template <std::invocable Task>
+constexpr void yield(Task && task) {
+  execution_context::this_executor().yield(std::forward<Task>(task));
 }
 
 template <typename Awaiter>
