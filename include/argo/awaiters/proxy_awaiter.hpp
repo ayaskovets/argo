@@ -3,6 +3,8 @@
 #include <type_traits>
 #include <utility>
 
+#include "../awaiter.hpp"
+
 namespace argo::awaiters {
 
 /**
@@ -10,7 +12,7 @@ namespace argo::awaiters {
  * access to the suspended coroutine handle by modifying it in a user-defined
  * way
  */
-template <typename Awaiter, typename Proxy>
+template <concepts::awaiter Awaiter, typename Proxy>
 class proxy_awaiter final {
  public:
   explicit constexpr proxy_awaiter(Awaiter awaiter, Proxy proxy) noexcept

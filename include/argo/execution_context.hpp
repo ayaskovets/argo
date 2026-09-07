@@ -79,9 +79,9 @@ class execution_context {
    * @note Can be treated as a end of an step execution for a certain coroutine
    * @note Noexcept if input channel of the current executor is noexcept
    */
-  template <typename Awaiter>
-  constexpr void schedule(Awaiter const & awaiter) {
-    (this->*park_)(&awaiter, typeid(&awaiter));
+  template <typename Params>
+  constexpr void schedule(Params const & params) {
+    (this->*park_)(&params, typeid(&params));
     this_executor_ = nullptr;
   }
 
@@ -107,11 +107,11 @@ class execution_context {
    * function gets called when a coroutine encounters a co_await that causes it
    * to suspend. This function is expected to do
    * @note Type info is passed for type safety to ensure that either scheduler
-   * input channel or any other place that the awaiter go to expect the
+   * input channel or any other place that the params go to expect the
    * same type as the one passed as it is impossible to know what scheduler type
-   * is going to be used with a certain awaiter
+   * is going to be used with a certain params
    */
-  void (execution_context::*park_)(void const * awaiter,
+  void (execution_context::*park_)(void const * params,
                                    std::type_info const & type_info);
 
   // NOLINTEND(misc-non-private-member-variables-in-classes)
@@ -131,33 +131,33 @@ class execution_context {
    */
   template <concepts::executor Executor>
     requires(concepts::monochannel<typename Executor::out_channel_type>)
-  constexpr void park(void const * awaiter, std::type_info const & type_info) {
+  constexpr void park(void const * params, std::type_info const & type_info) {
     if (type_info != typeid(Executor::out_channel_type::value_type const *))
         [[unlikely]] {
       throw std::runtime_error(std::format(
-          "execution_context::park(): incompatible awaiter ({}) and output "
+          "execution_context::park(): incompatible params ({}) and output "
           "channel value type ({})",
           type_info.name(),
           typeid(Executor::out_channel_type::value_type const *).name()));
     }
 
     auto const & typed_executor = *static_cast<Executor const *>(executor_);
-    auto const & typed_awaiter =
-        *static_cast<Executor::out_channel_type::value_type const *>(awaiter);
+    auto const & typed_params =
+        *static_cast<Executor::out_channel_type::value_type const *>(params);
 
     // TODO: handle infinite wait
-    typed_executor.out_channel().push(typed_awaiter);
+    typed_executor.out_channel().push(typed_params);
   }
 
   /**
    * @brief Type safety check and linear search through all possible output
    * types of the executor. If there is a type in the output channel which is
-   * the same as the awaiter type the awaiter is pushed to the output channel of
+   * the same as the params type then params are pushed to the output channel of
    * current executor
    */
   template <typename Executor>
     requires(concepts::multichannel<typename Executor::out_channel_type>)
-  constexpr void park(void const * awaiter, std::type_info const & type_info) {
+  constexpr void park(void const * params, std::type_info const & type_info) {
     bool const match = [&]<typename... Args>(std::variant<Args...>) -> bool {
       return ([&]() -> bool {
         if (type_info != typeid(Args const *)) {
@@ -165,10 +165,10 @@ class execution_context {
         }
 
         auto const & typed_executor = *static_cast<Executor const *>(executor_);
-        auto const & typed_awaiter  = *static_cast<Args const *>(awaiter);
+        auto const & typed_params   = *static_cast<Args const *>(params);
 
         // TODO: handle infinite wait
-        typed_executor.out_channel().push(typed_awaiter);
+        typed_executor.out_channel().push(typed_params);
 
         return true;
       } || ...);
@@ -176,7 +176,7 @@ class execution_context {
 
     if (!match) [[unlikely]] {
       throw std::runtime_error(
-          "execution_context::park(): incompatible awaiter ({}) and output "
+          "execution_context::park(): incompatible params ({}) and output "
           "channel value types");
     }
   }
@@ -202,9 +202,9 @@ constexpr void yield(Task && task) {
   execution_context::this_executor().yield(std::forward<Task>(task));
 }
 
-template <typename Awaiter>
-constexpr void schedule(Awaiter const & awaiter) {
-  execution_context::this_executor().schedule(awaiter);
+template <typename Params>
+constexpr void schedule(Params && params) {
+  execution_context::this_executor().schedule(std::forward<Params>(params));
 }
 
 }  // namespace argo::this_executor

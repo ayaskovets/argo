@@ -165,7 +165,7 @@ class task<T>::promise_type : public swiss::non_copyable,
     return std::move(task);
   }
 
-  template <typename Awaiter>
+  template <concepts::awaiter Awaiter>
   constexpr auto await_transform(Awaiter && awaiter) const noexcept
       -> decltype(auto) {
     return awaiters::proxy(
@@ -246,7 +246,7 @@ class task<void>::promise_type : public swiss::non_copyable,
     return std::move(task);
   }
 
-  template <typename Awaiter>
+  template <concepts::awaiter Awaiter>
   constexpr auto await_transform(Awaiter && awaiter) const noexcept
       -> decltype(auto) {
     return awaiters::proxy(

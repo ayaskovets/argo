@@ -28,6 +28,7 @@ set(HEADERS
     include/argo/awaiters/switch_to_awaiter.hpp
     include/argo/awaiters/timer_awaiter.hpp
     include/argo/awaiters/yield_awaiter.hpp
+    include/argo/awaiter.hpp
     include/argo/channel.hpp
     include/argo/execution_context.hpp
     include/argo/executor.hpp
