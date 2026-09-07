@@ -16,7 +16,7 @@ namespace argo {
 // TODO: cancel for nested tasks
 
 /**
- * @brief Task with a non-void value type
+ * @brief Coroutine return object
  */
 template <typename T>
 // NOLINTNEXTLINE(cppcoreguidelines-special-member-functions)
@@ -66,7 +66,7 @@ class task : public swiss::non_copyable {
         return handle;
       }
 
-      constexpr auto await_resume() -> T {
+      constexpr auto await_resume() -> decltype(auto) {
         if (!handle) [[unlikely]] {
           throw std::runtime_error("task_awaiter::await_resume(): no state");
         }
@@ -103,7 +103,7 @@ class task : public swiss::non_copyable {
     handle_.resume();
   }
 
-  constexpr auto get() && -> T {
+  constexpr auto get() && -> decltype(auto) {
     if (!handle_) [[unlikely]] {
       throw std::runtime_error("task::get(): no state");
     }
@@ -181,12 +181,12 @@ class task<T>::promise_type : public swiss::non_copyable,
     continuation_ = continuation;
   }
 
-  constexpr auto get() && -> T {
+  constexpr auto get() && -> T & {
     if (exception_) {
       std::rethrow_exception(exception_);
     }
 
-    return std::move(*value_);
+    return *value_;
   }
 
  private:
