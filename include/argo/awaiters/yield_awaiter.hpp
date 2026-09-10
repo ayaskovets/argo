@@ -17,7 +17,7 @@ class yield_awaiter final {
    */
   template <typename Caller>
   constexpr void await_suspend(Caller && caller) const {
-    this_executor::yield(std::forward<Caller>(caller));
+    this_executor::execute(std::forward<Caller>(caller));
   }
 
   constexpr void await_resume() const noexcept {}

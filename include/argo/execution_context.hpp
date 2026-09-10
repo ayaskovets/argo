@@ -43,15 +43,14 @@ class execution_context {
   template <concepts::executor Executor>
   explicit constexpr execution_context(Executor const & executor) noexcept
       : executor_(&executor),
-        yield_(&execution_context::yield<Executor>),
+        post_(&execution_context::post<Executor>),
         park_(&execution_context::park<Executor>) {}
 
  public:
   /**
    * @brief Resume task by the passed executor instance. Sets up all internal
    * machinery needed for awaiters and task scheduling to work
-   * @note Can be treated as a start of an execution step for a certain
-   * coroutine
+   * @note Expected to be a start of a coroutine execution step
    * @warning This functions expects task being valid and non-null
    */
   // NOLINTNEXTLINE(bugprone-exception-escape)
@@ -62,21 +61,23 @@ class execution_context {
   }
 
   /**
-   * @brief Yield execution to another task adding handle to the back of
-   * the execution queue
-   * @note Can be treated as a end of an step execution for a certain coroutine
+   * @brief Add the task handle to the back of the execution queue
+   * @note Expected to be a final call in await_suspend() and an end of a
+   * coroutine execution step
    * @note Noexcept if input channel of the current executor is noexcept
    */
   template <std::invocable Task>
-  constexpr void yield(Task && task) {
-    (this->*yield_)(std::forward<Task>(task));
+  constexpr void execute(Task && task) {
+    (this->*post_)(std::forward<Task>(task));
     this_executor_ = nullptr;
   }
 
   /**
-   * @brief Hand over the task parameters to a task scheduler. The specific
-   * scheduler type is selected based on the type of the function argument
-   * @note Can be treated as a end of an step execution for a certain coroutine
+   * @brief Add the task to the back of the scheduling queue
+   * @note The specific scheduler type is selected based on the type of the
+   * function argument
+   * @note Expected to be a final call in await_suspend() and an end of a
+   * coroutine execution step
    * @note Noexcept if input channel of the current executor is noexcept
    */
   template <typename Params>
@@ -94,18 +95,14 @@ class execution_context {
   void const * executor_;
 
   /**
-   * @brief Yield function is set when a task is resumed by an executor. This
-   * called when a coroutine encounters a co_await with the
-   * awaiters::yield_awaiter
-   * @note The rationale for this function is a mechanisn to bypass scheduler
-   * and add the task back to the execution queue of an executor
+   * @brief Bypass scheduler and add the task back to the execution queue of an
+   * executor
    */
-  void (execution_context::*yield_)(task_ref);
+  void (execution_context::*post_)(task_ref);
 
   /**
-   * @brief Park function is set when a task is resumed by an executor. This
-   * function gets called when a coroutine encounters a co_await that causes it
-   * to suspend. This function is expected to do
+   * @brief Called when a coroutine encounters a co_await that causes it to
+   * suspend and get transfered to a corresponding scheduler
    * @note Type info is passed for type safety to ensure that either scheduler
    * input channel or any other place that the params go to expect the
    * same type as the one passed as it is impossible to know what scheduler type
@@ -117,7 +114,7 @@ class execution_context {
   // NOLINTEND(misc-non-private-member-variables-in-classes)
  private:
   template <concepts::executor Executor>
-  constexpr void yield(task_ref task) noexcept(
+  constexpr void post(task_ref task) noexcept(
       concepts::noexcept_channel<typename Executor::in_channel_type>) {
     auto const & typed_executor = *static_cast<Executor const *>(executor_);
 
@@ -126,8 +123,8 @@ class execution_context {
   }
 
   /**
-   * @brief Type safety check and push the task to the output channel of current
-   * executor
+   * @brief Do type safety check and push the task to the output channel of
+   * current executor
    */
   template <concepts::executor Executor>
     requires(concepts::monochannel<typename Executor::out_channel_type>)
@@ -198,8 +195,8 @@ class execution_context {
 namespace argo::this_executor {
 
 template <std::invocable Task>
-constexpr void yield(Task && task) {
-  execution_context::this_executor().yield(std::forward<Task>(task));
+constexpr void execute(Task && task) {
+  execution_context::this_executor().execute(std::forward<Task>(task));
 }
 
 template <typename Params>
