@@ -13,7 +13,7 @@ class yield_awaiter final {
   constexpr auto await_ready() const noexcept -> bool { return false; }
 
   /**
-   * @note Noexcept if this_executor::yield is noexcept
+   * @note Noexcept if this_executor::execute is noexcept
    */
   template <typename Caller>
   constexpr void await_suspend(Caller && caller) const {

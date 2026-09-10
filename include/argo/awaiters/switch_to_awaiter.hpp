@@ -15,7 +15,7 @@ class switch_to_awaiter final {
 
  public:
   constexpr auto await_ready() const noexcept -> bool { return true; }
-  constexpr void await_suspend(auto &&) const noexcept {}
+  constexpr void await_suspend(auto &&) const noexcept { std::unreachable(); }
   constexpr void await_resume() const noexcept {}
 };
 
