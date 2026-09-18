@@ -1,8 +1,6 @@
 #include <argo/executors/thread_pool_executor.hpp>
 #include <argo/task.hpp>
 
-#include <stop_token>
-
 #include <flow/spsc_queue.hpp>
 #include <gtest/gtest.h>
 

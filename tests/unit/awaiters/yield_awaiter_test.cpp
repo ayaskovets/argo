@@ -2,8 +2,6 @@
 #include <argo/executors/inline_executor.hpp>
 #include <argo/task.hpp>
 
-#include <cstddef>
-
 #include <flow/spsc_queue.hpp>
 #include <gtest/gtest.h>
 
