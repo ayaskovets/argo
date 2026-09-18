@@ -1,7 +1,5 @@
 #pragma once
 
-#include <type_traits>
-
 #include "../awaiter.hpp"
 
 namespace argo::awaiters {
@@ -18,20 +16,16 @@ class proxy_awaiter final {
       : awaiter_(std::move(awaiter)), proxy_(std::move(proxy)) {}
 
  public:
-  constexpr auto await_ready() noexcept(noexcept(awaiter_.await_ready()))
-      -> decltype(auto) {
+  constexpr auto await_ready() -> decltype(auto) {
     return awaiter_.await_ready();
   }
 
   template <typename Caller>
-  constexpr auto await_suspend(Caller && caller) noexcept(
-      noexcept(awaiter_.await_suspend(proxy_(caller))) &&
-      std::is_nothrow_invocable_v<Proxy, Caller>) -> decltype(auto) {
+  constexpr auto await_suspend(Caller && caller) -> decltype(auto) {
     return awaiter_.await_suspend(proxy_(std::forward<Caller>(caller)));
   }
 
-  constexpr auto await_resume() noexcept(noexcept(awaiter_.await_resume()))
-      -> decltype(auto) {
+  constexpr auto await_resume() -> decltype(auto) {
     return awaiter_.await_resume();
   }
 
