@@ -86,11 +86,8 @@ class task : public swiss::non_copyable {
   constexpr void operator()() { resume(); }
 
  public:
-  /**
-   * @note True only if task has a valid and done handle
-   */
   constexpr auto done() const noexcept -> bool {
-    return handle_ && handle_.done();
+    return !handle_ || handle_.done();
   };
 
   constexpr void resume() {

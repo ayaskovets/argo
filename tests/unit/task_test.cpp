@@ -51,7 +51,7 @@ TEST(task, void_smoke) {
 TEST(task, null_handle) {
   argo::task<void> task(nullptr);
 
-  EXPECT_FALSE(task.done());
+  EXPECT_TRUE(task.done());
   EXPECT_ANY_THROW(task.resume());
   EXPECT_ANY_THROW(std::move(task).get());
 }
@@ -77,7 +77,7 @@ TEST(task, move_ctor) {
   auto move = std::move(task);
   EXPECT_FALSE(task);
   EXPECT_TRUE(move);
-  EXPECT_FALSE(task.done());
+  EXPECT_TRUE(task.done());
   EXPECT_ANY_THROW(task.resume());
   EXPECT_TRUE(move.done());
   EXPECT_EQ(std::move(move).get(), 1);
@@ -95,7 +95,7 @@ TEST(task, move_assignment) {
   task = std::move(other);
   EXPECT_TRUE(task);
   EXPECT_FALSE(other);
-  EXPECT_FALSE(other.done());
+  EXPECT_TRUE(other.done());
   EXPECT_ANY_THROW(other.resume());
   EXPECT_TRUE(task.done());
   EXPECT_EQ(std::move(task).get(), 2);
