@@ -54,28 +54,25 @@ class task : public swiss::non_copyable {
  public:
   constexpr auto operator co_await() && noexcept -> decltype(auto) {
     struct task_awaiter final {
-      // NOLINTNEXTLINE(misc-non-private-member-variables-in-classes)
-      std::coroutine_handle<promise_type> handle;
+      // NOLINTNEXTLINE(misc-non-private-member-variables-in-classes,cppcoreguidelines-avoid-const-or-ref-data-members)
+      task & task;
 
+     public:
       constexpr auto await_ready() const noexcept -> bool {
-        return !handle || handle.done();
+        return task.done();
       }
 
       constexpr auto await_suspend(std::coroutine_handle<> caller)
           const noexcept -> std::coroutine_handle<> {
-        handle.promise().set_continuation(caller);
-        return handle;
+        task.handle_.promise().set_continuation(caller);
+        return task.handle_;
       }
 
       constexpr auto await_resume() -> decltype(auto) {
-        if (!handle) [[unlikely]] {
-          throw std::runtime_error("task_awaiter::await_resume(): no state");
-        }
-
-        return std::move(handle.promise()).get();
+        return std::move(task).get();
       }
     };
-    return task_awaiter{.handle = handle_};
+    return task_awaiter(*this);
   }
 
  public:
