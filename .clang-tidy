@@ -10,6 +10,7 @@ Checks: "*,
         -cppcoreguidelines-non-private-member-variables-in-classes,
         -altera-unroll-loops,
         -readability-convert-member-functions-to-static,
-        -modernize-use-nodiscard"
+        -modernize-use-nodiscard,
+        -cert-dcl59-cpp"
 FormatStyle: none
 WarningsAsErrors: "*"

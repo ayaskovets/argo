@@ -1,5 +1,6 @@
 #pragma once
 
+#include <atomic>
 #include <coroutine>
 #include <exception>
 #include <optional>
@@ -54,8 +55,11 @@ class task : public swiss::non_copyable {
  public:
   constexpr auto operator co_await() && noexcept -> decltype(auto) {
     struct task_awaiter final {
-      // NOLINTNEXTLINE(misc-non-private-member-variables-in-classes,cppcoreguidelines-avoid-const-or-ref-data-members)
+      // NOLINTBEGIN(misc-non-private-member-variables-in-classes)
+      // NOLINTBEGIN(cppcoreguidelines-avoid-const-or-ref-data-members)
       task & task;
+      // NOLINTEND(cppcoreguidelines-avoid-const-or-ref-data-members)
+      // NOLINTEND(misc-non-private-member-variables-in-classes)
 
      public:
       constexpr auto await_ready() const noexcept -> bool {
@@ -72,7 +76,7 @@ class task : public swiss::non_copyable {
         return std::move(task).get();
       }
     };
-    return task_awaiter(*this);
+    return task_awaiter{.task = *this};
   }
 
  public:
@@ -120,27 +124,28 @@ class task : public swiss::non_copyable {
 };
 
 /**
- * @brief Promise type for a non-void task
+ * @brief Shared parts of promise type with void and non-void return type
  */
-template <typename T>
-class task<T>::promise_type : public swiss::non_copyable,
-                              public swiss::non_movable {
+class base_promise_type : public swiss::non_copyable,
+                          public swiss::non_movable {
  public:
-  constexpr auto get_return_object() noexcept -> task<T> {
-    return task<T>(std::coroutine_handle<promise_type>::from_promise(*this));
-  }
-
   constexpr auto initial_suspend() const noexcept -> std::suspend_always {
     return {};
   }
 
-  constexpr auto final_suspend() const noexcept
-      -> awaiters::continuation_awaiter {
-    return awaiters::continuation(continuation_);
-  }
-
-  constexpr void return_value(T && value) noexcept {
-    value_.emplace(std::move(value));
+  constexpr auto final_suspend() noexcept -> awaiters::continuation_awaiter {
+    /**
+     * @note Check whether there is a continuation for this task or assign a
+     * sentinel value indicating that the task is finished without subsequent
+     * symmetric transfer
+     */
+    if (void * expected = nullptr; !continuation_.compare_exchange_strong(
+            expected, this, std::memory_order::acquire,
+            std::memory_order::relaxed)) {
+      return awaiters::continuation_awaiter(
+          std::coroutine_handle<>::from_address(expected));
+    }
+    return awaiters::continuation_awaiter(nullptr);
   }
 
   constexpr void unhandled_exception() noexcept {
@@ -173,9 +178,31 @@ class task<T>::promise_type : public swiss::non_copyable,
  public:
   constexpr void set_continuation(
       std::coroutine_handle<> continuation) noexcept {
-    continuation_ = continuation;
+    continuation_.store(continuation.address(), std::memory_order::release);
   }
 
+ protected:
+  // NOLINTBEGIN(misc-non-private-member-variables-in-classes)
+  std::exception_ptr exception_     = nullptr;
+  std::atomic<void *> continuation_ = nullptr;
+  // NOLINTEND(misc-non-private-member-variables-in-classes)
+};
+
+/**
+ * @brief Promise type for a non-void task
+ */
+template <typename T>
+class task<T>::promise_type final : public base_promise_type {
+ public:
+  constexpr auto get_return_object() noexcept -> task<T> {
+    return task<T>(std::coroutine_handle<promise_type>::from_promise(*this));
+  }
+
+  constexpr void return_value(T && value) noexcept {
+    value_.emplace(std::move(value));
+  }
+
+ public:
   constexpr auto get() && -> T & {
     if (exception_) {
       std::rethrow_exception(exception_);
@@ -186,74 +213,26 @@ class task<T>::promise_type : public swiss::non_copyable,
 
  private:
   std::optional<T> value_;
-  std::exception_ptr exception_;
-  std::coroutine_handle<> continuation_;
 };
 
 /**
  * @brief Promise type for a void task
  */
 template <>
-class task<void>::promise_type : public swiss::non_copyable,
-                                 public swiss::non_movable {
+class task<void>::promise_type final : public base_promise_type {
  public:
   constexpr auto get_return_object() noexcept -> task<void> {
     return task<void>(std::coroutine_handle<promise_type>::from_promise(*this));
   }
 
-  constexpr auto initial_suspend() const noexcept -> std::suspend_always {
-    return {};
-  }
-
-  constexpr auto final_suspend() const noexcept
-      -> awaiters::continuation_awaiter {
-    return awaiters::continuation(continuation_);
-  }
-
   constexpr void return_void() const noexcept {}
 
-  constexpr void unhandled_exception() noexcept {
-    exception_ = std::current_exception();
-  }
-
  public:
-  constexpr void set_continuation(
-      std::coroutine_handle<> continuation) noexcept {
-    continuation_ = continuation;
-  }
-
   constexpr void get() && {
     if (exception_) {
       std::rethrow_exception(exception_);
     }
   }
-
- public:
-  template <typename U>
-  constexpr auto await_transform(task<U> & task) const noexcept
-      -> decltype(auto) {
-    return task;
-  }
-
-  template <typename U>
-  constexpr auto await_transform(task<U> && task) const noexcept
-      -> decltype(auto) {
-    return std::move(task);
-  }
-
-  template <concepts::awaiter Awaiter>
-  constexpr auto await_transform(Awaiter && awaiter) const noexcept
-      -> decltype(auto) {
-    return awaiters::proxy(
-        std::forward<Awaiter>(awaiter),
-        [](std::coroutine_handle<> caller) noexcept -> decltype(auto) {
-          return task_ref(caller);
-        });
-  }
-
- private:
-  std::exception_ptr exception_;
-  std::coroutine_handle<> continuation_;
 };
 
 }  // namespace argo
