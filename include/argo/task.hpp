@@ -1,6 +1,7 @@
 #pragma once
 
 #include <atomic>
+#include <cassert>
 #include <coroutine>
 #include <exception>
 #include <optional>
@@ -12,13 +13,6 @@
 #include "awaiters/continuation_awaiter.hpp"
 #include "awaiters/proxy_awaiter.hpp"
 #include "task_ref.hpp"
-
-namespace argo::awaiters {
-template <typename T>
-class task_awaiter;
-template <typename T>
-class fork_awaiter;
-}  // namespace argo::awaiters
 
 namespace argo {
 
@@ -55,6 +49,35 @@ class task : public swiss::non_copyable {
     if (handle_) {
       handle_.destroy();
     }
+  }
+
+ public:
+  constexpr auto operator co_await() && noexcept -> decltype(auto) {
+    class task_awaiter final {
+     public:
+      explicit constexpr task_awaiter(task<T> && task) noexcept
+          : task_(std::move(task)) {}
+
+     public:
+      constexpr auto await_ready() const noexcept -> bool {
+        return task_.done();
+      }
+
+      constexpr auto await_suspend(std::coroutine_handle<> caller)
+          const noexcept -> std::coroutine_handle<> {
+        assert(task_.handle_.promise().compare_exchange_continuation(caller) &&
+               "task_awaiter::await_suspend(): failed to set continuation");
+        return task_.handle_;
+      }
+
+      constexpr auto await_resume() -> decltype(auto) {
+        return std::move(task_).get();
+      }
+
+     private:
+      task<T> task_;
+    };
+    return task_awaiter(std::move(*this));
   }
 
  public:
@@ -99,18 +122,6 @@ class task : public swiss::non_copyable {
    * @note For passing coroutine handle to task ref in constructor
    */
   friend class task_ref;
-
-  /**
-   * @note For hiding co_await mechanism from the general task interface under a
-   * dedicated awaiter type
-   */
-  friend class awaiters::task_awaiter<T>;
-
-  /**
-   * @note For hiding forking mechanism from the general task interface under a
-   * dedicated awaiter type
-   */
-  friend class awaiters::fork_awaiter<T>;
 };
 
 /**
@@ -151,12 +162,6 @@ class base_promise_type : public swiss::non_copyable,
   constexpr auto await_transform(task<U> && task) const noexcept
       -> decltype(auto) {
     return std::move(task);
-  }
-
-  template <typename U>
-  constexpr auto await_transform(
-      awaiters::fork_awaiter<U> && awaiter) const noexcept -> decltype(auto) {
-    return std::move(awaiter);
   }
 
   template <concepts::awaiter Awaiter>

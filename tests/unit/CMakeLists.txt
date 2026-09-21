@@ -26,10 +26,8 @@ add_executable(argo-unit-tests)
 
 set(SOURCES
     awaiters/continuation_awaiter_test.cpp
-    awaiters/fork_awaiter_test.cpp
     awaiters/proxy_awaiter_test.cpp
     awaiters/switch_to_awaiter_test.cpp
-    awaiters/task_awaiter_test.cpp
     awaiters/timer_awaiter_test.cpp
     awaiters/yield_awaiter_test.cpp
     awaiter_test.cpp
@@ -39,6 +37,7 @@ set(SOURCES
     executors/thread_pool_executor_test.cpp
     scheduler_test.cpp
     schedulers/timer_scheduler_test.cpp
+    task_future_test.cpp
     task_test.cpp)
 
 # ------------------------------------------------------------------------------

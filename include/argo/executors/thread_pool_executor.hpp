@@ -62,6 +62,7 @@ class thread_pool_executor final : public swiss::non_copyable,
   std::vector<std::jthread> workers_;
 
  private:
+  // NOLINTNEXTLINE(bugprone-exception-escape)
   constexpr void worker_task(std::stop_token const & stop_token) noexcept {
     in_value_type in_value{};
     while (true) {

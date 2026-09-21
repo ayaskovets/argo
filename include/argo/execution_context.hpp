@@ -5,6 +5,7 @@
 #include <variant>
 
 #include "executor.hpp"
+#include "task_future.hpp"
 #include "task_ref.hpp"
 
 namespace argo::awaiters {
@@ -53,10 +54,22 @@ class execution_context {
    * @note Expected to be a start of a coroutine execution step
    * @warning This functions expects task being valid and non-null
    */
-  template <std::invocable Task>
-  constexpr void resume(Task && task) noexcept {
+  constexpr void resume(task_ref task) {
     this_executor_ = this;
-    std::forward<Task>(task)();
+    task.resume();
+  }
+
+  /**
+   * @brief Add the task handle to the back of the execution queue and return
+   * async future that could be used to retrieve the task result
+   * @note Expected to be a final call in await_suspend() and an end of a
+   * coroutine execution step
+   * @note Noexcept if input channel of the current executor is noexcept
+   */
+  template <typename T>
+  [[nodiscard]] constexpr auto execute(task<T> && task) -> task_future<T> {
+    execute(task_ref(task));
+    return task_future<T>(std::move(task));
   }
 
   /**
@@ -65,9 +78,8 @@ class execution_context {
    * coroutine execution step
    * @note Noexcept if input channel of the current executor is noexcept
    */
-  template <std::invocable Task>
-  constexpr void execute(Task && task) {
-    (this->*post_)(std::forward<Task>(task));
+  constexpr void execute(task_ref task) {
+    (this->*post_)(task);
     this_executor_ = nullptr;
   }
 
@@ -191,9 +203,13 @@ class execution_context {
  */
 namespace argo::this_executor {
 
-template <std::invocable Task>
-constexpr void execute(Task && task) {
-  execution_context::this_executor().execute(std::forward<Task>(task));
+template <typename T>
+[[nodiscard]] constexpr auto execute(task<T> && task) -> task_future<T> {
+  execution_context::this_executor().execute(std::move(task));
+}
+
+constexpr void execute(task_ref task) {
+  execution_context::this_executor().execute(task);
 }
 
 template <typename Params>
