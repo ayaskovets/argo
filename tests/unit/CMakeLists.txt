@@ -26,8 +26,10 @@ add_executable(argo-unit-tests)
 
 set(SOURCES
     awaiters/continuation_awaiter_test.cpp
+    awaiters/fork_awaiter_test.cpp
     awaiters/proxy_awaiter_test.cpp
     awaiters/switch_to_awaiter_test.cpp
+    awaiters/task_awaiter_test.cpp
     awaiters/timer_awaiter_test.cpp
     awaiters/yield_awaiter_test.cpp
     awaiter_test.cpp

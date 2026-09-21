@@ -2,15 +2,14 @@
 
 #include <gtest/gtest.h>
 
-namespace tests::unit::awaiters {
+namespace tests::unit {
 
 namespace {
 
 /**
- * @note Mock implementation of the yield awaiter
+ * @note Mock implementation of std::suspend_always awaiter
  */
-class suspend_awaiter final {
- public:
+struct suspend_always final {
   constexpr auto await_ready() const noexcept -> bool { return false; }
   constexpr void await_suspend(auto &&) const noexcept {}
   constexpr void await_resume() const noexcept {}
@@ -20,7 +19,7 @@ class suspend_awaiter final {
 
 TEST(task, nonvoid_smoke) {
   auto task = []() -> argo::task<int> {
-    co_await suspend_awaiter();
+    co_await suspend_always{};
     co_return 1;
   }();
 
@@ -35,7 +34,7 @@ TEST(task, nonvoid_smoke) {
 
 TEST(task, void_smoke) {
   auto task = []() -> argo::task<void> {
-    co_await suspend_awaiter();
+    co_await suspend_always{};
     co_return;
   }();
 
@@ -129,52 +128,4 @@ TEST(task, void_exception) {
   EXPECT_THROW(std::move(task).get(), exception);
 }
 
-TEST(task, awaiter_smoke) {
-  auto task = []() -> argo::task<int> {
-    auto const one = co_await []() -> argo::task<int> { co_return 1; }();
-    auto const two = co_await []() -> argo::task<int> { co_return 2; }();
-    co_return one + two;
-  }();
-
-  EXPECT_FALSE(task.done());
-  task.resume();
-  EXPECT_TRUE(task.done());
-  EXPECT_EQ(std::move(task).get(), 3);
-}
-
-TEST(task, awaiter_exception) {
-  class exception final : public std::exception {};
-
-  auto task = []() -> argo::task<int> {
-    auto const one = co_await []() -> argo::task<int> { co_return 1; }();
-    auto const two = co_await []() -> argo::task<int> { throw exception{}; }();
-    co_return one + two;
-  }();
-
-  EXPECT_FALSE(task.done());
-  task.resume();
-  EXPECT_TRUE(task.done());
-  EXPECT_THROW(std::move(task).get(), exception);
-}
-
-TEST(task, awaiter_recursion) {
-  std::function<argo::task<int>(int)> const recurse =
-      // NOLINTNEXTLINE(cppcoreguidelines-avoid-capturing-lambda-coroutines)
-      [&](int depth) -> argo::task<int> {
-    if (depth <= 0) {
-      co_return 0;
-    } else {
-      co_return depth + co_await recurse(depth - 1);
-    }
-  };
-
-  // NOLINTNEXTLINE(readability-magic-numbers)
-  auto task = recurse(512);
-
-  EXPECT_FALSE(task.done());
-  task.resume();
-  EXPECT_TRUE(task.done());
-  EXPECT_EQ(std::move(task).get(), 131328);
-}
-
-}  // namespace tests::unit::awaiters
+}  // namespace tests::unit

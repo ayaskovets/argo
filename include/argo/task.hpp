@@ -13,9 +13,14 @@
 #include "awaiters/proxy_awaiter.hpp"
 #include "task_ref.hpp"
 
-namespace argo {
+namespace argo::awaiters {
+template <typename T>
+class task_awaiter;
+template <typename T>
+class fork_awaiter;
+}  // namespace argo::awaiters
 
-// TODO: cancel for nested tasks
+namespace argo {
 
 /**
  * @brief Coroutine return object
@@ -53,33 +58,6 @@ class task : public swiss::non_copyable {
   }
 
  public:
-  constexpr auto operator co_await() && noexcept -> decltype(auto) {
-    struct task_awaiter final {
-      // NOLINTBEGIN(misc-non-private-member-variables-in-classes)
-      // NOLINTBEGIN(cppcoreguidelines-avoid-const-or-ref-data-members)
-      task & task;
-      // NOLINTEND(cppcoreguidelines-avoid-const-or-ref-data-members)
-      // NOLINTEND(misc-non-private-member-variables-in-classes)
-
-     public:
-      constexpr auto await_ready() const noexcept -> bool {
-        return task.done();
-      }
-
-      constexpr auto await_suspend(std::coroutine_handle<> caller)
-          const noexcept -> std::coroutine_handle<> {
-        task.handle_.promise().set_continuation(caller);
-        return task.handle_;
-      }
-
-      constexpr auto await_resume() -> decltype(auto) {
-        return std::move(task).get();
-      }
-    };
-    return task_awaiter{.task = *this};
-  }
-
- public:
   explicit constexpr operator bool() const noexcept {
     return static_cast<bool>(handle_);
   }
@@ -89,7 +67,7 @@ class task : public swiss::non_copyable {
  public:
   constexpr auto done() const noexcept -> bool {
     return !handle_ || handle_.done();
-  };
+  }
 
   constexpr void resume() {
     if (!handle_) [[unlikely]] {
@@ -121,31 +99,47 @@ class task : public swiss::non_copyable {
    * @note For passing coroutine handle to task ref in constructor
    */
   friend class task_ref;
+
+  /**
+   * @note For hiding co_await mechanism from the general task interface under a
+   * dedicated awaiter type
+   */
+  friend class awaiters::task_awaiter<T>;
+
+  /**
+   * @note For hiding forking mechanism from the general task interface under a
+   * dedicated awaiter type
+   */
+  friend class awaiters::fork_awaiter<T>;
 };
 
 /**
  * @brief Shared parts of promise type with void and non-void return type
  */
+template <typename T, typename CRTP>
+// NOLINTNEXTLINE(bugprone-crtp-constructor-accessibility)
 class base_promise_type : public swiss::non_copyable,
                           public swiss::non_movable {
  public:
+  constexpr auto get_return_object() noexcept -> task<T> {
+    return task<T>(
+        std::coroutine_handle<CRTP>::from_promise(static_cast<CRTP &>(*this)));
+  }
+
   constexpr auto initial_suspend() const noexcept -> std::suspend_always {
     return {};
   }
 
+  /**
+   * @brief Check whether there is a continuation for this task or assign a
+   * sentinel value indicating that the task is finished
+   */
   constexpr auto final_suspend() noexcept -> awaiters::continuation_awaiter {
-    /**
-     * @note Check whether there is a continuation for this task or assign a
-     * sentinel value indicating that the task is finished without subsequent
-     * symmetric transfer
-     */
-    if (void * expected = nullptr; !continuation_.compare_exchange_strong(
-            expected, this, std::memory_order::acquire,
-            std::memory_order::relaxed)) {
-      return awaiters::continuation_awaiter(
-          std::coroutine_handle<>::from_address(expected));
+    if (std::coroutine_handle<> continuation = continuation_sentinel();
+        !compare_exchange_continuation(continuation)) {
+      return awaiters::continuation(continuation);
     }
-    return awaiters::continuation_awaiter(nullptr);
+    return awaiters::continuation(nullptr);
   }
 
   constexpr void unhandled_exception() noexcept {
@@ -154,15 +148,15 @@ class base_promise_type : public swiss::non_copyable,
 
  public:
   template <typename U>
-  constexpr auto await_transform(task<U> & task) const noexcept
-      -> decltype(auto) {
-    return task;
-  }
-
-  template <typename U>
   constexpr auto await_transform(task<U> && task) const noexcept
       -> decltype(auto) {
     return std::move(task);
+  }
+
+  template <typename U>
+  constexpr auto await_transform(
+      awaiters::fork_awaiter<U> && awaiter) const noexcept -> decltype(auto) {
+    return std::move(awaiter);
   }
 
   template <concepts::awaiter Awaiter>
@@ -176,38 +170,62 @@ class base_promise_type : public swiss::non_copyable,
   }
 
  public:
-  constexpr void set_continuation(
-      std::coroutine_handle<> continuation) noexcept {
-    continuation_.store(continuation.address(), std::memory_order::release);
+  constexpr auto done_without_continuation() noexcept -> bool {
+    return continuation_.load(std::memory_order::relaxed) ==
+           continuation_sentinel();
   }
 
- protected:
-  // NOLINTBEGIN(misc-non-private-member-variables-in-classes)
-  std::exception_ptr exception_     = nullptr;
-  std::atomic<void *> continuation_ = nullptr;
-  // NOLINTEND(misc-non-private-member-variables-in-classes)
+  /**
+   * @return True if this is the first call of this method on a certain promise
+   * object and if
+   */
+  constexpr auto compare_exchange_continuation(
+      std::coroutine_handle<> & continuation) noexcept -> bool {
+    std::coroutine_handle<> expected = nullptr;
+    if (continuation_.compare_exchange_strong(expected, continuation,
+                                              std::memory_order::acquire,
+                                              std::memory_order::relaxed)) {
+      return true;
+    }
+
+    continuation = expected;
+    return false;
+  }
+
+  constexpr void get() && {
+    if (exception_) {
+      std::rethrow_exception(exception_);
+    }
+  }
+
+ private:
+  std::exception_ptr exception_{nullptr};
+  std::atomic<std::coroutine_handle<>> continuation_{nullptr};
+
+ private:
+  /**
+   * @brief Sentinel value for continuation indicating that promise type is
+   * already in the finished state without any continuation task
+   */
+  constexpr auto continuation_sentinel() noexcept -> std::coroutine_handle<> {
+    return std::coroutine_handle<CRTP>::from_promise(
+        static_cast<CRTP &>(*this));
+  }
 };
 
 /**
  * @brief Promise type for a non-void task
  */
 template <typename T>
-class task<T>::promise_type final : public base_promise_type {
+class task<T>::promise_type : public base_promise_type<T, promise_type> {
  public:
-  constexpr auto get_return_object() noexcept -> task<T> {
-    return task<T>(std::coroutine_handle<promise_type>::from_promise(*this));
-  }
-
   constexpr void return_value(T && value) noexcept {
     value_.emplace(std::move(value));
   }
 
  public:
   constexpr auto get() && -> T & {
-    if (exception_) {
-      std::rethrow_exception(exception_);
-    }
-
+    std::move(*this).base_promise_type<T, promise_type>::get();
     return *value_;
   }
 
@@ -219,20 +237,9 @@ class task<T>::promise_type final : public base_promise_type {
  * @brief Promise type for a void task
  */
 template <>
-class task<void>::promise_type final : public base_promise_type {
+class task<void>::promise_type : public base_promise_type<void, promise_type> {
  public:
-  constexpr auto get_return_object() noexcept -> task<void> {
-    return task<void>(std::coroutine_handle<promise_type>::from_promise(*this));
-  }
-
   constexpr void return_void() const noexcept {}
-
- public:
-  constexpr void get() && {
-    if (exception_) {
-      std::rethrow_exception(exception_);
-    }
-  }
 };
 
 }  // namespace argo

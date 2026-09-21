@@ -40,8 +40,4 @@ TEST(yield_awaiter, smoke) {
   EXPECT_TRUE(task.done());
 }
 
-TEST(yield_awaiter, overflow) {
-  // TODO: overflow in push
-}
-
 }  // namespace tests::unit::awaiters

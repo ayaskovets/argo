@@ -46,8 +46,4 @@ TEST(timer_awaiter, suspend) {
   EXPECT_NO_THROW(std::move(task).get());
 }
 
-TEST(timer_awaiter, overflow) {
-  // TODO: channel is full
-}
-
 }  // namespace tests::unit::awaiters
