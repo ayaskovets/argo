@@ -20,9 +20,9 @@ class proxy_awaiter final {
     return awaiter_.await_ready();
   }
 
-  template <typename Caller>
-  constexpr auto await_suspend(Caller && caller) -> decltype(auto) {
-    return awaiter_.await_suspend(proxy_(std::forward<Caller>(caller)));
+  constexpr auto await_suspend(auto && caller) -> decltype(auto) {
+    return awaiter_.await_suspend(
+        proxy_(std::forward<decltype(caller)>(caller)));
   }
 
   constexpr auto await_resume() -> decltype(auto) {

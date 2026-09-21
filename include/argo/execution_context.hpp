@@ -53,7 +53,6 @@ class execution_context {
    * @note Expected to be a start of a coroutine execution step
    * @warning This functions expects task being valid and non-null
    */
-  // NOLINTNEXTLINE(bugprone-exception-escape)
   template <std::invocable Task>
   constexpr void resume(Task && task) noexcept {
     this_executor_ = this;

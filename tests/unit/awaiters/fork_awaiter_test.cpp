@@ -1,9 +1,6 @@
 #include <argo/awaiters/fork_awaiter.hpp>
-#include <argo/execution_context.hpp>
-#include <argo/executors/inline_executor.hpp>
 #include <argo/task.hpp>
 
-#include <flow/spsc_queue.hpp>
 #include <gtest/gtest.h>
 
 namespace tests::unit::awaiters {
