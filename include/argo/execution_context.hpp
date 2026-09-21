@@ -7,11 +7,11 @@
 #include "executor.hpp"
 #include "task_ref.hpp"
 
-namespace argo {
-
-namespace awaiters {
+namespace argo::awaiters {
 class switch_to_awaiter;
-}  // namespace awaiters
+}  // namespace argo::awaiters
+
+namespace argo {
 
 /**
  * @brief Context for a single thread of execution. All scheduling and context
@@ -87,7 +87,6 @@ class execution_context {
   }
 
  protected:
-  // NOLINTBEGIN(misc-non-private-member-variables-in-classes)
   /**
    * @brief This pointer is set when a task is resumed by an executor to
    * access the executor instance
@@ -111,7 +110,6 @@ class execution_context {
   void (execution_context::*park_)(void const * params,
                                    std::type_info const & type_info);
 
-  // NOLINTEND(misc-non-private-member-variables-in-classes)
  private:
   template <concepts::executor Executor>
   constexpr void post(task_ref task) noexcept(

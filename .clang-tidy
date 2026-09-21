@@ -11,6 +11,7 @@ Checks: "*,
         -altera-unroll-loops,
         -readability-convert-member-functions-to-static,
         -modernize-use-nodiscard,
-        -cert-dcl59-cpp"
+        -cert-dcl59-cpp,
+        -misc-non-private-member-variables-in-classes"
 FormatStyle: none
 WarningsAsErrors: "*"

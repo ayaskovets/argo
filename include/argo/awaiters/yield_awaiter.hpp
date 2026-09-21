@@ -26,7 +26,7 @@ class yield_awaiter final {
 }  // namespace argo::awaiters
 
 /**
- * @section Utility awaiter constructors
+ * @section Awaiter constructors
  */
 namespace argo::awaiters {
 

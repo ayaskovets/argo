@@ -4,14 +4,16 @@
 #include <stdexcept>
 
 namespace argo {
-
 template <typename T>
 class task;
+}  // namespace argo
+
+namespace argo {
 
 /**
  * @brief Non-owning trivially copyable task reference with reduced interface
- * intended for passing type-erase tasks to a scheduler or an executor without
- * passing task ownership
+ * intended for passing type-erased tasks to a scheduler or an executor without
+ * giving away task ownership
  * @note Awaiter types only have access to the suspended task through this type
  */
 class task_ref final {
