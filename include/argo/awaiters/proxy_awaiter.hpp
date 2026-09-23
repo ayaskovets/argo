@@ -1,5 +1,7 @@
 #pragma once
 
+#include <swiss/concepts.hpp>
+
 #include "../awaiter.hpp"
 
 namespace argo::awaiters {
@@ -47,16 +49,8 @@ namespace argo::awaiters {
 template <typename Awaiter, typename Proxy>
 constexpr auto proxy(Awaiter && awaiter, Proxy && proxy) noexcept
     -> decltype(auto) {
-  if constexpr (requires { awaiter.operator co_await(); }) {
-    return proxy_awaiter(std::forward<Awaiter>(awaiter).operator co_await(),
-                         std::forward<Proxy>(proxy));
-  } else if constexpr (requires { operator co_await(awaiter); }) {
-    return proxy_awaiter(operator co_await(std::forward<Awaiter>(awaiter)),
-                         std::forward<Proxy>(proxy));
-  } else {
-    return proxy_awaiter(std::forward<Awaiter>(awaiter),
-                         std::forward<Proxy>(proxy));
-  }
+  return proxy_awaiter(swiss::co_await_result_v(std::forward<Awaiter>(awaiter)),
+                       std::forward<Proxy>(proxy));
 }
 
 }  // namespace argo::awaiters
