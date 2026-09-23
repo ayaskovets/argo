@@ -1,7 +1,7 @@
 #include <argo/executors/thread_pool_executor.hpp>
 #include <argo/task.hpp>
 
-#include <flow/spsc_queue.hpp>
+#include <flow/spmc_queue.hpp>
 #include <gtest/gtest.h>
 
 namespace tests::unit::awaiters {
@@ -15,8 +15,8 @@ TEST(thread_pool_executor, smoke) {
     co_return;
   }(stop_source);
 
-  flow::spsc_queue<argo::task_ref> in_channel(1);
-  flow::spsc_queue<std::nullptr_t> out_channel(1);
+  flow::spmc_queue<argo::task_ref> in_channel(2);
+  flow::spmc_queue<std::nullptr_t> out_channel(2);
   argo::executors::thread_pool_executor executor(in_channel, out_channel);
 
   in_channel.push(argo::task_ref(task));

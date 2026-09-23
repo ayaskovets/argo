@@ -1,3 +1,5 @@
+#pragma once
+
 #include "task.hpp"
 
 namespace argo {
