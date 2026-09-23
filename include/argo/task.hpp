@@ -15,6 +15,11 @@
 #include "task_ref.hpp"
 
 namespace argo {
+template <typename T>
+class task_future;
+}  // namespace argo
+
+namespace argo {
 
 /**
  * @brief Coroutine return object
@@ -122,6 +127,11 @@ class task : public swiss::non_copyable {
    * @note For passing coroutine handle to task ref in constructor
    */
   friend class task_ref;
+
+  /**
+   * @note For accessing task handle from the future object
+   */
+  friend class task_future<T>;
 };
 
 /**
@@ -162,6 +172,12 @@ class base_promise_type : public swiss::non_copyable,
   constexpr auto await_transform(task<U> && task) const noexcept
       -> decltype(auto) {
     return std::move(task);
+  }
+
+  template <typename U>
+  constexpr auto await_transform(task_future<U> && future) const noexcept
+      -> decltype(auto) {
+    return std::move(future);
   }
 
   template <concepts::awaiter Awaiter>
