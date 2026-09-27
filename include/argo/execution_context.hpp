@@ -5,7 +5,6 @@
 #include <variant>
 
 #include "executor.hpp"
-#include "task_future.hpp"
 #include "task_ref.hpp"
 
 namespace argo::awaiters {
@@ -57,19 +56,6 @@ class execution_context {
   constexpr void resume(task_ref task) {
     this_executor_ = this;
     task.resume();
-  }
-
-  /**
-   * @brief Add the task handle to the back of the execution queue and return
-   * async future that could be used to retrieve the task result
-   * @note Expected to be a final call in await_suspend() and an end of a
-   * coroutine execution step
-   * @note Noexcept if input channel of the current executor is noexcept
-   */
-  template <typename T>
-  [[nodiscard]] constexpr auto execute(task<T> && task) -> task_future<T> {
-    execute(task_ref(task));
-    return task_future<T>(std::move(task));
   }
 
   /**
@@ -202,11 +188,6 @@ class execution_context {
  * std::this_thread
  */
 namespace argo::this_executor {
-
-template <typename T>
-[[nodiscard]] constexpr auto execute(task<T> && task) -> task_future<T> {
-  execution_context::this_executor().execute(std::move(task));
-}
 
 constexpr void execute(task_ref task) {
   execution_context::this_executor().execute(task);

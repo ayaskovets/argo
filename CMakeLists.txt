@@ -24,6 +24,7 @@ add_library(argo::argo ALIAS argo)
 
 set(HEADERS
     include/argo/awaiters/continuation_awaiter.hpp
+    include/argo/awaiters/fork_awaiter.hpp
     include/argo/awaiters/proxy_awaiter.hpp
     include/argo/awaiters/switch_to_awaiter.hpp
     include/argo/awaiters/timer_awaiter.hpp
