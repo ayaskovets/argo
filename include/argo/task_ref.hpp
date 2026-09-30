@@ -15,6 +15,8 @@ namespace argo {
  * intended for passing type-erased tasks to a scheduler or an executor without
  * giving away task ownership
  * @note Awaiter types only have access to the suspended task through this type
+ * @note Can outlive a specific task object but must not outlive the underlying
+ * handle
  */
 class task_ref final {
  public:

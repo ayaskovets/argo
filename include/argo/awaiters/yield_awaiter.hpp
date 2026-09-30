@@ -16,8 +16,8 @@ class yield_awaiter final {
   /**
    * @note Noexcept if this_executor::execute is noexcept
    */
-  constexpr void await_suspend(task_ref task) const {
-    this_executor::execute(task);
+  constexpr void await_suspend(task_ref caller) const {
+    this_executor::execute(caller);
   }
 
   constexpr void await_resume() const noexcept {}

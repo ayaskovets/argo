@@ -12,7 +12,7 @@ namespace argo::concepts {
 template <typename T>
 concept awaiter = requires(swiss::co_await_result_t<T> awaiter) {
   { awaiter.await_ready() } -> std::same_as<bool>;
-  { awaiter.await_suspend(argo::task_ref{}) };
+  { awaiter.await_suspend(argo::task_ref()) };
   { awaiter.await_resume() };
 };
 

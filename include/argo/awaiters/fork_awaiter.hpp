@@ -8,7 +8,8 @@
 namespace argo::awaiters {
 
 /**
- * @brief Awaiter that implements
+ * @brief Awaiter that implements parallel execution of a task within another
+ * task scope
  */
 template <typename T>
 class fork_awaiter final {
@@ -25,8 +26,11 @@ class fork_awaiter final {
    * @note Noexcept if this_executor::schedule is noexcept
    */
   constexpr auto await_resume() -> task_future<T> {
-    this_executor::execute(task_ref(task_));
-    return task_future(std::move(task_));
+    task_ref const ref(task_);
+    task_future<T> future(std::move(task_));
+
+    this_executor::execute(ref);
+    return future;
   }
 
  private:
