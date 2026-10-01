@@ -1,4 +1,4 @@
-#include <argo/awaiters/fork_awaiter.hpp>
+#include <argo/awaiters/async_awaiter.hpp>
 #include <argo/executors/inline_executor.hpp>
 
 #include <flow/spsc_queue.hpp>
@@ -6,7 +6,7 @@
 
 namespace tests::unit {
 
-TEST(fork_awaiter, smoke) {
+TEST(async_awaiter, smoke) {
   flow::spsc_queue<argo::task_ref> in_channel(1);
   flow::spsc_queue<std::nullptr_t> out_channel(1);
   argo::executors::inline_executor executor(in_channel, out_channel);
@@ -15,7 +15,7 @@ TEST(fork_awaiter, smoke) {
   auto child_ref = argo::task_ref(child);
 
   auto task = [](argo::task<int> child) -> argo::task<void> {
-    auto future = co_await argo::awaiters::fork(std::move(child));
+    auto future = co_await argo::awaiters::async(std::move(child));
     co_await std::move(future);
     co_return;
   }(std::move(child));

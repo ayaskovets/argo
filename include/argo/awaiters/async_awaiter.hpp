@@ -12,9 +12,9 @@ namespace argo::awaiters {
  * task scope
  */
 template <typename T>
-class fork_awaiter final {
+class async_awaiter final {
  public:
-  explicit constexpr fork_awaiter(task<T> && task) noexcept
+  explicit constexpr async_awaiter(task<T> && task) noexcept
       : task_(std::move(task)) {}
 
  public:
@@ -45,8 +45,8 @@ class fork_awaiter final {
 namespace argo::awaiters {
 
 template <typename T>
-constexpr auto fork(task<T> && task) noexcept -> fork_awaiter<T> {
-  return fork_awaiter(std::move(task));
+constexpr auto async(task<T> && task) noexcept -> async_awaiter<T> {
+  return async_awaiter(std::move(task));
 }
 
 }  // namespace argo::awaiters
