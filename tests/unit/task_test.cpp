@@ -29,7 +29,7 @@ TEST(task, nonvoid_smoke) {
 
   task();
   EXPECT_TRUE(task.done());
-  EXPECT_EQ(std::move(task).get(), 1);
+  EXPECT_EQ(task.get(), 1);
 }
 
 TEST(task, void_smoke) {
@@ -44,7 +44,7 @@ TEST(task, void_smoke) {
 
   task();
   EXPECT_TRUE(task.done());
-  std::move(task).get();
+  task.get();
 }
 
 TEST(task, null_handle) {
@@ -52,7 +52,7 @@ TEST(task, null_handle) {
 
   EXPECT_TRUE(task.done());
   EXPECT_ANY_THROW(task.resume());
-  EXPECT_ANY_THROW(std::move(task).get());
+  EXPECT_ANY_THROW(task.get());
 }
 
 TEST(task, noncopyable_type) {
@@ -62,7 +62,7 @@ TEST(task, noncopyable_type) {
 
   EXPECT_FALSE(task.done());
   task.resume();
-  EXPECT_EQ(*std::move(task).get(), 1);
+  EXPECT_EQ(*task.get(), 1);
 }
 
 TEST(task, move_ctor) {
@@ -97,7 +97,7 @@ TEST(task, move_assignment) {
   EXPECT_TRUE(other.done());
   EXPECT_ANY_THROW(other.resume());
   EXPECT_TRUE(task.done());
-  EXPECT_EQ(std::move(task).get(), 2);
+  EXPECT_EQ(task.get(), 2);
 }
 
 TEST(task, nonvoid_exception) {
@@ -111,7 +111,7 @@ TEST(task, nonvoid_exception) {
   EXPECT_FALSE(task.done());
   task.resume();
   EXPECT_TRUE(task.done());
-  EXPECT_THROW(std::move(task).get(), exception);
+  EXPECT_THROW(task.get(), exception);
 }
 
 TEST(task, void_exception) {
@@ -125,7 +125,7 @@ TEST(task, void_exception) {
   EXPECT_FALSE(task.done());
   task.resume();
   EXPECT_TRUE(task.done());
-  EXPECT_THROW(std::move(task).get(), exception);
+  EXPECT_THROW(task.get(), exception);
 }
 
 TEST(task, awaiter_smoke) {
@@ -138,7 +138,7 @@ TEST(task, awaiter_smoke) {
   EXPECT_FALSE(task.done());
   task.resume();
   EXPECT_TRUE(task.done());
-  EXPECT_EQ(std::move(task).get(), 3);
+  EXPECT_EQ(task.get(), 3);
 }
 
 TEST(task, awaiter_exception) {
@@ -153,7 +153,7 @@ TEST(task, awaiter_exception) {
   EXPECT_FALSE(task.done());
   task.resume();
   EXPECT_TRUE(task.done());
-  EXPECT_THROW(std::move(task).get(), exception);
+  EXPECT_THROW(task.get(), exception);
 }
 
 TEST(task, awaiter_recursion) {
@@ -173,7 +173,7 @@ TEST(task, awaiter_recursion) {
   EXPECT_FALSE(task.done());
   task.resume();
   EXPECT_TRUE(task.done());
-  EXPECT_EQ(std::move(task).get(), 131328);
+  EXPECT_EQ(task.get(), 131328);
 }
 
 }  // namespace tests::unit

@@ -12,6 +12,7 @@ Checks: "*,
         -readability-convert-member-functions-to-static,
         -modernize-use-nodiscard,
         -cert-dcl59-cpp,
-        -misc-non-private-member-variables-in-classes"
+        -misc-non-private-member-variables-in-classes,
+        -modernize-use-default-member-init"
 FormatStyle: none
 WarningsAsErrors: "*"

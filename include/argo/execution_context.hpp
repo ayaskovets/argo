@@ -50,8 +50,7 @@ class execution_context {
   /**
    * @brief Resume task by the passed executor instance. Sets up all internal
    * machinery needed for awaiters and task scheduling to work
-   * @note Expected to be a start of a coroutine execution step
-   * @warning This functions expects task being valid and non-null
+   * @warning This function expects task being valid and non-null
    */
   constexpr void resume(task_ref task) {
     this_executor_ = this;
@@ -60,27 +59,19 @@ class execution_context {
 
   /**
    * @brief Add the task handle to the back of the execution queue
-   * @note Expected to be a final call in await_suspend() and an end of a
-   * coroutine execution step
    * @note Noexcept if input channel of the current executor is noexcept
    */
-  constexpr void execute(task_ref task) {
-    (this->*post_)(task);
-    this_executor_ = nullptr;
-  }
+  constexpr void execute(task_ref task) { (this->*post_)(task); }
 
   /**
    * @brief Add the task to the back of the scheduling queue
    * @note The specific scheduler type is selected based on the type of the
    * function argument
-   * @note Expected to be a final call in await_suspend() and an end of a
-   * coroutine execution step
    * @note Noexcept if input channel of the current executor is noexcept
    */
   template <typename Params>
   constexpr void schedule(Params const & params) {
     (this->*park_)(&params, typeid(&params));
-    this_executor_ = nullptr;
   }
 
  protected:

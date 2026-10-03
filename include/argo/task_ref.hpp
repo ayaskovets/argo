@@ -17,6 +17,7 @@ namespace argo {
  * @note Awaiter types only have access to the suspended task through this type
  * @note Can outlive a specific task object but must not outlive the underlying
  * handle
+ * @note Not thread-safe
  */
 class task_ref final {
  public:

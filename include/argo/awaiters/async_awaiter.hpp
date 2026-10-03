@@ -14,8 +14,7 @@ namespace argo::awaiters {
 template <typename T>
 class async_awaiter final {
  public:
-  explicit constexpr async_awaiter(task<T> && task) noexcept
-      : task_(std::move(task)) {}
+  explicit constexpr async_awaiter(task<T> & task) noexcept : task_(task) {}
 
  public:
   constexpr auto await_ready() const noexcept -> bool { return true; }
@@ -23,18 +22,16 @@ class async_awaiter final {
   constexpr void await_suspend(auto &&) const noexcept { std::unreachable(); }
 
   /**
-   * @note Noexcept if this_executor::schedule is noexcept
+   * @note Noexcept if this_executor::execute is noexcept
    */
   constexpr auto await_resume() -> task_future<T> {
-    task_ref const ref(task_);
-    task_future<T> future(std::move(task_));
-
-    this_executor::execute(ref);
-    return future;
+    this_executor::execute(task_ref(task_));
+    return task_future<T>(task_);
   }
 
  private:
-  task<T> task_;
+  // NOLINTNEXTLINE(cppcoreguidelines-avoid-const-or-ref-data-members
+  task<T> & task_;
 };
 
 }  // namespace argo::awaiters
@@ -45,8 +42,8 @@ class async_awaiter final {
 namespace argo::awaiters {
 
 template <typename T>
-constexpr auto async(task<T> && task) noexcept -> async_awaiter<T> {
-  return async_awaiter(std::move(task));
+constexpr auto async(task<T> & task) noexcept -> async_awaiter<T> {
+  return async_awaiter(task);
 }
 
 }  // namespace argo::awaiters
