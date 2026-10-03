@@ -6,7 +6,6 @@
 #include <optional>
 #include <stdexcept>
 
-#include <swiss/functional.hpp>
 #include <swiss/mixins.hpp>
 #include <swiss/sealable_stack.hpp>
 
@@ -154,17 +153,16 @@ class base_promise_type : public swiss::non_copyable,
 
   constexpr auto final_suspend() noexcept -> awaiters::continuation_awaiter {
     waitlist_.seal();
-    if (waitlist_.empty()) {
-      return awaiters::continuation(continuation_);
+    if (!waitlist_.empty()) {
+      for (auto const [task_ref, ctx] : waitlist_) {
+        ctx->execute(task_ref);
+      }
+      assert(!continuation_ &&
+             "base_promise_type::final_suspend(): async coroutine with "
+             "continuation");
     }
 
-    assert(!continuation_ &&
-           "base_promise_type::final_suspend(): async coroutine with "
-           "continuation");
-    for (auto const [task_ref, ctx] : waitlist_) {
-      ctx->execute(task_ref);
-    }
-    return awaiters::continuation(nullptr);
+    return awaiters::continuation(continuation_);
   }
 
   constexpr void unhandled_exception() noexcept {

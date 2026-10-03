@@ -7,7 +7,7 @@
 namespace argo {
 
 /**
- * @brief Non-owning future object for task
+ * @brief Non-owning future object for the task type
  * @note Can be used for awaiting a task from multiple awaiters
  * @note Thread-safe
  */

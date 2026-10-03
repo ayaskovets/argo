@@ -19,14 +19,9 @@ TEST(switch_to_awaiter, smoke) {
   auto task = [](argo::execution_context & ctx2) -> argo::task<void> {
     co_await argo::awaiters::switch_to(ctx2);
     co_await argo::awaiters::yield();
-    co_return;
   }(executor2.context());
 
-  in_channel1.push(argo::task_ref(task));
-  EXPECT_FALSE(in_channel1.empty());
-  EXPECT_TRUE(in_channel2.empty());
-
-  executor1.run_once();
+  executor1.context().resume(argo::task_ref(task));
   EXPECT_TRUE(in_channel1.empty());
   EXPECT_FALSE(in_channel2.empty());
 

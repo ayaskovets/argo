@@ -11,7 +11,7 @@ class task;
 namespace argo {
 
 /**
- * @brief Non-owning trivially copyable task reference with reduced interface
+ * @brief Non-owning task reference with reduced interface
  * intended for passing type-erased tasks to a scheduler or an executor without
  * giving away task ownership
  * @note Awaiter types only have access to the suspended task through this type

@@ -14,7 +14,6 @@ TEST(timer_awaiter, skip_suspend) {
         std::chrono::milliseconds(0));
     co_await argo::awaiters::sleep_until<swiss::tls_mocked_clock<>>(
         swiss::tls_mocked_clock<>::now());
-    co_return;
   }();
 
   EXPECT_FALSE(task.done());
@@ -32,11 +31,9 @@ TEST(timer_awaiter, suspend) {
   auto task = []() -> argo::task<void> {
     co_await argo::awaiters::sleep_for<swiss::tls_mocked_clock<>>(
         std::chrono::milliseconds(1));
-    co_return;
   }();
 
-  in_channel.push(argo::task_ref(task));
-  executor.run_once();
+  executor.context().resume(argo::task_ref(task));
   EXPECT_FALSE(task.done());
   EXPECT_EQ(out_channel.size(), 1);
   EXPECT_TRUE(out_channel.try_pop(std::ignore));

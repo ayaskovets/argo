@@ -33,10 +33,7 @@ TEST(task, nonvoid_smoke) {
 }
 
 TEST(task, void_smoke) {
-  auto task = []() -> argo::task<void> {
-    co_await suspend_always{};
-    co_return;
-  }();
+  auto task = []() -> argo::task<void> { co_await suspend_always{}; }();
 
   EXPECT_FALSE(task.done());
   task.resume();

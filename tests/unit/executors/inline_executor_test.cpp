@@ -18,8 +18,7 @@ TEST(inline_executor, smoke) {
     co_return;
   }(times_called);
 
-  in_channel.push(argo::task_ref(task));
-  executor.run_once();
+  executor.context().resume(argo::task_ref(task));
   EXPECT_EQ(times_called, 1);
 
   executor.run_once();

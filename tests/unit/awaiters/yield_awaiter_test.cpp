@@ -12,18 +12,13 @@ TEST(yield_awaiter, smoke) {
     co_await argo::awaiters::yield();
     co_await argo::awaiters::yield();
     co_await argo::awaiters::yield();
-    co_return;
   }();
 
   flow::spsc_queue<argo::task_ref> in_channel(1);
   flow::spsc_queue<std::nullptr_t> out_channel(1);
   argo::executors::inline_executor executor(in_channel, out_channel);
 
-  in_channel.push(argo::task_ref(task));
-  EXPECT_EQ(in_channel.size(), 1);
-  EXPECT_FALSE(task.done());
-
-  executor.run_once();
+  executor.context().resume(argo::task_ref(task));
   EXPECT_EQ(in_channel.size(), 1);
   EXPECT_FALSE(task.done());
 
