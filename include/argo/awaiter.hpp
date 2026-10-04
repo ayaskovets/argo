@@ -2,18 +2,21 @@
 
 #include <swiss/concepts.hpp>
 
-#include "task_ref.hpp"
+#include "awaiter_context.hpp"
 
 namespace argo::concepts {
 
 /**
- * @brief Task executor concept with input/output channels
+ * @brief Awaiter concept with a coroutine handle wrapped in a type with
+ * restricted access to the promise type. Otherwise this is a basic model for a
+ * standard awaiter type
  */
 template <typename T>
-concept awaiter = requires(swiss::co_await_result_t<T> awaiter) {
-  { awaiter.await_ready() } -> std::same_as<bool>;
-  { awaiter.await_suspend(argo::task_ref()) };
-  { awaiter.await_resume() };
-};
+concept awaiter =
+    requires(swiss::co_await_result_t<T> awaiter, argo::awaiter_context<> ctx) {
+      { awaiter.await_ready() } -> std::same_as<bool>;
+      { awaiter.await_suspend(ctx) };
+      { awaiter.await_resume() };
+    };
 
 }  // namespace argo::concepts

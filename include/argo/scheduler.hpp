@@ -5,7 +5,9 @@
 namespace argo::concepts {
 
 /**
- * @brief Task scheduler with input/output channels
+ * @brief Task scheduler concept. The general idea of a scheduler is an event
+ * loop that gets tasks to be scheduled from an input channel and sends task
+ * ready to run to the output channel
  */
 template <typename T>
 concept scheduler = requires(T scheduler) {
