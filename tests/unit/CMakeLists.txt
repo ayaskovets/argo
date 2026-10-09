@@ -25,20 +25,13 @@ add_executable(argo-unit-tests)
 # ------------------------------------------------------------------------------
 
 set(SOURCES
-    awaiters/async_awaiter_test.cpp
-    awaiters/continuation_awaiter_test.cpp
-    awaiters/proxy_awaiter_test.cpp
-    awaiters/switch_to_awaiter_test.cpp
-    awaiters/timer_awaiter_test.cpp
-    awaiters/yield_awaiter_test.cpp
     awaiter_test.cpp
+    awaiters/yield_awaiter_test.cpp
     channel_test.cpp
+    execution_context_test.cpp
     executor_test.cpp
     executors/inline_executor_test.cpp
     executors/thread_pool_executor_test.cpp
-    scheduler_test.cpp
-    schedulers/timer_scheduler_test.cpp
-    task_future_test.cpp
     task_test.cpp)
 
 # ------------------------------------------------------------------------------

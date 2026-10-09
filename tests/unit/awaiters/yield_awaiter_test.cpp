@@ -8,17 +8,21 @@
 namespace tests::unit::awaiters {
 
 TEST(yield_awaiter, smoke) {
+  flow::spsc_queue<argo::suspended> in_channel(1);
+  flow::spsc_queue<std::nullptr_t> out_channel(1);
+  argo::executors::inline_executor executor(in_channel, out_channel);
+
   auto task = []() -> argo::task<void> {
     co_await argo::awaiters::yield();
     co_await argo::awaiters::yield();
     co_await argo::awaiters::yield();
   }();
 
-  flow::spsc_queue<argo::task_ref> in_channel(1);
-  flow::spsc_queue<std::nullptr_t> out_channel(1);
-  argo::executors::inline_executor executor(in_channel, out_channel);
+  in_channel.push(task.suspend());
+  EXPECT_EQ(in_channel.size(), 1);
+  EXPECT_FALSE(task.done());
 
-  executor.context().resume(argo::task_ref(task));
+  executor.run_once();
   EXPECT_EQ(in_channel.size(), 1);
   EXPECT_FALSE(task.done());
 

@@ -7,7 +7,7 @@
 namespace tests::unit::awaiters {
 
 TEST(inline_executor, smoke) {
-  flow::spsc_queue<argo::task_ref> in_channel(1);
+  flow::spsc_queue<argo::suspended> in_channel(1);
   flow::spsc_queue<std::nullptr_t> out_channel(1);
   argo::executors::inline_executor executor(in_channel, out_channel);
 
@@ -18,7 +18,10 @@ TEST(inline_executor, smoke) {
     co_return;
   }(times_called);
 
-  executor.context().resume(argo::task_ref(task));
+  in_channel.push(task.suspend());
+  EXPECT_EQ(times_called, 0);
+
+  executor.run_once();
   EXPECT_EQ(times_called, 1);
 
   executor.run_once();

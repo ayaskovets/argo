@@ -2,7 +2,7 @@
 
 #include <swiss/concepts.hpp>
 
-#include "awaiter_context.hpp"
+#include "suspended.hpp"
 
 namespace argo::concepts {
 
@@ -13,9 +13,11 @@ namespace argo::concepts {
  */
 template <typename T>
 concept awaiter =
-    requires(swiss::co_await_result_t<T> awaiter, argo::awaiter_context<> ctx) {
+    requires(swiss::co_await_result_t<T> awaiter, argo::suspended task) {
       { awaiter.await_ready() } -> std::same_as<bool>;
-      { awaiter.await_suspend(ctx) };
+      {
+        awaiter.await_suspend(task)
+      } -> swiss::one_of<void, bool, std::coroutine_handle<>>;
       { awaiter.await_resume() };
     };
 

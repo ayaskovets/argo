@@ -4,39 +4,63 @@
 #include <format>
 #include <variant>
 
-#include "executor.hpp"
-#include "task_ref.hpp"
+#include <swiss/mixins.hpp>
 
-namespace argo::awaiters {
-class switch_to_awaiter;
-}  // namespace argo::awaiters
+#include "executor.hpp"
+#include "suspended.hpp"
 
 namespace argo {
 
 /**
- * @brief Context for a single thread of execution. All scheduling and context
- * switching should be done through the functions defined in this namespace
- * @note With multiple threads of execution each thread needs its own context to
- * function properly as it is difficult and unnecessary to implement this class
- * in a way that does distinguishing between threads automatically
+ * @brief Execution context. Represents a trivially copyable set of pointers and
+ * functions with type-erased operations on in/out channels of a certain
+ * executor
  */
-class execution_context {
- protected:
+class execution_context final : public swiss::non_copyable,
+                                public swiss::non_movable {
+ private:
   /**
-   * @brief TLS execution context. Set by resume(). Each co_await that suspends
-   * a coroutine will use this execution context for scheduling
+   * @brief TLS execution context. Used to access and switch the current
+   * execution context for resumed and suspended coroutines
    */
-  static thread_local inline execution_context * this_executor_ = nullptr;
+  static thread_local inline execution_context const * this_executor_ = nullptr;
 
  public:
   /**
-   * @brief Somewhat analogous to std::this_thread for accessing the current
-   * thread local execution context
+   * @brief Public accessor for the TLS execution context
    */
-  static constexpr auto this_executor() noexcept -> execution_context & {
+  static constexpr auto this_executor() noexcept -> execution_context const & {
     assert(this_executor_ &&
            "execution_context::this_executor(): no resumed coroutine");
     return *this_executor_;
+  }
+
+  /**
+   * @brief Switch TLS execution context to the co_await'ed object without
+   * suspending the current task
+   */
+  constexpr auto operator co_await() const noexcept -> decltype(auto) {
+    class switch_awaiter final {
+     public:
+      explicit constexpr switch_awaiter(execution_context const & ctx) noexcept
+          : ctx_(&ctx) {}
+
+     public:
+      constexpr auto await_ready() const noexcept -> bool { return true; }
+
+      constexpr void await_suspend(suspended) const noexcept {
+        std::unreachable();
+      }
+
+      constexpr void await_resume() const noexcept {
+        execution_context::this_executor_ = ctx_;
+      }
+
+     private:
+      execution_context const * ctx_;
+    };
+
+    return switch_awaiter(*this);
   }
 
  public:
@@ -48,60 +72,35 @@ class execution_context {
 
  public:
   /**
-   * @brief Resume task by the passed executor instance. Sets up all internal
-   * machinery needed for awaiters and task scheduling to work
-   * @warning This function expects task being valid and non-null
+   * @brief Synchronously resume task by the current executor
    */
-  constexpr void resume(task_ref task) {
+  constexpr void resume(suspended task) const noexcept {
     this_executor_ = this;
-    task.resume();
+    task.handle_.resume();
   }
 
   /**
-   * @brief Add the task handle to the back of the execution queue
+   * @brief Add the task to the input channel of the current executor
    * @note Noexcept if input channel of the current executor is noexcept
    */
-  constexpr void execute(task_ref task) { (this->*post_)(task); }
+  constexpr void execute(suspended task) const { (this->*post_)(task); }
 
   /**
-   * @brief Add the task to the back of the scheduling queue
-   * @note The specific scheduler type is selected based on the type of the
-   * function argument
+   * @brief Add the task to output channel of the current executor
    * @note Noexcept if input channel of the current executor is noexcept
    */
   template <typename Params>
-  constexpr void schedule(Params const & params) {
+  constexpr void schedule(Params const & params) const {
     (this->*park_)(&params, typeid(&params));
   }
 
- protected:
-  /**
-   * @brief This pointer is set when a task is resumed by an executor to
-   * access the executor instance
-   */
-  void const * executor_;
-
-  /**
-   * @brief Bypass scheduler and add the task back to the execution queue of an
-   * executor
-   */
-  void (execution_context::*post_)(task_ref);
-
-  /**
-   * @brief Called when a coroutine encounters a co_await that causes it to
-   * suspend and get transfered to a corresponding scheduler
-   * @note Type info is passed for type safety to ensure that either scheduler
-   * input channel or any other place that the params go to expect the
-   * same type as the one passed as it is impossible to know what scheduler type
-   * is going to be used with a certain params
-   */
-  void (execution_context::*park_)(void const * params,
-                                   std::type_info const & type_info);
-
  private:
+  /**
+   * @brief Push the task to the input channel of the executor
+   */
   template <concepts::executor Executor>
-  constexpr void post(task_ref task) noexcept(
-      concepts::noexcept_channel<typename Executor::in_channel_type>) {
+  constexpr void post(suspended task) const
+      noexcept(concepts::noexcept_channel<typename Executor::in_channel_type>) {
     auto const & typed_executor = *static_cast<Executor const *>(executor_);
 
     // TODO: handle infinite wait
@@ -109,12 +108,13 @@ class execution_context {
   }
 
   /**
-   * @brief Do type safety check and push the task to the output channel of
-   * current executor
+   * @brief Check whether the typeid matches the expected typeid in the channel
+   * and push to the output channel of the executor
    */
   template <concepts::executor Executor>
     requires(concepts::monochannel<typename Executor::out_channel_type>)
-  constexpr void park(void const * params, std::type_info const & type_info) {
+  constexpr void park(void const * params,
+                      std::type_info const & type_info) const {
     if (type_info != typeid(Executor::out_channel_type::value_type const *))
         [[unlikely]] {
       throw std::runtime_error(std::format(
@@ -133,12 +133,10 @@ class execution_context {
   }
 
   /**
-   * @brief Type safety check and linear search through all possible output
-   * types of the executor. If there is a type in the output channel which is
-   * the same as the params type then params are pushed to the output channel of
-   * current executor
+   * @brief Do linear search through the list of possible typeid values in the
+   * multichannel and push to the output channel of the executor
    */
-  template <typename Executor>
+  template <concepts::executor Executor>
     requires(concepts::multichannel<typename Executor::out_channel_type>)
   constexpr void park(void const * params, std::type_info const & type_info) {
     bool const match = [&]<typename... Args>(std::variant<Args...>) -> bool {
@@ -165,28 +163,10 @@ class execution_context {
   }
 
  private:
-  /**
-   * @brief To implement changing executors for a task through a single
-   * incapsulated awaiter type
-   */
-  friend class awaiters::switch_to_awaiter;
+  void const * executor_;
+  void (execution_context::*post_)(suspended) const;
+  void (execution_context::*park_)(void const * params,
+                                   std::type_info const & type_info) const;
 };
 
 }  // namespace argo
-
-/**
- * @brief Utility namespace for accessing current executor same way as
- * std::this_thread
- */
-namespace argo::this_executor {
-
-constexpr void execute(task_ref task) {
-  execution_context::this_executor().execute(task);
-}
-
-template <typename Params>
-constexpr void schedule(Params && params) {
-  execution_context::this_executor().schedule(std::forward<Params>(params));
-}
-
-}  // namespace argo::this_executor

@@ -28,18 +28,18 @@ class thread_pool_executor final : public swiss::non_copyable,
   constexpr thread_pool_executor(
       in_channel_type & in_channel, out_channel_type & out_channel,
       std::size_t workers_size = std::thread::hardware_concurrency()) noexcept
-      : in_channel_(in_channel), out_channel_(out_channel), ctx_(*this) {
+      : ctx_(*this), in_channel_(&in_channel), out_channel_(&out_channel) {
     workers_.reserve(workers_size);
   }
 
  public:
   constexpr auto in_channel() const noexcept -> in_channel_type & {
-    return in_channel_;
+    return *in_channel_;
   }
   constexpr auto out_channel() const noexcept -> out_channel_type & {
-    return out_channel_;
+    return *out_channel_;
   }
-  constexpr auto context() const noexcept -> execution_context & {
+  constexpr auto context() const noexcept -> execution_context const & {
     return ctx_;
   }
 
@@ -53,16 +53,12 @@ class thread_pool_executor final : public swiss::non_copyable,
   }
 
  private:
-  // NOLINTBEGIN(cppcoreguidelines-avoid-const-or-ref-data-members)
-  in_channel_type & in_channel_;
-  out_channel_type & out_channel_;
-  // NOLINTEND(cppcoreguidelines-avoid-const-or-ref-data-members)
-
-  mutable execution_context ctx_;
   std::vector<std::jthread> workers_;
+  mutable execution_context ctx_;
+  in_channel_type * in_channel_;
+  out_channel_type * out_channel_;
 
  private:
-  // NOLINTNEXTLINE(bugprone-exception-escape)
   constexpr void worker_task(std::stop_token const & stop_token) noexcept {
     in_value_type in_value{};
     while (true) {
@@ -71,7 +67,7 @@ class thread_pool_executor final : public swiss::non_copyable,
        * while resuming a task
        */
       try {
-        if (!in_channel_.pop(stop_token, in_value)) {
+        if (!in_channel_->pop(stop_token, in_value)) {
           break;
         }
         // NOLINTNEXTLINE(bugprone-empty-catch)
