@@ -3,11 +3,14 @@
 #include <coroutine>
 #include <utility>
 
+#include <swiss/badge.hpp>
+
 #include "promise_ctrl.hpp"
 
 namespace argo {
 template <typename ReturnObject>
 class promise_frame;
+class execution_token;
 }  // namespace argo
 
 namespace argo {
@@ -21,7 +24,8 @@ namespace argo {
 template <typename PromiseType = void>
 class promise_ptr final {
  public:
-  constexpr promise_ptr() noexcept : ctrl_(nullptr) {}
+  // NOLINTNEXTLINE(google-explicit-constructor,hicpp-explicit-conversions)
+  constexpr promise_ptr(std::nullptr_t = nullptr) noexcept : ctrl_(nullptr) {}
 
   explicit constexpr promise_ptr(promise_ctrl & ctrl) noexcept : ctrl_(&ctrl) {
     ctrl_->add_ref();
@@ -75,15 +79,18 @@ class promise_ptr final {
     return &operator*();
   }
 
+ public:
+  /**
+   * @brief Used by execution token to resume coroutine by anonymous handle
+   */
+  constexpr void resume(swiss::badge<execution_token>) const {
+    ctrl_->resume();
+  }
+
  private:
   promise_ctrl * ctrl_;
 
  private:
-  /**
-   * @note For execution token to access control object and call resume
-   */
-  friend class execution_token;
-
   /**
    * @note For promise frame to access the control pointer
    */
