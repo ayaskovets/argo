@@ -4,7 +4,7 @@
 
 #include <swiss/mixins.hpp>
 
-#include "promise.hpp"
+#include "promise_type.hpp"
 
 namespace argo {
 
@@ -20,24 +20,8 @@ class task final : public swiss::non_copyable {
   using promise_type = promise_type<task>;
 
  public:
-  constexpr task() noexcept = delete;
-
-  explicit constexpr task(promise_type & promise) noexcept
-      : promise_(&promise) {}
-
-  constexpr task(task && that) noexcept
-      : promise_(std::exchange(that.promise_, nullptr)) {}
-
-  constexpr auto operator=(task && that) noexcept -> task & {
-    std::swap(promise_, that.promise_);
-    return *this;
-  }
-
-  constexpr ~task() noexcept {
-    if (promise_ != nullptr) {
-      std::exchange(promise_, nullptr)->detach_return_object();
-    }
-  }
+  explicit constexpr task(promise_ptr<promise_type> promise) noexcept
+      : promise_(promise) {}
 
  public:
   /**
@@ -53,16 +37,28 @@ class task final : public swiss::non_copyable {
   }
 
  public:
-  // TODO: rework and extend this section
-  constexpr auto suspend() -> execution_token {
-    return execution_token(promise_->handle());
-  }
-  constexpr void resume() noexcept { promise_->resume(); }
+  /**
+   * @brief Resume a non-resumed coroutine that is not shared with a execution
+   * channel, otherwise throw an exception
+   * @warning Note that this happens without an implicit execution context so
+   * the awaiter types that work with execution context will not work
+   */
+  constexpr void resume() { return promise_->resume(); }
+
+  /**
+   * @brief Check whether coroutine is finished
+   */
   constexpr auto done() const noexcept -> bool { return promise_->done(); }
-  constexpr auto get() -> decltype(auto) { return promise_->get(); }
+
+  /**
+   * @brief Extract value from a finished coroutine. Throws an exception for an
+   * unfinished coroutine
+   * @returns A reference to a value of the task type or void
+   */
+  constexpr auto get() const -> decltype(auto) { return promise_->get(); }
 
  private:
-  promise_type * promise_;
+  promise_ptr<promise_type> promise_;
 };
 
 }  // namespace argo

@@ -80,9 +80,11 @@ TEST(task, void_exception) {
 
 TEST(task, awaiter_smoke) {
   auto task = []() -> argo::task<int> {
-    auto const one = co_await []() -> argo::task<int> { co_return 1; }();
-    auto const two = co_await []() -> argo::task<int> { co_return 2; }();
-    co_return one + two;
+    // NOLINTBEGIN(readability-magic-numbers)
+    auto const one = co_await []() -> argo::task<float> { co_return 0.5F; }();
+    auto const two = co_await []() -> argo::task<double> { co_return 2.6; }();
+    // NOLINTEND(readability-magic-numbers)
+    co_return static_cast<int>(one + two);
   }();
 
   task.resume();
@@ -105,7 +107,6 @@ TEST(task, awaiter_exception) {
 
 TEST(task, awaiter_recursion) {
   std::function<argo::task<int>(int)> const recurse =
-      // NOLINTNEXTLINE(cppcoreguidelines-avoid-capturing-lambda-coroutines)
       [&](int depth) -> argo::task<int> {
     if (depth <= 0) {
       co_return 0;

@@ -31,7 +31,9 @@ set(HEADERS
     include/argo/executor.hpp
     include/argo/executors/inline_executor.hpp
     include/argo/executors/thread_pool_executor.hpp
-    include/argo/promise.hpp
+    include/argo/promise_ptr.hpp
+    include/argo/promise_ctrl.hpp
+    include/argo/promise_type.hpp
     include/argo/scheduler.hpp
     include/argo/task.hpp)
 

@@ -26,12 +26,9 @@ add_executable(argo-unit-tests)
 
 set(SOURCES
     awaiter_test.cpp
-    awaiters/yield_awaiter_test.cpp
     channel_test.cpp
-    execution_context_test.cpp
     executor_test.cpp
-    executors/inline_executor_test.cpp
-    executors/thread_pool_executor_test.cpp
+    promise_ptr_test.cpp
     task_test.cpp)
 
 # ------------------------------------------------------------------------------

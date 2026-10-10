@@ -13,6 +13,7 @@ Checks: "*,
         -modernize-use-nodiscard,
         -cert-dcl59-cpp,
         -misc-non-private-member-variables-in-classes,
-        -modernize-use-default-member-init"
+        -modernize-use-default-member-init,
+        -cert-oop54-cpp"
 FormatStyle: none
 WarningsAsErrors: "*"
