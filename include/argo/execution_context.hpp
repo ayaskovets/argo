@@ -39,7 +39,7 @@ class execution_context final : public swiss::non_copyable,
    * @brief Switch TLS execution context to the co_await'ed object without
    * suspending the current task
    */
-  constexpr auto operator co_await() const noexcept -> decltype(auto) {
+  constexpr auto operator co_await() const noexcept -> auto {
     class switch_awaiter final {
      public:
       explicit constexpr switch_awaiter(execution_context const & ctx) noexcept

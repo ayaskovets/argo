@@ -94,8 +94,7 @@ class promise_frame final
    * await_suspend takes no arguments
    */
   template <concepts::awaiter Awaiter>
-  constexpr auto await_transform(Awaiter && awaiter) const noexcept
-      -> decltype(auto) {
+  constexpr auto await_transform(Awaiter && awaiter) const noexcept -> auto {
     /* TODO:
       RUNNING -> {SUSPENDED if TRUE/VALID/VOID}, await_suspend
     */
@@ -137,15 +136,15 @@ class promise_frame final
   /**
    * @brief Lazy execution by default
    */
-  constexpr auto initial_suspend() const noexcept -> decltype(auto) {
-    return std::suspend_always();
+  constexpr auto initial_suspend() const noexcept -> std::suspend_always {
+    return {};
   }
 
   /**
    * @brief Suspend the task and do a symmetric transfer if there is a single
    * awaiting parent coroutine
    */
-  constexpr auto final_suspend() const noexcept -> decltype(auto) {
+  constexpr auto final_suspend() const noexcept -> auto {
     /* TODO: impl, rewrite description
       SHARED(0) -> {DONE}, suspend_never, destroy, resume waitlist, continuation
       SHARED(_) -> {DONE}, suspend_always, resume waitlist, continuation
@@ -178,7 +177,7 @@ class promise_frame final
    * @brief Synchronously resume this coroutine via symmetric transfer from the
    * suspended task and return control to the parent in final_suspend()
    */
-  constexpr auto operator co_await() && noexcept -> decltype(auto) {
+  constexpr auto operator co_await() && noexcept -> auto {
     /* TODO: impl
       SUSPENDED -> {RUNNING}, resume
       RUNNING -> throw

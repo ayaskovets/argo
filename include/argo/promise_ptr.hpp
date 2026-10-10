@@ -21,7 +21,7 @@ namespace argo {
  * @note Requires the specific promise type to for functions that access the
  * promise frame
  */
-template <typename PromiseType = void>
+template <typename PromiseFrame = void>
 class promise_ptr final {
  public:
   // NOLINTNEXTLINE(google-explicit-constructor,hicpp-explicit-conversions)
@@ -66,15 +66,15 @@ class promise_ptr final {
   }
 
   constexpr auto operator*() const noexcept -> decltype(auto)
-    requires(!std::same_as<PromiseType, void>)
+    requires(!std::same_as<PromiseFrame, void>)
   {
-    return std::coroutine_handle<PromiseType>::from_address(
+    return std::coroutine_handle<PromiseFrame>::from_address(
                ctrl_->handle_.address())
         .promise();
   }
 
-  constexpr auto operator->() const noexcept -> PromiseType *
-    requires(!std::same_as<PromiseType, void>)
+  constexpr auto operator->() const noexcept -> PromiseFrame *
+    requires(!std::same_as<PromiseFrame, void>)
   {
     return &operator*();
   }
