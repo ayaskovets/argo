@@ -18,8 +18,8 @@ class yield final {
       /**
        * @note Noexcept if this_executor::execute is noexcept
        */
-      constexpr void await_suspend(suspended task) const {
-        execution_context::this_executor().execute(task);
+      constexpr void await_suspend(execution_token token) const {
+        execution_context::this_executor().execute(std::move(token));
       }
 
       constexpr void await_resume() const noexcept {}

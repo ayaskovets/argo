@@ -27,12 +27,12 @@ set(HEADERS
     include/argo/awaiters/yield_awaiter.hpp
     include/argo/channel.hpp
     include/argo/execution_context.hpp
+    include/argo/execution_token.hpp
     include/argo/executor.hpp
     include/argo/executors/inline_executor.hpp
     include/argo/executors/thread_pool_executor.hpp
     include/argo/promise.hpp
     include/argo/scheduler.hpp
-    include/argo/suspended.hpp
     include/argo/task.hpp)
 
 # ------------------------------------------------------------------------------

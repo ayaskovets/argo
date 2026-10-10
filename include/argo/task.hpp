@@ -54,8 +54,8 @@ class task final : public swiss::non_copyable {
 
  public:
   // TODO: rework and extend this section
-  constexpr auto suspend() -> suspended {
-    return suspended(promise_->handle());
+  constexpr auto suspend() -> execution_token {
+    return execution_token(promise_->handle());
   }
   constexpr void resume() noexcept { promise_->resume(); }
   constexpr auto done() const noexcept -> bool { return promise_->done(); }

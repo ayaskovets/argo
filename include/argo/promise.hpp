@@ -66,6 +66,31 @@ class promise_type_return_value<void> {
 };
 
 /**
+ * @brief Shared thread-safe promise state. Separated into a dedicated type to
+ * localize promise mutations
+ */
+class promise_type_shared_state final {
+ public:
+  constexpr promise_type_shared_state() noexcept
+      : continuation_(std::noop_coroutine()) {}
+
+ public:
+  constexpr auto get_continuation() const noexcept -> std::coroutine_handle<> {
+    return continuation_;
+  }
+
+  constexpr void set_continuation(
+      std::coroutine_handle<> continuation) noexcept {
+    continuation_ = continuation;
+  }
+
+  // TODO: impl
+
+ private:
+  std::coroutine_handle<> continuation_;
+};
+
+/**
  * @brief Promise type with configurable return object type and a state machine
  * for lifetime management
  */
@@ -84,6 +109,8 @@ class promise_type final
    * @brief Hide the raw coroutine handle from the user-facing awaiter types and
    * replace it with a fixed awaiter context with a curated set of possible
    * operations on the coroutine
+   * @note Supports awaiters that do not care about the suspended task where
+   * await_suspend takes no arguments
    */
   template <concepts::awaiter Awaiter>
   constexpr auto await_transform(Awaiter && awaiter) const noexcept
@@ -101,7 +128,11 @@ class promise_type final
 
       constexpr auto await_suspend(std::coroutine_handle<> handle)
           -> decltype(auto) {
-        return awaiter_.await_suspend(suspended(handle));
+        if constexpr (requires { awaiter_.await_suspend(); }) {
+          return awaiter_.await_suspend();
+        } else {
+          return awaiter_.await_suspend(execution_token(handle));
+        }
       }
 
       constexpr auto await_resume() -> decltype(auto) {
@@ -132,31 +163,31 @@ class promise_type final
     class continuation_awaiter final {
      public:
       explicit constexpr continuation_awaiter(
-          std::coroutine_handle<> continuation) noexcept
-          : continuation_(continuation) {}
+          promise_type const & promise) noexcept
+          : promise_(&promise) {}
 
      public:
       constexpr auto await_ready() const noexcept -> bool { return false; }
 
       constexpr auto await_suspend(std::coroutine_handle<>) const noexcept
           -> std::coroutine_handle<> {
-        return continuation_ ? continuation_ : std::noop_coroutine();
+        return promise_->shared_state_.get_continuation();
       }
 
       constexpr void await_resume() const noexcept {}
 
      private:
-      std::coroutine_handle<> continuation_;
+      promise_type const * promise_;
     };
 
-    return continuation_awaiter(continuation_);
+    return continuation_awaiter(*this);
   }
 
   /**
    * @brief Synchronously resume this coroutine via symmetric transfer from the
    * suspended task and return control to the parent in final_suspend()
    */
-  constexpr auto operator co_await() && -> decltype(auto) {
+  constexpr auto operator co_await() && noexcept -> decltype(auto) {
     class scope_awaiter final {
      public:
       explicit constexpr scope_awaiter(promise_type & promise) noexcept
@@ -167,9 +198,9 @@ class promise_type final
         return promise_->handle().done();
       }
 
-      constexpr auto await_suspend(suspended task) const noexcept
-          -> std::coroutine_handle<promise_type> {
-        promise_->continuation_ = task.handle_;
+      constexpr auto await_suspend(execution_token token) const noexcept
+          -> std::coroutine_handle<> {
+        promise_->shared_state_.set_continuation(token.handle_);
         return promise_->handle();
       }
 
@@ -195,7 +226,7 @@ class promise_type final
   using promise_type_return_value<typename ReturnObject::value_type>::get;
 
  private:
-  std::coroutine_handle<> continuation_;
+  promise_type_shared_state shared_state_;
 };
 
 }  // namespace argo

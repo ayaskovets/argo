@@ -6,8 +6,8 @@
 
 #include <swiss/mixins.hpp>
 
+#include "execution_token.hpp"
 #include "executor.hpp"
-#include "suspended.hpp"
 
 namespace argo {
 
@@ -48,9 +48,7 @@ class execution_context final : public swiss::non_copyable,
      public:
       constexpr auto await_ready() const noexcept -> bool { return true; }
 
-      constexpr void await_suspend(suspended) const noexcept {
-        std::unreachable();
-      }
+      constexpr void await_suspend() const noexcept { std::unreachable(); }
 
       constexpr void await_resume() const noexcept {
         execution_context::this_executor_ = ctx_;
@@ -74,16 +72,18 @@ class execution_context final : public swiss::non_copyable,
   /**
    * @brief Synchronously resume task by the current executor
    */
-  constexpr void resume(suspended task) const noexcept {
+  constexpr void resume(execution_token token) const noexcept {
     this_executor_ = this;
-    task.handle_.resume();
+    token.resume();
   }
 
   /**
    * @brief Add the task to the input channel of the current executor
    * @note Noexcept if input channel of the current executor is noexcept
    */
-  constexpr void execute(suspended task) const { (this->*post_)(task); }
+  constexpr void execute(execution_token token) const {
+    (this->*post_)(std::move(token));
+  }
 
   /**
    * @brief Add the task to output channel of the current executor
@@ -99,12 +99,12 @@ class execution_context final : public swiss::non_copyable,
    * @brief Push the task to the input channel of the executor
    */
   template <concepts::executor Executor>
-  constexpr void post(suspended task) const
+  constexpr void post(execution_token token) const
       noexcept(concepts::noexcept_channel<typename Executor::in_channel_type>) {
     auto const & typed_executor = *static_cast<Executor const *>(executor_);
 
     // TODO: handle infinite wait
-    typed_executor.in_channel().push(task);
+    typed_executor.in_channel().push(std::move(token));
   }
 
   /**
@@ -164,7 +164,7 @@ class execution_context final : public swiss::non_copyable,
 
  private:
   void const * executor_;
-  void (execution_context::*post_)(suspended) const;
+  void (execution_context::*post_)(execution_token) const;
   void (execution_context::*park_)(void const * params,
                                    std::type_info const & type_info) const;
 };

@@ -12,17 +12,17 @@ namespace argo::concepts {
  */
 template <typename T, typename Value = typename T::value_type>
 concept monochannel =
-    requires(T channel, Value value, std::stop_token stop_token) {
-      { channel.try_emplace(value) } -> std::same_as<bool>;
-      { channel.try_push(value) } -> std::same_as<bool>;
+    requires(T channel, Value value, std::stop_token const & stop_token) {
+      { channel.try_emplace(std::move(value)) } -> std::same_as<bool>;
+      { channel.try_push(std::move(value)) } -> std::same_as<bool>;
       { channel.try_pop(value) } -> std::same_as<bool>;
 
-      { channel.emplace(value) } -> std::same_as<void>;
-      { channel.push(value) } -> std::same_as<void>;
+      { channel.emplace(std::move(value)) } -> std::same_as<void>;
+      { channel.push(std::move(value)) } -> std::same_as<void>;
       { channel.pop(value) } -> std::same_as<void>;
 
-      { channel.emplace(stop_token, value) } -> std::same_as<bool>;
-      { channel.push(stop_token, value) } -> std::same_as<bool>;
+      { channel.emplace(stop_token, std::move(value)) } -> std::same_as<bool>;
+      { channel.push(stop_token, std::move(value)) } -> std::same_as<bool>;
       { channel.pop(stop_token, value) } -> std::same_as<bool>;
     } && std::is_same_v<Value, typename T::value_type>;
 
@@ -32,17 +32,17 @@ concept monochannel =
 template <typename T, typename Value = typename T::value_type>
 concept noexcept_monochannel =
     monochannel<T, Value> &&
-    requires(T channel, Value value, std::stop_token stop_token) {
-      requires noexcept(channel.try_emplace(value));
-      requires noexcept(channel.try_push(value));
+    requires(T channel, Value value, std::stop_token const & stop_token) {
+      requires noexcept(channel.try_emplace(std::move(value)));
+      requires noexcept(channel.try_push(std::move(value)));
       requires noexcept(channel.try_pop(value));
 
-      requires noexcept(channel.emplace(value));
-      requires noexcept(channel.push(value));
+      requires noexcept(channel.emplace(std::move(value)));
+      requires noexcept(channel.push(std::move(value)));
       requires noexcept(channel.pop(value));
 
-      requires noexcept(channel.emplace(stop_token, value));
-      requires noexcept(channel.push(stop_token, value));
+      requires noexcept(channel.emplace(stop_token, std::move(value)));
+      requires noexcept(channel.push(stop_token, std::move(value)));
       requires noexcept(channel.pop(stop_token, value));
     };
 

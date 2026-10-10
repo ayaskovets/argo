@@ -9,8 +9,8 @@
 namespace tests::unit::awaiters {
 
 TEST(execution_context, awaiter) {
-  flow::spsc_queue<argo::suspended> in_channel1(1);
-  flow::spsc_queue<argo::suspended> in_channel2(1);
+  flow::spsc_queue<argo::execution_token> in_channel1(1);
+  flow::spsc_queue<argo::execution_token> in_channel2(1);
   flow::spsc_queue<std::nullptr_t> out_channel(1);
   argo::executors::inline_executor executor1(in_channel1, out_channel);
   argo::executors::inline_executor executor2(in_channel2, out_channel);

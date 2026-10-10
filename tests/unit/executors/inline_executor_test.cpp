@@ -7,7 +7,7 @@
 namespace tests::unit::awaiters {
 
 TEST(inline_executor, smoke) {
-  flow::spsc_queue<argo::suspended> in_channel(1);
+  flow::spsc_queue<argo::execution_token> in_channel(1);
   flow::spsc_queue<std::nullptr_t> out_channel(1);
   argo::executors::inline_executor executor(in_channel, out_channel);
 

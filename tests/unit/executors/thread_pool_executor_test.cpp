@@ -7,7 +7,7 @@
 namespace tests::unit::awaiters {
 
 TEST(thread_pool_executor, smoke) {
-  flow::spmc_queue<argo::suspended> in_channel(2);
+  flow::spmc_queue<argo::execution_token> in_channel(2);
   flow::spmc_queue<std::nullptr_t> out_channel(2);
   argo::executors::thread_pool_executor executor(in_channel, out_channel);
 
