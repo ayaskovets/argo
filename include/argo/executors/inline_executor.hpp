@@ -42,8 +42,7 @@ class inline_executor final : public swiss::non_copyable,
    * @brief Run the next task if there is any in the input channel
    * @return True if a task was executed
    */
-  constexpr auto run_once() noexcept(
-      concepts::noexcept_channel<in_channel_type>) -> bool {
+  constexpr auto run_once() -> bool {
     in_value_type in_value{};
     if (!in_channel_->try_pop(in_value)) {
       return false;
@@ -58,8 +57,7 @@ class inline_executor final : public swiss::non_copyable,
    * or stop is requested
    * @return True if a task was executed
    */
-  constexpr auto run_once(std::stop_token const & stop_token) noexcept(
-      concepts::noexcept_channel<in_channel_type>) -> bool {
+  constexpr auto run_once(std::stop_token const & stop_token) -> bool {
     in_value_type in_value{};
     if (!in_channel_->pop(in_value, stop_token)) {
       return false;

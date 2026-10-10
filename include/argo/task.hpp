@@ -4,7 +4,8 @@
 
 #include <swiss/mixins.hpp>
 
-#include "promise_type.hpp"
+#include "execution_token.hpp"
+#include "promise_frame.hpp"
 
 namespace argo {
 
@@ -17,11 +18,11 @@ template <typename T>
 class task final : public swiss::non_copyable {
  public:
   using value_type   = T;
-  using promise_type = promise_type<task>;
+  using promise_type = promise_frame<task>;
 
  public:
   explicit constexpr task(promise_ptr<promise_type> promise) noexcept
-      : promise_(promise) {}
+      : promise_(std::move(promise)) {}
 
  public:
   /**
@@ -30,7 +31,7 @@ class task final : public swiss::non_copyable {
    * result
    */
   constexpr auto operator co_await() && -> decltype(auto) {
-    if (promise_ == nullptr) {
+    if (promise_ == nullptr) [[unlikely]] {
       throw std::runtime_error("task::operator co_await(): no state");
     }
     return std::move(*promise_).operator co_await();
@@ -38,10 +39,18 @@ class task final : public swiss::non_copyable {
 
  public:
   /**
-   * @brief Resume a non-resumed coroutine that is not shared with a execution
-   * channel, otherwise throw an exception
-   * @warning Note that this happens without an implicit execution context so
-   * the awaiter types that work with execution context will not work
+   * @brief Lock other calls to resume and this function. Create an object
+   * that grants exclusive access resumption until it gets destructed
+   */
+  constexpr auto get_execution_token() noexcept -> execution_token {
+    return promise_->get_execution_token();
+  }
+
+  /**
+   * @brief Resume a non-resumed coroutine that does not have a live
+   * execution token, otherwise throw an exception
+   * @warning Note that this happens without an implicit execution context
+   * so the awaiter types that work with execution context will not work
    */
   constexpr void resume() { return promise_->resume(); }
 

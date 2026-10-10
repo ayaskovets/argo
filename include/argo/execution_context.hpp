@@ -72,7 +72,7 @@ class execution_context final : public swiss::non_copyable,
   /**
    * @brief Synchronously resume task by the current executor
    */
-  constexpr void resume(execution_token token) const noexcept {
+  constexpr void resume(execution_token token) const {
     this_executor_ = this;
     token.resume();
   }

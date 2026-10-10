@@ -21,7 +21,7 @@ TEST(execution_context, awaiter) {
     co_await argo::awaiters::yield();
   }(executor2.context());
 
-  in_channel1.push(task.suspend());
+  in_channel1.push(task.get_execution_token());
   EXPECT_FALSE(in_channel1.empty());
   EXPECT_TRUE(in_channel2.empty());
 

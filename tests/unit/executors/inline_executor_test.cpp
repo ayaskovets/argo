@@ -18,7 +18,7 @@ TEST(inline_executor, smoke) {
     co_return;
   }(times_called);
 
-  in_channel.push(task.suspend());
+  in_channel.push(task.get_execution_token());
   EXPECT_EQ(times_called, 0);
 
   executor.run_once();

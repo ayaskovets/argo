@@ -12,6 +12,7 @@ namespace argo::executors {
 
 /**
  * @brief Thread pool executor
+ * @note Exceptions in the input channel and await_suspend are silently dropped
  */
 template <concepts::channel InChannel, concepts::channel OutChannel>
 class thread_pool_executor final : public swiss::non_copyable,
@@ -70,11 +71,11 @@ class thread_pool_executor final : public swiss::non_copyable,
         if (!in_channel_->pop(stop_token, in_value)) {
           break;
         }
+
+        ctx_.resume(std::move(in_value));
         // NOLINTNEXTLINE(bugprone-empty-catch)
       } catch (...) {
       }
-
-      ctx_.resume(std::move(in_value));
     }
   }
 };

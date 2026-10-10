@@ -107,6 +107,7 @@ TEST(task, awaiter_exception) {
 
 TEST(task, awaiter_recursion) {
   std::function<argo::task<int>(int)> const recurse =
+      // NOLINTNEXTLINE(cppcoreguidelines-avoid-capturing-lambda-coroutines)
       [&](int depth) -> argo::task<int> {
     if (depth <= 0) {
       co_return 0;

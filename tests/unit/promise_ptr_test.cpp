@@ -13,7 +13,7 @@ TEST(promise_ptr, smoke) {
 
     {
       // NOLINTNEXTLINE(performance-unnecessary-copy-initialization)
-      argo::promise_ptr<int> const ptr2(ctrl);
+      argo::promise_ptr const ptr2(ctrl);
       EXPECT_EQ(ctrl.use_count(), 2);
     }
 
@@ -25,9 +25,9 @@ TEST(promise_ptr, smoke) {
 TEST(promise_ptr, copy) {
   argo::promise_ctrl ctrl(nullptr);
   {
-    argo::promise_ptr<int> const ptr(ctrl);
+    argo::promise_ptr const ptr(ctrl);
 
-    argo::promise_ptr<int> copy(ptr);
+    argo::promise_ptr copy(ptr);
     EXPECT_EQ(ctrl.use_count(), 2);
 
     copy = ptr;
@@ -39,9 +39,9 @@ TEST(promise_ptr, copy) {
 TEST(promise_ptr, move) {
   argo::promise_ctrl ctrl(nullptr);
   {
-    argo::promise_ptr<int> ptr(ctrl);
+    argo::promise_ptr ptr(ctrl);
 
-    argo::promise_ptr<int> move(std::move(ptr));
+    argo::promise_ptr move(std::move(ptr));
     EXPECT_EQ(ctrl.use_count(), 1);
 
     move = std::move(ptr);

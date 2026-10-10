@@ -1,39 +1,41 @@
 #pragma once
 
-#include <coroutine>
-#include <utility>
-
 #include <swiss/mixins.hpp>
+
+#include "promise_ptr.hpp"
+
+namespace argo {
+template <typename ReturnObject>
+class promise_frame;
+}  // namespace argo
 
 namespace argo {
 
-// TODO: rework this
-
 /**
- * @brief Wrapped coroutine handle with a fixed set of possible operations.
- * Passed to await_suspend() instead of a plain std::coroutine_handle
+ * @brief Essentially a mutex for the resume() call only instead of blocking
+ * throws an exception as more than one instance of this object for a
+ * certain coroutine frame is counted as in invalid state caused by program
+ * error
  */
-// NOLINTNEXTLINE(cppcoreguidelines-special-member-functions)
 class execution_token final : public swiss::non_copyable {
  public:
   constexpr execution_token() noexcept = default;
-  explicit constexpr execution_token(std::coroutine_handle<> handle) noexcept
-      : handle_(handle) {}
 
-  constexpr execution_token(execution_token && that) noexcept
-      : handle_(std::exchange(that.handle_, nullptr)) {}
-
-  constexpr auto operator=(execution_token && that) noexcept
-      -> execution_token & {
-    std::swap(handle_, that.handle_);
-    return *this;
-  }
+  explicit constexpr execution_token(promise_ptr<> promise) noexcept
+      : promise_(std::move(promise)) {}
 
  public:
-  constexpr void resume() const noexcept { handle_.resume(); }
+  constexpr void resume() const { promise_.ctrl_->resume(); }
 
- public:
-  std::coroutine_handle<> handle_;
+ private:
+  promise_ptr<> promise_;
+
+ private:
+  /**
+   * @note For promise frame to access the control pointer
+   */
+  template <typename ReturnObject>
+  friend class promise_frame;
 };
 
 }  // namespace argo

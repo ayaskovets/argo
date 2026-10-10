@@ -18,7 +18,7 @@ TEST(thread_pool_executor, smoke) {
     co_return;
   }(stop_source);
 
-  in_channel.push(task.suspend());
+  in_channel.push(task.get_execution_token());
   executor.run_detached(stop_source.get_token());
 }
 

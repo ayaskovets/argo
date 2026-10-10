@@ -18,7 +18,7 @@ TEST(yield_awaiter, smoke) {
     co_await argo::awaiters::yield();
   }();
 
-  in_channel.push(task.suspend());
+  in_channel.push(task.get_execution_token());
   EXPECT_EQ(in_channel.size(), 1);
   EXPECT_FALSE(task.done());
 

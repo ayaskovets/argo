@@ -24,17 +24,26 @@ add_library(argo::argo ALIAS argo)
 
 set(HEADERS
     include/argo/awaiter.hpp
+    # include/argo/awaiters/async_awaiter.hpp
+    # include/argo/awaiters/detach_awaiter.hpp
+    # include/argo/awaiters/io_awaiter.hpp
+    # include/argo/awaiters/timer_awaiter.hpp
     include/argo/awaiters/yield_awaiter.hpp
     include/argo/channel.hpp
+    # include/argo/channels/multiplexed_channel.hpp
     include/argo/execution_context.hpp
     include/argo/execution_token.hpp
     include/argo/executor.hpp
     include/argo/executors/inline_executor.hpp
     include/argo/executors/thread_pool_executor.hpp
-    include/argo/promise_ptr.hpp
     include/argo/promise_ctrl.hpp
-    include/argo/promise_type.hpp
+    include/argo/promise_frame.hpp
+    include/argo/promise_ptr.hpp
     include/argo/scheduler.hpp
+    # include/argo/schedulers/detached_scheduler.hpp
+    # include/argo/schedulers/io_scheduler.hpp
+    # include/argo/schedulers/timer_scheduler.hpp
+    # include/argo/task_future.hpp
     include/argo/task.hpp)
 
 # ------------------------------------------------------------------------------
