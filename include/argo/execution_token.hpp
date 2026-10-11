@@ -19,14 +19,14 @@ namespace argo {
  */
 class execution_token final : public swiss::non_copyable {
  public:
-  explicit constexpr execution_token(promise_ptr<> promise = nullptr) noexcept
-      : promise_(std::move(promise)) {}
+  explicit constexpr execution_token(promise_ptr<> ptr = nullptr) noexcept
+      : ptr_(std::move(ptr)) {}
 
  public:
-  constexpr void resume() const { promise_.resume({}); }
+  constexpr void resume() const { ptr_.resume({}); }
 
  private:
-  promise_ptr<> promise_;
+  promise_ptr<> ptr_;
 
  private:
   /**

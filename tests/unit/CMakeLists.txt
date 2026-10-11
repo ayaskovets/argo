@@ -39,7 +39,7 @@ set(SOURCES
     # scheduler_test.cpp
     # schedulers/io_scheduler_test.cpp
     # schedulers/timer_scheduler_test.cpp
-    # task_future_test.cpp
+    task_future_test.cpp
     task_test.cpp)
 
 # ------------------------------------------------------------------------------

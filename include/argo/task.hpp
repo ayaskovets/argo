@@ -6,6 +6,7 @@
 
 #include "execution_token.hpp"
 #include "promise_frame.hpp"
+#include "task_future.hpp"
 
 namespace argo {
 
@@ -21,8 +22,8 @@ class task final : public swiss::non_copyable {
   using promise_type = promise_frame<task>;
 
  public:
-  explicit constexpr task(promise_ptr<promise_type> promise) noexcept
-      : promise_(std::move(promise)) {}
+  explicit constexpr task(promise_ptr<promise_type> ptr) noexcept
+      : ptr_(std::move(ptr)) {}
 
  public:
   /**
@@ -31,10 +32,10 @@ class task final : public swiss::non_copyable {
    * result
    */
   constexpr auto operator co_await() && -> decltype(auto) {
-    if (promise_ == nullptr) [[unlikely]] {
+    if (ptr_ == nullptr) [[unlikely]] {
       throw std::runtime_error("task::operator co_await(): no state");
     }
-    return std::move(*promise_).operator co_await();
+    return std::move(*ptr_).operator co_await();
   }
 
  public:
@@ -43,31 +44,39 @@ class task final : public swiss::non_copyable {
    * that grants exclusive access resumption until it gets destructed
    */
   constexpr auto get_execution_token() noexcept -> execution_token {
-    return promise_->get_execution_token();
+    return ptr_->get_execution_token();
   }
 
+  /**
+   * @brief Get future for the task object. Does not run or schedule the task
+   */
+  constexpr auto get_future() const noexcept -> task_future<promise_type> {
+    return task_future(ptr_);
+  }
+
+ public:
   /**
    * @brief Resume a non-resumed coroutine that does not have a live
    * execution token, otherwise throw an exception
    * @warning Note that this happens without an implicit execution context
    * so the awaiter types that work with execution context will not work
    */
-  constexpr void resume() { return promise_->resume(); }
+  constexpr void resume() { return ptr_->resume(); }
 
   /**
    * @brief Check whether coroutine is finished
    */
-  constexpr auto done() const noexcept -> bool { return promise_->done(); }
+  constexpr auto done() const noexcept -> bool { return ptr_->done(); }
 
   /**
    * @brief Extract value from a finished coroutine. Throws an exception for an
    * unfinished coroutine
    * @returns A reference to a value of the task type or void
    */
-  constexpr auto get() const -> decltype(auto) { return promise_->get(); }
+  constexpr auto get() const -> decltype(auto) { return ptr_->get(); }
 
  private:
-  promise_ptr<promise_type> promise_;
+  promise_ptr<promise_type> ptr_;
 };
 
 }  // namespace argo

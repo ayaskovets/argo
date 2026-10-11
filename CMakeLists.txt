@@ -44,6 +44,7 @@ set(HEADERS
     # include/argo/schedulers/io_scheduler.hpp
     # include/argo/schedulers/timer_scheduler.hpp
     # include/argo/task_future.hpp
+    include/argo/task_waitlist.hpp
     include/argo/task.hpp)
 
 # ------------------------------------------------------------------------------

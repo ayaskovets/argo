@@ -8,6 +8,7 @@
 #include <swiss/mixins.hpp>
 
 #include "awaiter.hpp"
+#include "execution_token.hpp"
 #include "promise_ctrl.hpp"
 #include "promise_ptr.hpp"
 
@@ -120,7 +121,7 @@ class promise_frame final
         }
       }
 
-      constexpr auto await_resume() const -> decltype(auto) {
+      constexpr auto await_resume() -> decltype(auto) {
         return awaiter_.await_resume();
       }
 
@@ -153,21 +154,21 @@ class promise_frame final
     class continuation_awaiter final {
      public:
       explicit constexpr continuation_awaiter(
-          promise_frame const & promise) noexcept
-          : promise_(&promise) {}
+          promise_frame const & frame) noexcept
+          : frame_(&frame) {}
 
      public:
       constexpr auto await_ready() const noexcept -> bool { return false; }
 
       constexpr auto await_suspend(std::coroutine_handle<>) const noexcept
           -> std::coroutine_handle<> {
-        return promise_->ctrl_.get_continuation();
+        return frame_->ctrl_.get_continuation();
       }
 
       constexpr void await_resume() const noexcept {}
 
      private:
-      promise_frame const * promise_;
+      promise_frame const * frame_;
     };
 
     return continuation_awaiter(*this);
@@ -186,26 +187,27 @@ class promise_frame final
 
     class sync_awaiter final {
      public:
-      explicit constexpr sync_awaiter(promise_frame & promise) noexcept
-          : promise_(&promise) {}
+      explicit constexpr sync_awaiter(promise_frame & frame) noexcept
+          : frame_(&frame) {}
 
      public:
       constexpr auto await_ready() const noexcept -> bool {
-        return promise_->ctrl_.done();
+        return frame_->ctrl_.done();
       }
 
       constexpr auto await_suspend(execution_token token) const noexcept
           -> std::coroutine_handle<> {
-        promise_->ctrl_.set_continuation(token.promise_.ctrl_->handle_);
-        return promise_->ctrl_.handle_;
+        frame_->ctrl_.set_continuation(
+            token.ptr_.ctrl_->handle(swiss::badge<promise_frame>{}));
+        return frame_->ctrl_.handle(swiss::badge<promise_frame>{});
       }
 
       constexpr auto await_resume() const -> decltype(auto) {
-        return promise_->get();
+        return frame_->get();
       }
 
      private:
-      promise_frame * promise_;
+      promise_frame * frame_;
     };
 
     return sync_awaiter(*this);
@@ -220,6 +222,16 @@ class promise_frame final
     return execution_token(promise_ptr(ctrl_));
   }
 
+  /**
+   * @brief Add node to waitlist. Suspended nodes on waitlist are resumed in
+   * final_suspend
+   */
+  constexpr auto add_to_waitlist(task_waitlist::node const & node) noexcept
+      -> bool {
+    return ctrl_.add_to_waitlist(node);
+  }
+
+ public:
   /**
    * @brief Resume a non-resumed coroutine that is not shared with a execution
    * channel, otherwise throw an exception

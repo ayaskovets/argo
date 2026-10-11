@@ -10,7 +10,6 @@
 namespace argo {
 template <typename ReturnObject>
 class promise_frame;
-class execution_token;
 }  // namespace argo
 
 namespace argo {
@@ -69,7 +68,7 @@ class promise_ptr final {
     requires(!std::same_as<PromiseFrame, void>)
   {
     return std::coroutine_handle<PromiseFrame>::from_address(
-               ctrl_->handle_.address())
+               ctrl_->handle(swiss::badge<promise_ptr>{}).address())
         .promise();
   }
 
@@ -83,7 +82,7 @@ class promise_ptr final {
   /**
    * @brief Used by execution token to resume coroutine by anonymous handle
    */
-  constexpr void resume(swiss::badge<execution_token>) const {
+  constexpr void resume(swiss::badge<class execution_token>) const {
     ctrl_->resume();
   }
 
