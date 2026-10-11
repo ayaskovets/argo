@@ -54,6 +54,13 @@ class task final : public swiss::non_copyable {
     return task_future<T>(ptr_);
   }
 
+  /**
+   * @brief Get future for the task object. Destroy the task object
+   */
+  constexpr auto get_future() && noexcept -> task_future<T> {
+    return task_future<T>(std::move(ptr_));
+  }
+
  public:
   /**
    * @brief Resume a non-resumed coroutine that does not have a live

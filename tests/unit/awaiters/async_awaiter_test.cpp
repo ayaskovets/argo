@@ -13,24 +13,21 @@ TEST(async_awaiter, smoke) {
 
   auto child = []() -> argo::task<int> { co_return 1; }();
   // NOLINTNEXTLINE(cppcoreguidelines-avoid-reference-coroutine-parameters)
-  auto parent = [](argo::task<int> & child) -> argo::task<void> {
-    auto future = co_await argo::awaiters::async(child);
+  auto parent = [](argo::task<int> child) -> argo::task<void> {
+    auto future = co_await argo::awaiters::async(std::move(child));
     co_await future;
-  }(child);
+  }(std::move(child));
 
   in_channel.push(parent.get_execution_token());
   EXPECT_FALSE(parent.done());
-  EXPECT_FALSE(child.done());
   EXPECT_EQ(in_channel.size(), 1);
 
   executor.run_once();
   EXPECT_FALSE(parent.done());
-  EXPECT_FALSE(child.done());
   EXPECT_EQ(in_channel.size(), 1);
 
   executor.run_once();
   EXPECT_FALSE(parent.done());
-  EXPECT_TRUE(child.done());
   EXPECT_EQ(in_channel.size(), 1);
 
   executor.run_once();
