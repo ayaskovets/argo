@@ -58,13 +58,15 @@ class task final : public swiss::non_copyable {
   /**
    * @brief Resume a non-resumed coroutine that does not have a live
    * execution token, otherwise throw an exception
-   * @warning Note that this happens without an implicit execution context
-   * so the awaiter types that work with execution context will not work
+   * @warning Synchronous interface. Not intended for general use within the
+   * engine
    */
   constexpr void resume() { return ptr_->resume(); }
 
   /**
    * @brief Check whether coroutine is finished
+   * @warning Synchronous interface. Not intended for general use within the
+   * engine
    */
   constexpr auto done() const noexcept -> bool { return ptr_->done(); }
 
@@ -72,6 +74,8 @@ class task final : public swiss::non_copyable {
    * @brief Extract value from a finished coroutine. Throws an exception for an
    * unfinished coroutine
    * @returns A reference to a value of the task type or void
+   * @warning Synchronous interface. Not intended for general use within the
+   * engine
    */
   constexpr auto get() const -> decltype(auto) { return ptr_->get(); }
 

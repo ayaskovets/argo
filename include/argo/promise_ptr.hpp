@@ -1,7 +1,6 @@
 #pragma once
 
 #include <coroutine>
-#include <utility>
 
 #include <swiss/badge.hpp>
 
@@ -68,7 +67,7 @@ class promise_ptr final {
     requires(!std::same_as<PromiseFrame, void>)
   {
     return std::coroutine_handle<PromiseFrame>::from_address(
-               ctrl_->handle(swiss::badge<promise_ptr>{}).address())
+               ctrl_->handle().address())
         .promise();
   }
 

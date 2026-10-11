@@ -10,14 +10,11 @@ namespace argo::awaiters {
  */
 class yield final {
  public:
-  constexpr auto operator co_await() const noexcept {
+  constexpr auto operator co_await() && noexcept -> auto {
     class yield_awaiter final {
      public:
       constexpr auto await_ready() const noexcept -> bool { return false; }
 
-      /**
-       * @note Noexcept if this_executor::execute is noexcept
-       */
       constexpr void await_suspend(execution_token token) const {
         execution_context::this_executor().execute(std::move(token));
       }

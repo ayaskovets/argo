@@ -24,7 +24,7 @@ add_library(argo::argo ALIAS argo)
 
 set(HEADERS
     include/argo/awaiter.hpp
-    # include/argo/awaiters/async_awaiter.hpp
+    include/argo/awaiters/async_awaiter.hpp
     # include/argo/awaiters/detach_awaiter.hpp
     # include/argo/awaiters/io_awaiter.hpp
     # include/argo/awaiters/timer_awaiter.hpp
@@ -43,7 +43,7 @@ set(HEADERS
     # include/argo/schedulers/detached_scheduler.hpp
     # include/argo/schedulers/io_scheduler.hpp
     # include/argo/schedulers/timer_scheduler.hpp
-    # include/argo/task_future.hpp
+    include/argo/task_future.hpp
     include/argo/task_waitlist.hpp
     include/argo/task.hpp)
 

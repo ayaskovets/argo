@@ -2,8 +2,6 @@
 
 #include "../execution_context.hpp"
 #include "../task.hpp"
-#include "../task_future.hpp"
-#include "../task_ref.hpp"
 
 namespace argo::awaiters {
 
@@ -12,38 +10,37 @@ namespace argo::awaiters {
  * task scope
  */
 template <typename T>
-class async_awaiter final {
+class async final {
  public:
-  explicit constexpr async_awaiter(task<T> & task) noexcept : task_(task) {}
+  explicit constexpr async(task<T> & task) noexcept : task_(&task) {}
 
  public:
-  constexpr auto await_ready() const noexcept -> bool { return true; }
+  constexpr auto operator co_await() && noexcept -> auto {
+    class async_awaiter final {
+     public:
+      explicit constexpr async_awaiter(task<T> & task) noexcept
+          : task_(&task) {}
 
-  constexpr void await_suspend(auto &&) const noexcept { std::unreachable(); }
+     public:
+      constexpr auto await_ready() const noexcept -> bool { return true; }
 
-  /**
-   * @note Noexcept if this_executor::execute is noexcept
-   */
-  constexpr auto await_resume() -> task_future<T> {
-    this_executor::execute(task_ref(task_));
-    return task_future<T>(task_);
+      constexpr void await_suspend() const noexcept { std::unreachable(); }
+
+      constexpr auto await_resume() -> decltype(auto) {
+        execution_context::this_executor().execute(
+            task_->get_execution_token());
+        return task_->get_future();
+      }
+
+     private:
+      task<T> * task_;
+    };
+
+    return async_awaiter(*task_);
   }
 
  private:
-  // NOLINTNEXTLINE(cppcoreguidelines-avoid-const-or-ref-data-members
-  task<T> & task_;
+  task<T> * task_;
 };
-
-}  // namespace argo::awaiters
-
-/**
- * @section Awaiter constructors
- */
-namespace argo::awaiters {
-
-template <typename T>
-constexpr auto async(task<T> & task) noexcept -> async_awaiter<T> {
-  return async_awaiter(task);
-}
 
 }  // namespace argo::awaiters

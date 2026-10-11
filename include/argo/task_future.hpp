@@ -1,57 +1,54 @@
 #pragma once
 
 #include "execution_context.hpp"
-#include "task.hpp"
-#include "task_ref.hpp"
+#include "execution_token.hpp"
+#include "task_waitlist.hpp"
 
 namespace argo {
 
 /**
- * @brief Non-owning future object for the task type
- * @note Can be used for awaiting a task from multiple awaiters
- * @note Thread-safe
+ * @brief Shared thread-safe task that can be awaited by multiple coroutines
  */
-template <typename T>
+template <typename PromiseFrame>
 class task_future final {
- private:
-  using promise_type  = typename task<T>::promise_type;
-  using waitlist_type = typename promise_type::waitlist_type;
+ public:
+  explicit constexpr task_future(promise_ptr<PromiseFrame> ptr) noexcept
+      : ptr_(std::move(ptr)) {}
 
  public:
-  explicit constexpr task_future(task<T> & task) noexcept
-      : promise_(task.handle_.promise()) {}
-
- public:
-  constexpr auto operator co_await() noexcept -> decltype(auto) {
-    class task_awaiter final {
+  constexpr auto operator co_await() noexcept -> auto {
+    class future_awaiter final {
      public:
-      explicit constexpr task_awaiter(task_future<T> future) noexcept
-          : node_(), promise_(future.promise_) {}
+      explicit constexpr future_awaiter(task_future & future) noexcept
+          : future_(&future) {}
 
      public:
       constexpr auto await_ready() const noexcept -> bool {
-        return promise_.get().waitlist().sealed();
+        return future_->ptr_->done();
       }
 
-      constexpr auto await_suspend(task_ref task_ref) noexcept -> bool {
-        node_ = typename waitlist_type::node(
-            task_ref, &execution_context::this_executor());
-        return promise_.get().waitlist().try_push(node_);
+      constexpr auto await_suspend(execution_token token) noexcept -> bool {
+        token_ = std::move(token);
+        node_ =
+            task_waitlist::node(&token_, &execution_context::this_executor());
+        return future_->ptr_->add_to_waitlist(node_);
       }
 
-      constexpr auto await_resume() -> decltype(auto) {
-        return promise_.get().get();
+      constexpr auto await_resume() const -> decltype(auto) {
+        return future_->ptr_->get();
       }
 
      private:
-      waitlist_type::node node_;
-      std::reference_wrapper<promise_type> promise_;
+      execution_token token_;
+      task_waitlist::node node_;
+      task_future * future_;
     };
-    return task_awaiter(*this);
+
+    return future_awaiter(*this);
   }
 
  private:
-  std::reference_wrapper<promise_type> promise_;
+  promise_ptr<PromiseFrame> ptr_;
 };
 
 }  // namespace argo

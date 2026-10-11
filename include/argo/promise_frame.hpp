@@ -162,6 +162,9 @@ class promise_frame final
 
       constexpr auto await_suspend(std::coroutine_handle<>) const noexcept
           -> std::coroutine_handle<> {
+        for (auto [token, ctx] : frame_->ctrl_.waitlist()) {
+          ctx->execute(std::move(*token));
+        }
         return frame_->ctrl_.get_continuation();
       }
 
@@ -197,9 +200,8 @@ class promise_frame final
 
       constexpr auto await_suspend(execution_token token) const noexcept
           -> std::coroutine_handle<> {
-        frame_->ctrl_.set_continuation(
-            token.ptr_.ctrl_->handle(swiss::badge<promise_frame>{}));
-        return frame_->ctrl_.handle(swiss::badge<promise_frame>{});
+        frame_->ctrl_.set_continuation(token.ptr_.ctrl_->handle());
+        return frame_->ctrl_.handle();
       }
 
       constexpr auto await_resume() const -> decltype(auto) {

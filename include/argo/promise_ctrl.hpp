@@ -5,6 +5,8 @@
 
 #include <swiss/mixins.hpp>
 
+#include "task_waitlist.hpp"
+
 namespace argo {
 
 /**
@@ -57,10 +59,22 @@ class promise_ctrl final : public swiss::non_copyable,
 
   constexpr auto use_count() const noexcept -> int { return use_count_.load(); }
 
- public:
+  constexpr auto add_to_waitlist(task_waitlist::node const & node) noexcept
+      -> bool {
+    return waitlist_.try_push(node);
+  }
+
+  constexpr auto handle() const noexcept -> std::coroutine_handle<> {
+    return handle_;
+  }
+
+  constexpr auto waitlist() const noexcept -> auto & { return waitlist_; }
+
+ private:
   std::atomic<int> use_count_;
   std::coroutine_handle<> handle_;
   std::coroutine_handle<> continuation_;
+  task_waitlist waitlist_;
 };
 
 }  // namespace argo
