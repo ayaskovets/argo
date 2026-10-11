@@ -54,8 +54,8 @@ class thread_pool_executor final : public swiss::non_copyable,
   }
 
  private:
-  std::vector<std::jthread> workers_;
   mutable execution_context ctx_;
+  std::vector<std::jthread> workers_;
   in_channel_type * in_channel_;
   out_channel_type * out_channel_;
 
