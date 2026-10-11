@@ -1,39 +1,68 @@
 #pragma once
 
+#include <stdexcept>
+#include <utility>
+
 #include <swiss/mixins.hpp>
 
-#include "promise_ptr.hpp"
-
 namespace argo {
-template <typename ReturnObject>
-class promise_frame;
+class promise_ctrl;
 }  // namespace argo
+
+/**
+ * @note This section is required to mitigate circulare dependency between
+ * promise control and execution token
+ */
+namespace argo::detail {
+void promise_ctrl_resume(promise_ctrl &);
+void promise_ctrl_unlock_resume(promise_ctrl &) noexcept;
+}  // namespace argo::detail
 
 namespace argo {
 
 /**
- * @brief Essentially a mutex for the resume() call only instead of blocking
- * throws an exception as more than one instance of this object for a
- * certain coroutine frame is counted as in invalid state caused by program
- * error
+ * @brief Exclusive token for executing a coroutine. Only single object of this
+ * type for a certain coroutine frame can be created
  */
+// NOLINTNEXTLINE(cppcoreguidelines-special-member-functions)
 class execution_token final : public swiss::non_copyable {
  public:
-  explicit constexpr execution_token(promise_ptr<> ptr = nullptr) noexcept
-      : ptr_(std::move(ptr)) {}
+  constexpr execution_token() noexcept : ctrl_(nullptr) {}
+
+  explicit constexpr execution_token(promise_ctrl & ctrl) noexcept
+      : ctrl_(&ctrl) {}
+
+  constexpr execution_token(execution_token && that) noexcept
+      : ctrl_(std::exchange(that.ctrl_, nullptr)) {}
+
+  constexpr auto operator=(execution_token && that) noexcept
+      -> execution_token & {
+    std::swap(ctrl_, that.ctrl_);
+    return *this;
+  }
+
+  constexpr ~execution_token() noexcept {
+    if (ctrl_ != nullptr) {
+      detail::promise_ctrl_unlock_resume(*ctrl_);
+    }
+  }
 
  public:
-  constexpr void resume() const { ptr_.resume({}); }
+  constexpr void resume() const {
+    if (ctrl_ == nullptr) {
+      throw std::runtime_error("execution_token::resume(): no state");
+    }
+    detail::promise_ctrl_resume(*ctrl_);
+  }
 
  private:
-  promise_ptr<> ptr_;
+  promise_ctrl * ctrl_;
 
  private:
   /**
-   * @note For promise frame to access the control pointer
+   * @brief For control to access itself in awaiter_suspend implementations
    */
-  template <typename ReturnObject>
-  friend class promise_frame;
+  friend class promise_ctrl;
 };
 
 }  // namespace argo

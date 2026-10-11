@@ -43,15 +43,15 @@ class task final : public swiss::non_copyable {
    * @brief Lock other calls to resume and this function. Create an object
    * that grants exclusive access resumption until it gets destructed
    */
-  constexpr auto get_execution_token() noexcept -> execution_token {
+  constexpr auto get_execution_token() -> execution_token {
     return ptr_->get_execution_token();
   }
 
   /**
    * @brief Get future for the task object. Does not run or schedule the task
    */
-  constexpr auto get_future() const noexcept -> task_future<promise_type> {
-    return task_future(ptr_);
+  constexpr auto get_future() const noexcept -> task_future<T> {
+    return task_future<T>(ptr_);
   }
 
  public:
@@ -77,7 +77,7 @@ class task final : public swiss::non_copyable {
    * @warning Synchronous interface. Not intended for general use within the
    * engine
    */
-  constexpr auto get() const -> decltype(auto) { return ptr_->get(); }
+  constexpr auto get() -> decltype(auto) { return ptr_->get(); }
 
  private:
   promise_ptr<promise_type> ptr_;

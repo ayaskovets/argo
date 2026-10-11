@@ -2,9 +2,11 @@
 
 #include <swiss/sealable_stack.hpp>
 
+#include "execution_token.hpp"
+
 namespace argo {
 
 using task_waitlist = swiss::sealable_stack<
-    std::pair<class execution_token *, class execution_context const *>>;
+    std::pair<execution_token, class execution_context const *>>;
 
 }  // namespace argo

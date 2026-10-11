@@ -2,17 +2,28 @@
 
 #include "execution_context.hpp"
 #include "execution_token.hpp"
+#include "promise_ptr.hpp"
 #include "task_waitlist.hpp"
+
+namespace argo {
+template <typename T>
+class task;
+}  // namespace argo
 
 namespace argo {
 
 /**
- * @brief Shared thread-safe task that can be awaited by multiple coroutines
+ * @brief Shared thread-safe task that can be awaited by multiple coroutines.
+ * Can be constructed only from an existing task object
  */
-template <typename PromiseFrame>
+template <typename T>
 class task_future final {
  public:
-  explicit constexpr task_future(promise_ptr<PromiseFrame> ptr) noexcept
+  using value_type   = T;
+  using promise_type = task<T>::promise_type;
+
+ public:
+  explicit constexpr task_future(promise_ptr<promise_type> ptr) noexcept
       : ptr_(std::move(ptr)) {}
 
  public:
@@ -28,9 +39,8 @@ class task_future final {
       }
 
       constexpr auto await_suspend(execution_token token) noexcept -> bool {
-        token_ = std::move(token);
-        node_ =
-            task_waitlist::node(&token_, &execution_context::this_executor());
+        node_ = task_waitlist::node(std::move(token),
+                                    &execution_context::this_executor());
         return future_->ptr_->add_to_waitlist(node_);
       }
 
@@ -39,7 +49,6 @@ class task_future final {
       }
 
      private:
-      execution_token token_;
       task_waitlist::node node_;
       task_future * future_;
     };
@@ -48,7 +57,7 @@ class task_future final {
   }
 
  private:
-  promise_ptr<PromiseFrame> ptr_;
+  promise_ptr<promise_type> ptr_;
 };
 
 }  // namespace argo

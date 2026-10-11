@@ -1,21 +1,15 @@
 #pragma once
 
-#include <coroutine>
-
 #include <swiss/badge.hpp>
 
 #include "promise_ctrl.hpp"
 
 namespace argo {
-template <typename ReturnObject>
-class promise_frame;
-}  // namespace argo
-
-namespace argo {
 
 /**
- * @brief Intrusive RAII ptr for notifying coroutine lifetime control about the
- * number of live instances of types that reference the coroutine state
+ * @brief Intrusive RAII shared ptr for notifying coroutine lifetime control
+ * about the number of live instances of types that reference the coroutine
+ * state
  * @note Requires the specific promise type to for functions that access the
  * promise frame
  */
@@ -30,14 +24,20 @@ class promise_ptr final {
   }
 
   constexpr promise_ptr(promise_ptr const & that) noexcept : ctrl_(that.ctrl_) {
-    that.ctrl_->add_ref();
+    if (ctrl_) {
+      ctrl_->add_ref();
+    }
   }
 
   // NOLINTNEXTLINE(bugprone-unhandled-self-assignment)
   constexpr auto operator=(promise_ptr const & that) noexcept -> promise_ptr & {
     if (ctrl_ != that.ctrl_) {
-      ctrl_->remove_ref();
-      that.ctrl_->add_ref();
+      if (ctrl_) {
+        ctrl_->remove_ref();
+      }
+      if (that.ctrl_) {
+        that.ctrl_->add_ref();
+      }
     }
     return *this;
   }
@@ -66,9 +66,7 @@ class promise_ptr final {
   constexpr auto operator*() const noexcept -> decltype(auto)
     requires(!std::same_as<PromiseFrame, void>)
   {
-    return std::coroutine_handle<PromiseFrame>::from_address(
-               ctrl_->handle().address())
-        .promise();
+    return ctrl_->promise<PromiseFrame>();
   }
 
   constexpr auto operator->() const noexcept -> PromiseFrame *
@@ -87,13 +85,6 @@ class promise_ptr final {
 
  private:
   promise_ctrl * ctrl_;
-
- private:
-  /**
-   * @note For promise frame to access the control pointer
-   */
-  template <typename ReturnObject>
-  friend class promise_frame;
 };
 
 }  // namespace argo

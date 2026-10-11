@@ -2,6 +2,7 @@
 
 #include "../execution_context.hpp"
 #include "../task.hpp"
+#include "../task_future.hpp"
 
 namespace argo::awaiters {
 
@@ -26,7 +27,7 @@ class async final {
 
       constexpr void await_suspend() const noexcept { std::unreachable(); }
 
-      constexpr auto await_resume() -> decltype(auto) {
+      constexpr auto await_resume() -> task_future<T> {
         execution_context::this_executor().execute(
             task_->get_execution_token());
         return task_->get_future();

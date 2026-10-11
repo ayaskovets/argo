@@ -1,8 +1,12 @@
 #pragma once
 
+#include <coroutine>
+
 #include <swiss/concepts.hpp>
 
-#include "execution_token.hpp"
+namespace argo {
+class execution_token;
+}  // namespace argo
 
 namespace argo::concepts {
 

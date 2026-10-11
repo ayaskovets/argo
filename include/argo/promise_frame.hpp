@@ -30,7 +30,7 @@ class promise_retval {
   }
 
  protected:
-  constexpr auto get() const -> T & {
+  constexpr auto get() -> T & {
     if (exception_) {
       std::rethrow_exception(exception_);
     }
@@ -41,7 +41,7 @@ class promise_retval {
   }
 
  private:
-  mutable std::optional<T> value_;
+  std::optional<T> value_;
   std::exception_ptr exception_;
 };
 
@@ -58,7 +58,7 @@ class promise_retval<void> {
   }
 
  protected:
-  constexpr void get() const {
+  constexpr void get() {
     if (exception_) {
       std::rethrow_exception(exception_);
     }
@@ -116,8 +116,7 @@ class promise_frame final
         if constexpr (requires { awaiter_.await_suspend(); }) {
           return awaiter_.await_suspend();
         } else {
-          return awaiter_.await_suspend(
-              execution_token(promise_ptr(handle.promise().ctrl_)));
+          return awaiter_.await_suspend(handle.promise().get_execution_token());
         }
       }
 
@@ -142,39 +141,29 @@ class promise_frame final
   }
 
   /**
-   * @brief Suspend the task and do a symmetric transfer if there is a single
-   * awaiting parent coroutine
+   * @brief Suspend the task, notify it's waitlist and optionally resume
+   * continuation
    */
-  constexpr auto final_suspend() const noexcept -> auto {
-    /* TODO: impl, rewrite description
-      SHARED(0) -> {DONE}, suspend_never, destroy, resume waitlist, continuation
-      SHARED(_) -> {DONE}, suspend_always, resume waitlist, continuation
-     */
-
-    class continuation_awaiter final {
+  constexpr auto final_suspend() noexcept -> auto {
+    class final_awaiter final {
      public:
-      explicit constexpr continuation_awaiter(
-          promise_frame const & frame) noexcept
+      explicit constexpr final_awaiter(promise_frame & frame) noexcept
           : frame_(&frame) {}
 
      public:
       constexpr auto await_ready() const noexcept -> bool { return false; }
 
-      constexpr auto await_suspend(std::coroutine_handle<>) const noexcept
-          -> std::coroutine_handle<> {
-        for (auto [token, ctx] : frame_->ctrl_.waitlist()) {
-          ctx->execute(std::move(*token));
-        }
-        return frame_->ctrl_.get_continuation();
+      constexpr auto await_suspend(std::coroutine_handle<>) -> decltype(auto) {
+        return frame_->ctrl_.final_await_suspend();
       }
 
       constexpr void await_resume() const noexcept {}
 
      private:
-      promise_frame const * frame_;
+      promise_frame * frame_;
     };
 
-    return continuation_awaiter(*this);
+    return final_awaiter(*this);
   }
 
   /**
@@ -182,12 +171,6 @@ class promise_frame final
    * suspended task and return control to the parent in final_suspend()
    */
   constexpr auto operator co_await() && noexcept -> auto {
-    /* TODO: impl
-      SUSPENDED -> {RUNNING}, resume
-      RUNNING -> throw
-      DONE -> return
-    */
-
     class sync_awaiter final {
      public:
       explicit constexpr sync_awaiter(promise_frame & frame) noexcept
@@ -199,14 +182,11 @@ class promise_frame final
       }
 
       constexpr auto await_suspend(execution_token token) const noexcept
-          -> std::coroutine_handle<> {
-        frame_->ctrl_.set_continuation(token.ptr_.ctrl_->handle());
-        return frame_->ctrl_.handle();
+          -> decltype(auto) {
+        return frame_->ctrl_.sync_await_suspend(std::move(token));
       }
 
-      constexpr auto await_resume() const -> decltype(auto) {
-        return frame_->get();
-      }
+      constexpr auto await_resume() -> decltype(auto) { return frame_->get(); }
 
      private:
       promise_frame * frame_;
@@ -218,18 +198,17 @@ class promise_frame final
  public:
   /**
    * @brief Lock other calls to resume and this function. Create an object
-   * that grants exclusive access resumption until it gets destructed
+   * that grants exclusive access to resumption until it gets destructed
    */
-  constexpr auto get_execution_token() noexcept -> execution_token {
-    return execution_token(promise_ptr(ctrl_));
+  constexpr auto get_execution_token() -> execution_token {
+    return ctrl_.get_execution_token();
   }
 
   /**
    * @brief Add node to waitlist. Suspended nodes on waitlist are resumed in
    * final_suspend
    */
-  constexpr auto add_to_waitlist(task_waitlist::node const & node) noexcept
-      -> bool {
+  constexpr auto add_to_waitlist(task_waitlist::node & node) noexcept -> bool {
     return ctrl_.add_to_waitlist(node);
   }
 
@@ -237,11 +216,15 @@ class promise_frame final
   /**
    * @brief Resume a non-resumed coroutine that is not shared with a execution
    * channel, otherwise throw an exception
+   * @warning Synchronous interface. Not intended for general use within the
+   * engine
    */
   constexpr void resume() { return ctrl_.resume(); }
 
   /**
    * @brief Check whether coroutine is finished
+   * @warning Synchronous interface. Not intended for general use within the
+   * engine
    */
   constexpr auto done() const noexcept -> bool { return ctrl_.done(); }
 
@@ -249,8 +232,10 @@ class promise_frame final
    * @brief Extract value from a finished coroutine. Throws an exception for an
    * unfinished coroutine
    * @returns A reference to a value of the task type or void
+   * @warning Synchronous interface. Not intended for general use within the
+   * engine
    */
-  constexpr auto get() const -> decltype(auto) {
+  constexpr auto get() -> decltype(auto) {
     if (!ctrl_.done()) {
       throw std::runtime_error("promise_frame::get(): not done");
     }
