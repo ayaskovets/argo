@@ -15,11 +15,10 @@ TEST(execution_context, awaiter) {
   argo::executors::inline_executor executor1(in_channel1, out_channel);
   argo::executors::inline_executor executor2(in_channel2, out_channel);
 
-  // NOLINTNEXTLINE(cppcoreguidelines-avoid-reference-coroutine-parameters)
-  auto task = [](argo::execution_context const & ctx2) -> argo::task<void> {
-    co_await ctx2;
+  auto task = [](argo::execution_context const * ctx2) -> argo::task<void> {
+    co_await *ctx2;
     co_await argo::awaiters::yield();
-  }(executor2.context());
+  }(&executor2.context());
 
   in_channel1.push(task.get_execution_token());
   EXPECT_FALSE(in_channel1.empty());

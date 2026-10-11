@@ -12,8 +12,7 @@ TEST(thread_pool_executor, smoke) {
   argo::executors::thread_pool_executor executor(in_channel, out_channel);
 
   std::stop_source stop_source;
-  // NOLINTNEXTLINE(cppcoreguidelines-avoid-reference-coroutine-parameters)
-  auto task = [](std::stop_source & stop_source) -> argo::task<void> {
+  auto task = [](std::stop_source stop_source) -> argo::task<void> {
     stop_source.request_stop();
     co_return;
   }(stop_source);

@@ -11,8 +11,7 @@ TEST(async_awaiter, smoke) {
   flow::spsc_queue<std::nullptr_t> out_channel(1);
   argo::executors::inline_executor executor(in_channel, out_channel);
 
-  auto child = []() -> argo::task<int> { co_return 1; }();
-  // NOLINTNEXTLINE(cppcoreguidelines-avoid-reference-coroutine-parameters)
+  auto child  = []() -> argo::task<int> { co_return 1; }();
   auto parent = [](argo::task<int> child) -> argo::task<void> {
     auto future = co_await argo::awaiters::async(std::move(child));
     co_await future;

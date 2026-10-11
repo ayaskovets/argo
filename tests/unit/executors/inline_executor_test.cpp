@@ -12,11 +12,10 @@ TEST(inline_executor, smoke) {
   argo::executors::inline_executor executor(in_channel, out_channel);
 
   std::size_t times_called = 0;
-  // NOLINTNEXTLINE(cppcoreguidelines-avoid-reference-coroutine-parameters)
-  auto task = [](std::size_t & times_called) -> argo::task<void> {
-    times_called += 1;
+  auto task = [](std::size_t * times_called) -> argo::task<void> {
+    *times_called += 1;
     co_return;
-  }(times_called);
+  }(&times_called);
 
   in_channel.push(task.get_execution_token());
   EXPECT_EQ(times_called, 0);

@@ -12,11 +12,10 @@ TEST(task_future, waitlist) {
   flow::spsc_queue<std::nullptr_t> out_channel(1);
   argo::executors::inline_executor executor(in_channel, out_channel);
 
-  auto child = []() -> argo::task<int> { co_return 1; }();
-  // NOLINTNEXTLINE(cppcoreguidelines-avoid-reference-coroutine-parameters)
-  auto parent = [](argo::task<int> & child) -> argo::task<void> {
-    co_await child.get_future();
-  }(child);
+  auto child  = []() -> argo::task<int> { co_return 1; }();
+  auto parent = [](argo::task<int> * child) -> argo::task<void> {
+    co_await child->get_future();
+  }(&child);
 
   in_channel.push(parent.get_execution_token());
   EXPECT_FALSE(parent.done());
@@ -39,11 +38,10 @@ TEST(task_future, waitlist) {
 }
 
 TEST(task_future, finished) {
-  auto child = []() -> argo::task<int> { co_return 1; }();
-  // NOLINTNEXTLINE(cppcoreguidelines-avoid-reference-coroutine-parameters)
-  auto parent = [](argo::task<int> & child) -> argo::task<void> {
-    co_await child.get_future();
-  }(child);
+  auto child  = []() -> argo::task<int> { co_return 1; }();
+  auto parent = [](argo::task<int> * child) -> argo::task<void> {
+    co_await child->get_future();
+  }(&child);
 
   child.resume();
   EXPECT_FALSE(parent.done());
