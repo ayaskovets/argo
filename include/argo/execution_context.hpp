@@ -86,12 +86,12 @@ class execution_context final : public swiss::non_copyable,
   }
 
   /**
-   * @brief Add the task to output channel of the current executor
+   * @brief Add the task and scheduling parameters to output channel of the
+   * current executor
    * @note Noexcept if input channel of the current executor is noexcept
    */
-  template <typename Params>
-  constexpr void schedule(Params const & params) const {
-    (this->*park_)(&params, typeid(&params));
+  constexpr void schedule(auto && params) const {
+    (this->*park_)(static_cast<void *>(&params), typeid(&params));
   }
 
  private:
@@ -113,10 +113,10 @@ class execution_context final : public swiss::non_copyable,
    */
   template <concepts::executor Executor>
     requires(concepts::monochannel<typename Executor::out_channel_type>)
-  constexpr void park(void const * params,
-                      std::type_info const & type_info) const {
-    if (type_info != typeid(Executor::out_channel_type::value_type const *))
-        [[unlikely]] {
+  constexpr void park(void * params, std::type_info const & type_info) const {
+    using out_value_type = typename Executor::out_channel_type::value_type;
+
+    if (type_info != typeid(out_value_type *)) [[unlikely]] {
       throw std::runtime_error(std::format(
           "execution_context::park(): incompatible params ({}) and output "
           "channel value type ({})",
@@ -125,11 +125,10 @@ class execution_context final : public swiss::non_copyable,
     }
 
     auto const & typed_executor = *static_cast<Executor const *>(executor_);
-    auto const & typed_params =
-        *static_cast<Executor::out_channel_type::value_type const *>(params);
+    auto & typed_params         = *static_cast<out_value_type *>(params);
 
     // TODO: handle infinite wait
-    typed_executor.out_channel().push(typed_params);
+    typed_executor.out_channel().push(std::move(typed_params));
   }
 
   /**
@@ -138,18 +137,19 @@ class execution_context final : public swiss::non_copyable,
    */
   template <concepts::executor Executor>
     requires(concepts::multichannel<typename Executor::out_channel_type>)
-  constexpr void park(void const * params, std::type_info const & type_info) {
-    bool const match = [&]<typename... Args>(std::variant<Args...>) -> bool {
+  constexpr void park(void * params, std::type_info const & type_info) const {
+    bool const match =
+        [&]<typename... OutValueType>(std::variant<OutValueType...>) -> bool {
       return ([&]() -> bool {
-        if (type_info != typeid(Args const *)) {
+        if (type_info != typeid(OutValueType *)) {
           return false;
         }
 
         auto const & typed_executor = *static_cast<Executor const *>(executor_);
-        auto const & typed_params   = *static_cast<Args const *>(params);
+        auto & typed_params         = *static_cast<OutValueType *>(params);
 
         // TODO: handle infinite wait
-        typed_executor.out_channel().push(typed_params);
+        typed_executor.out_channel().push(std::move(typed_params));
 
         return true;
       } || ...);
@@ -165,7 +165,7 @@ class execution_context final : public swiss::non_copyable,
  private:
   void const * executor_;
   void (execution_context::*post_)(execution_token) const;
-  void (execution_context::*park_)(void const * params,
+  void (execution_context::*park_)(void * params,
                                    std::type_info const & type_info) const;
 };
 

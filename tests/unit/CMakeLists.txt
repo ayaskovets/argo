@@ -28,7 +28,7 @@ set(SOURCES
     awaiter_test.cpp
     awaiters/async_awaiter_test.cpp
     awaiters/detach_awaiter_test.cpp
-    # awaiters/timer_awaiter_test.cpp
+    awaiters/timer_awaiter_test.cpp
     awaiters/yield_awaiter_test.cpp
     channel_test.cpp
     channels/multiplexed_channel_test.cpp

@@ -10,9 +10,9 @@ namespace tests::unit::awaiters {
 
 TEST(timer_awaiter, skip_suspend) {
   auto task = []() -> argo::task<void> {
-    co_await argo::awaiters::sleep_for<swiss::tls_mocked_clock<>>(
+    co_await argo::awaiters::timer<swiss::tls_mocked_clock<>>(
         std::chrono::milliseconds(0));
-    co_await argo::awaiters::sleep_until<swiss::tls_mocked_clock<>>(
+    co_await argo::awaiters::timer<swiss::tls_mocked_clock<>>(
         swiss::tls_mocked_clock<>::now());
   }();
 
@@ -22,23 +22,31 @@ TEST(timer_awaiter, skip_suspend) {
 }
 
 TEST(timer_awaiter, suspend) {
-  flow::spsc_queue<argo::task_ref> in_channel(1);
+  flow::spsc_queue<argo::execution_token> in_channel(1);
   flow::spsc_queue<
-      argo::awaiters::timer_awaiter<swiss::tls_mocked_clock<>> const *>
+      argo::awaiters::timer<swiss::tls_mocked_clock<>>::params_type>
       out_channel(1);
   argo::executors::inline_executor executor(in_channel, out_channel);
 
   auto task = []() -> argo::task<void> {
-    co_await argo::awaiters::sleep_for<swiss::tls_mocked_clock<>>(
+    co_await argo::awaiters::timer<swiss::tls_mocked_clock<>>(
         std::chrono::milliseconds(1));
   }();
 
-  executor.context().resume(argo::task_ref(task));
+  in_channel.push(task.get_execution_token());
+  EXPECT_EQ(in_channel.size(), 1);
+  EXPECT_FALSE(task.done());
+
+  executor.run_once();
   EXPECT_FALSE(task.done());
   EXPECT_EQ(out_channel.size(), 1);
   EXPECT_TRUE(out_channel.try_pop(std::ignore));
 
-  task.resume();
+  in_channel.push(task.get_execution_token());
+  EXPECT_FALSE(task.done());
+  EXPECT_EQ(in_channel.size(), 1);
+
+  executor.run_once();
   EXPECT_TRUE(task.done());
   EXPECT_NO_THROW(std::move(task).get());
 }
