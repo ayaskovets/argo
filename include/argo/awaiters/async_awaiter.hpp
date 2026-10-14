@@ -13,7 +13,7 @@ namespace argo::awaiters {
 template <typename T>
 class async final {
  public:
-  explicit constexpr async(task<T> && task) noexcept : task_(std::move(task)) {}
+  explicit constexpr async(task<T> task) noexcept : task_(std::move(task)) {}
 
  public:
   constexpr auto operator co_await() && noexcept -> auto {
