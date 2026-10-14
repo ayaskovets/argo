@@ -5,46 +5,69 @@
 #include <tuple>
 #include <variant>
 
+#include <swiss/concepts.hpp>
+
 namespace argo::concepts {
+
+/**
+ * @brief Channel interface for a specific type
+ */
+
+template <typename T, typename Value>
+concept typed_channel =
+    requires(T channel, Value value, std::stop_token const & stop_token) {
+      {
+        channel.template try_emplace<Value>(std::move(value))
+      } -> std::same_as<bool>;
+      { channel.try_push(std::move(value)) } -> std::same_as<bool>;
+      { channel.try_pop(value) } -> std::same_as<bool>;
+
+      {
+        channel.template emplace<Value>(std::move(value))
+      } -> std::same_as<void>;
+      { channel.push(std::move(value)) } -> std::same_as<void>;
+      { channel.pop(value) } -> std::same_as<void>;
+
+      {
+        channel.template emplace<Value>(stop_token, std::move(value))
+      } -> std::same_as<bool>;
+      { channel.push(stop_token, std::move(value)) } -> std::same_as<bool>;
+      { channel.pop(stop_token, value) } -> std::same_as<bool>;
+    };
+
+/**
+ * @brief Channel interface for a specific type with noexcept operations
+ */
+template <typename T, typename Value>
+concept noexcept_typed_channel =
+    requires(T channel, Value value, std::stop_token const & stop_token) {
+      requires noexcept(channel.template try_emplace<Value>(std::move(value)));
+      requires noexcept(channel.try_push(std::move(value)));
+      requires noexcept(channel.try_pop(value));
+
+      requires noexcept(channel.template emplace<Value>(std::move(value)));
+      requires noexcept(channel.push(std::move(value)));
+      requires noexcept(channel.pop(value));
+
+      requires noexcept(
+          channel.template emplace<Value>(stop_token, std::move(value)));
+      requires noexcept(channel.push(stop_token, std::move(value)));
+      requires noexcept(channel.pop(stop_token, value));
+    };
 
 /**
  * @brief Channel handling one type of values. Expected to be thread-safe
  */
 template <typename T, typename Value = typename T::value_type>
 concept monochannel =
-    requires(T channel, Value value, std::stop_token const & stop_token) {
-      { channel.try_emplace(std::move(value)) } -> std::same_as<bool>;
-      { channel.try_push(std::move(value)) } -> std::same_as<bool>;
-      { channel.try_pop(value) } -> std::same_as<bool>;
-
-      { channel.emplace(std::move(value)) } -> std::same_as<void>;
-      { channel.push(std::move(value)) } -> std::same_as<void>;
-      { channel.pop(value) } -> std::same_as<void>;
-
-      { channel.emplace(stop_token, std::move(value)) } -> std::same_as<bool>;
-      { channel.push(stop_token, std::move(value)) } -> std::same_as<bool>;
-      { channel.pop(stop_token, value) } -> std::same_as<bool>;
-    } && std::is_same_v<Value, typename T::value_type>;
+    typed_channel<T, Value> && std::is_same_v<Value, typename T::value_type>;
 
 /**
  * @brief Channel of one type with noexcept operations
  */
 template <typename T, typename Value = typename T::value_type>
-concept noexcept_monochannel =
-    monochannel<T, Value> &&
-    requires(T channel, Value value, std::stop_token const & stop_token) {
-      requires noexcept(channel.try_emplace(std::move(value)));
-      requires noexcept(channel.try_push(std::move(value)));
-      requires noexcept(channel.try_pop(value));
-
-      requires noexcept(channel.emplace(std::move(value)));
-      requires noexcept(channel.push(std::move(value)));
-      requires noexcept(channel.pop(value));
-
-      requires noexcept(channel.emplace(stop_token, std::move(value)));
-      requires noexcept(channel.push(stop_token, std::move(value)));
-      requires noexcept(channel.pop(stop_token, value));
-    };
+concept noexcept_monochannel = noexcept_typed_channel<T, Value> &&
+                               std::is_same_v<Value, typename T::value_type>;
 
 /**
  * @brief Channel handling multiple value types. Concept does not imply that the
@@ -55,25 +78,27 @@ concept noexcept_monochannel =
  * variadic pack of all valid types the channel is able to work with
  */
 template <typename T, typename... Values>
-concept multichannel =
-    ((sizeof...(Values) == 0 &&
-          []<typename... Args>(std::variant<Args...>) -> bool {
-       return (monochannel<T, Args> && ...);
-     }(typename T::value_types{})) ||
-     (sizeof...(Values) >= 1 && (monochannel<T, Values> && ...))) &&
-    std::is_same_v<std::variant<Values...>, typename T::value_types>;
+concept multichannel = requires {
+  requires[]<typename... Args>(std::variant<Args...> *)->bool {
+    return (sizeof...(Values) == 0 ||
+            std::is_same_v<std::variant<Values...>, std::variant<Args...>>) &&
+           (typed_channel<T, Args> && ...);
+  }
+  (static_cast<typename T::value_types *>(nullptr));
+};
 
 /**
  * @brief Multichannel with all noexcept operations
  */
 template <typename T, typename... Values>
-concept noexcept_multichannel =
-    ((sizeof...(Values) == 0 &&
-          []<typename... Args>(std::variant<Args...>) -> bool {
-       return (noexcept_monochannel<T, Args> && ...);
-     }(typename T::value_types{})) ||
-     (sizeof...(Values) >= 1 && (noexcept_monochannel<T, Values> && ...))) &&
-    std::is_same_v<std::variant<Values...>, typename T::value_types>;
+concept noexcept_multichannel = requires {
+  requires[]<typename... Args>(std::variant<Args...> *)->bool {
+    return (sizeof...(Values) == 0 ||
+            std::is_same_v<std::variant<Values...>, std::variant<Args...>>) &&
+           (noexcept_typed_channel<T, Args> && ...);
+  }
+  (static_cast<typename T::value_types *>(nullptr));
+};
 
 /**
  * @brief Channel for async communication between schedulers and

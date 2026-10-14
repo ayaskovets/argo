@@ -30,7 +30,7 @@ set(HEADERS
     # include/argo/awaiters/timer_awaiter.hpp
     include/argo/awaiters/yield_awaiter.hpp
     include/argo/channel.hpp
-    # include/argo/channels/multiplexed_channel.hpp
+    include/argo/channels/multiplexed_channel.hpp
     include/argo/execution_context.hpp
     include/argo/execution_token.hpp
     include/argo/executor.hpp

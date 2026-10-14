@@ -31,6 +31,7 @@ set(SOURCES
     # awaiters/timer_awaiter_test.cpp
     awaiters/yield_awaiter_test.cpp
     channel_test.cpp
+    channels/multiplexed_channel_test.cpp
     execution_context_test.cpp
     executor_test.cpp
     executors/inline_executor_test.cpp

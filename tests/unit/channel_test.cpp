@@ -1,4 +1,5 @@
 #include <argo/channel.hpp>
+#include <argo/channels/multiplexed_channel.hpp>
 
 #include <flow/mpmc_queue.hpp>
 #include <flow/mpsc_queue.hpp>
@@ -36,6 +37,23 @@ TEST(channel, flow) {
   static_assert(argo::concepts::channel<flow::unbounded_spsc_queue<int>, int>);
   static_assert(
       !argo::concepts::noexcept_channel<flow::unbounded_spsc_queue<int>, int>);
+}
+
+TEST(channel, multiplexed_channel) {
+  using multiplexed_channel =
+      argo::channels::multiplexed_channel<flow::spsc_queue<int>,
+                                          flow::unbounded_spsc_queue<float>>;
+
+  static_assert(argo::concepts::multichannel<multiplexed_channel, int, float>);
+  static_assert(
+      !argo::concepts::noexcept_multichannel<multiplexed_channel, int, float>);
+  static_assert(
+      argo::concepts::noexcept_typed_channel<multiplexed_channel, int>);
+
+  static_assert(argo::concepts::channel<multiplexed_channel>);
+  static_assert(!argo::concepts::noexcept_channel<multiplexed_channel>);
+  static_assert(
+      !argo::concepts::noexcept_typed_channel<multiplexed_channel, float>);
 }
 
 }  // namespace tests::unit
