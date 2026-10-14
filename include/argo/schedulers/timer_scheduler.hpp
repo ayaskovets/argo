@@ -1,46 +1,53 @@
 #pragma once
 
 #include <flat_map>
+#include <variant>
 
-#include <swiss/concepts.hpp>
 #include <swiss/mixins.hpp>
 #include <swiss/scope_exit.hpp>
 
-#include "../awaiters/timer_awaiter.hpp"
 #include "../channel.hpp"
+#include "../execution_token.hpp"
+
+namespace argo::schedulers::concepts {
+
+template <typename T, typename Clock>
+concept timer_scheduler_params = requires(T params) {
+  { params.execution_token() } -> std::same_as<execution_token &>;
+  { params.time_point() } -> std::same_as<typename Clock::time_point &>;
+};
+
+}  // namespace argo::schedulers::concepts
 
 namespace argo::schedulers {
 
 /**
- * @brief Task scheduler for scheduling tasks at a specified time point in the
- * future
+ * @brief Task scheduler for scheduling tasks at a specified time point in
+ * the future
  */
-template <concepts::channel InChannel, concepts::channel OutChannel>
+template <typename Clock, argo::concepts::channel InChannel,
+          argo::concepts::channel OutChannel>
 class timer_scheduler final : public swiss::non_copyable,
                               public swiss::non_movable {
  public:
   using in_channel_type  = InChannel;
   using out_channel_type = OutChannel;
+  using clock_type       = Clock;
+  using time_point_type  = clock_type::time_point;
 
  private:
   using in_value_type  = in_channel_type::value_type;
   using out_value_type = out_channel_type::value_type;
-  using clock_type     = std::remove_pointer_t<in_value_type>::clock_type;
-  using time_point_type =
-      std::remove_pointer_t<in_value_type>::clock_type::time_point;
 
  private:
-  static_assert(std::is_pointer_v<in_value_type>);
-  static_assert(swiss::instantiation_of<std::remove_pointer_t<in_value_type>,
-                                        awaiters::timer_awaiter>);
+  static_assert(concepts::timer_scheduler_params<in_value_type, Clock>);
 
  public:
   constexpr timer_scheduler(in_channel_type & in_channel,
                             out_channel_type & out_channel) noexcept
-      : in_value_(nullptr),
-        queue_(),
-        in_channel_(in_channel),
-        out_channel_(out_channel) {}
+      : in_value_(std::monostate{}),
+        in_channel_(&in_channel),
+        out_channel_(&out_channel) {}
 
  public:
   constexpr auto in_channel() const noexcept -> in_channel_type & {
@@ -65,8 +72,8 @@ class timer_scheduler final : public swiss::non_copyable,
         [&]() noexcept -> void { queue_.erase(queue_.begin(), iter); });
 
     for (; iter != queue_.end(); ++iter) {
-      auto const & [time_point, task] = *iter;
-      if (time_point > now || !out_channel_.try_push(task)) {
+      auto [time_point, task] = *iter;
+      if (time_point > now || !out_channel_->try_push(std::move(task))) {
         break;
       }
     }
@@ -89,36 +96,38 @@ class timer_scheduler final : public swiss::non_copyable,
         [&]() noexcept -> void { queue_.erase(queue_.begin(), iter); });
 
     for (; iter < queue_.end(); ++iter) {
-      auto const & [time_point, task] = *iter;
-      if (time_point > now || !out_channel_.push(stop_token, task)) {
+      auto [time_point, task] = *iter;
+      if (time_point > now ||
+          !out_channel_->push(stop_token, std::move(task))) {
         break;
       }
     }
   }
 
  private:
-  in_value_type in_value_;
-  std::flat_map<time_point_type, task_ref> queue_;
-
-  // NOLINTBEGIN(cppcoreguidelines-avoid-const-or-ref-data-members)
-  in_channel_type & in_channel_;
-  out_channel_type & out_channel_;
-  // NOLINTEND(cppcoreguidelines-avoid-const-or-ref-data-members)
+  std::flat_map<time_point_type, execution_token> queue_;
+  std::variant<std::monostate, in_value_type> in_value_;
+  in_channel_type * in_channel_;
+  out_channel_type * out_channel_;
 
  private:
   constexpr auto try_consume_in_value() -> bool {
-    if ((!in_value_ && in_channel_.try_pop(in_value_)) || in_value_) {
-      queue_.emplace(in_value_->time_point(), in_value_->task_ref());
-      in_value_ = nullptr;
+    if (in_value_.index() != 0 ||
+        (in_value_.index() == 0 && in_channel_->try_pop(in_value_))) {
+      queue_.emplace(std::get<1>(in_value_).time_point(),
+                     std::move(std::get<1>(in_value_).execution_token()));
+      in_value_ = std::monostate{};
       return true;
     }
     return false;
   }
 
   constexpr auto consume_in_value(std::stop_token const & stop_token) -> bool {
-    if ((!in_value_ && in_channel_.pop(stop_token, in_value_)) || in_value_) {
-      queue_.emplace(in_value_->time_point(), in_value_->task_ref());
-      in_value_ = nullptr;
+    if (in_value_.index() != 0 ||
+        (in_value_.index() == 0 && in_channel_->pop(stop_token, in_value_))) {
+      queue_.emplace(std::get<1>(in_value_).time_point(),
+                     std::move(std::get<1>(in_value_).execution_token()));
+      in_value_ = std::monostate{};
       return true;
     }
     return false;

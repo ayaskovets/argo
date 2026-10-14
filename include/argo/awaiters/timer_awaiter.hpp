@@ -13,7 +13,26 @@ class timer final {
  public:
   using clock_type      = Clock;
   using time_point_type = clock_type::time_point;
-  using params_type     = std::pair<execution_token, time_point_type>;
+  class params_type final {
+   public:
+    constexpr params_type(execution_token execution_token,
+                          time_point_type time_point) noexcept
+        : execution_token_(std::move(execution_token)),
+          time_point_(std::move(time_point)) {}
+
+   public:
+    constexpr auto execution_token() noexcept -> execution_token & {
+      return execution_token_;
+    }
+
+    constexpr auto time_point() noexcept -> time_point_type & {
+      return time_point_;
+    }
+
+   private:
+    class execution_token execution_token_;
+    time_point_type time_point_;
+  };
 
  private:
   /**
@@ -49,7 +68,7 @@ class timer final {
        */
       constexpr void await_suspend(execution_token token) const {
         execution_context::this_executor().schedule(
-            params_type{std::move(token), schedule_at_});
+            params_type(std::move(token), schedule_at_));
       }
 
       constexpr void await_resume() const noexcept {}
