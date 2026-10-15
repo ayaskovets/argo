@@ -11,6 +11,9 @@
 
 namespace argo {
 
+// TODO: cancellation
+// TODO: deadlines
+
 /**
  * @brief Control object for promise type. Responsible for waitlist and state
  * mutations

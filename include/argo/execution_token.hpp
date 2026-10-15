@@ -10,7 +10,7 @@ class promise_ctrl;
 }  // namespace argo
 
 /**
- * @note This section is required to mitigate circulare dependency between
+ * @note This section is required to mitigate the circular dependency between
  * promise control and execution token
  */
 namespace argo::detail {
