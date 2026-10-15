@@ -2,6 +2,7 @@
 
 #include <cassert>
 #include <format>
+#include <stop_token>
 #include <variant>
 
 #include <swiss/mixins.hpp>
@@ -16,6 +17,7 @@ namespace argo {
  * functions with type-erased operations on in/out channels of a certain
  * executor
  */
+// NOLINTNEXTLINE(cppcoreguidelines-special-member-functions)
 class execution_context final : public swiss::non_copyable,
                                 public swiss::non_movable {
  private:
@@ -68,6 +70,10 @@ class execution_context final : public swiss::non_copyable,
         post_(&execution_context::post<Executor>),
         park_(&execution_context::park<Executor>) {}
 
+  constexpr ~execution_context() noexcept {
+    destruction_stop_source_.request_stop();
+  }
+
  public:
   /**
    * @brief Synchronously resume task by the current executor
@@ -103,8 +109,8 @@ class execution_context final : public swiss::non_copyable,
       noexcept(concepts::noexcept_channel<typename Executor::in_channel_type>) {
     auto const & typed_executor = *static_cast<Executor const *>(executor_);
 
-    // TODO: handle infinite wait
-    typed_executor.in_channel().push(std::move(token));
+    typed_executor.in_channel().push(destruction_stop_source_.get_token(),
+                                     std::move(token));
   }
 
   /**
@@ -127,8 +133,8 @@ class execution_context final : public swiss::non_copyable,
     auto const & typed_executor = *static_cast<Executor const *>(executor_);
     auto & typed_params         = *static_cast<out_value_type *>(params);
 
-    // TODO: handle infinite wait
-    typed_executor.out_channel().push(std::move(typed_params));
+    typed_executor.out_channel().push(destruction_stop_source_.get_token(),
+                                      std::move(typed_params));
   }
 
   /**
@@ -148,8 +154,8 @@ class execution_context final : public swiss::non_copyable,
         auto const & typed_executor = *static_cast<Executor const *>(executor_);
         auto & typed_params         = *static_cast<OutValueType *>(params);
 
-        // TODO: handle infinite wait
-        typed_executor.out_channel().push(std::move(typed_params));
+        typed_executor.out_channel().push(destruction_stop_source_.get_token(),
+                                          std::move(typed_params));
 
         return true;
       } || ...);
@@ -163,6 +169,7 @@ class execution_context final : public swiss::non_copyable,
   }
 
  private:
+  std::stop_source destruction_stop_source_;
   void const * executor_;
   void (execution_context::*post_)(execution_token) const;
   void (execution_context::*park_)(void * params,
