@@ -8,8 +8,9 @@ project(
 # dependencies
 # ------------------------------------------------------------------------------
 
-find_package(swiss REQUIRED)
 find_package(flow REQUIRED)
+find_package(skynet REQUIRED)
+find_package(swiss REQUIRED)
 
 # ------------------------------------------------------------------------------
 # general settings and options
@@ -56,8 +57,9 @@ target_sources(
 
 target_compile_features(argo INTERFACE cxx_std_23)
 
-target_link_libraries(argo INTERFACE swiss::swiss)
 target_link_libraries(argo INTERFACE flow::flow)
+target_link_libraries(argo INTERFACE skynet::skynet)
+target_link_libraries(argo INTERFACE swiss::swiss)
 
 # ------------------------------------------------------------------------------
 # install

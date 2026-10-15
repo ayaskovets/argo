@@ -38,7 +38,7 @@ set(SOURCES
     executors/thread_pool_executor_test.cpp
     promise_ptr_test.cpp
     scheduler_test.cpp
-    # schedulers/io_scheduler_test.cpp
+    # schedulers/network_scheduler_test.cpp
     schedulers/timer_scheduler_test.cpp
     task_future_test.cpp
     task_test.cpp)

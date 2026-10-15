@@ -2,8 +2,9 @@
 
 include(CMakeFindDependencyMacro)
 
-find_dependency(swiss)
 find_dependency(flow)
+find_dependency(skynet)
+find_dependency(swiss)
 
 include("${CMAKE_CURRENT_LIST_DIR}/argo-targets.cmake")
 
