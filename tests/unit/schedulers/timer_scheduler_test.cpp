@@ -12,7 +12,7 @@ namespace tests::unit::schedulers {
 TEST(timer_scheduler, smoke) {
   flow::spsc_queue<argo::execution_token> in_channel(1);
   flow::spsc_queue<
-      argo::awaiters::timer<swiss::tls_mocked_clock<>>::params_type>
+      argo::awaiters::timer<swiss::tls_mocked_clock<>>::params_type *>
       out_channel(1);
   argo::executors::inline_executor executor(in_channel, out_channel);
   argo::schedulers::timer_scheduler<swiss::tls_mocked_clock<>,

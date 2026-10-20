@@ -15,12 +15,6 @@ class timer final {
   using time_point_type = clock_type::time_point;
   class params_type final {
    public:
-    constexpr params_type(execution_token execution_token,
-                          time_point_type time_point) noexcept
-        : execution_token_(std::move(execution_token)),
-          time_point_(std::move(time_point)) {}
-
-   public:
     constexpr auto execution_token() noexcept -> execution_token & {
       return execution_token_;
     }
@@ -55,26 +49,27 @@ class timer final {
   constexpr auto operator co_await() && noexcept -> auto {
     class timer_awaiter final {
      public:
-      explicit constexpr timer_awaiter(time_point_type schedule_at) noexcept
-          : schedule_at_(schedule_at) {}
+      explicit constexpr timer_awaiter(time_point_type schedule_at) noexcept {
+        params_.time_point() = schedule_at;
+      }
 
      public:
-      constexpr auto await_ready() const noexcept -> bool {
-        return schedule_at_ == kScheduleImmediately;
+      constexpr auto await_ready() noexcept -> bool {
+        return params_.time_point() == kScheduleImmediately;
       }
 
       /**
        * @brief Reschedule current task at the specified time point
        */
-      constexpr void await_suspend(execution_token token) const {
-        execution_context::this_executor().schedule(
-            params_type(std::move(token), schedule_at_));
+      constexpr void await_suspend(execution_token token) {
+        params_.execution_token() = std::move(token);
+        execution_context::this_executor().schedule(&params_);
       }
 
       constexpr void await_resume() const noexcept {}
 
      private:
-      time_point_type schedule_at_;
+      params_type params_;
     };
 
     return timer_awaiter(schedule_at_);

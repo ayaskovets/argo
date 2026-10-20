@@ -1,7 +1,7 @@
 #pragma once
 
+#include <cassert>
 #include <flat_map>
-#include <variant>
 
 #include <swiss/mixins.hpp>
 #include <swiss/scope_exit.hpp>
@@ -40,12 +40,14 @@ class timer_scheduler final : public swiss::non_copyable,
   using out_value_type = out_channel_type::value_type;
 
  private:
-  static_assert(concepts::timer_scheduler_params<in_value_type, Clock>);
+  static_assert(std::is_pointer_v<in_value_type>);
+  static_assert(concepts::timer_scheduler_params<
+                std::remove_pointer_t<in_value_type>, Clock>);
 
  public:
   constexpr timer_scheduler(in_channel_type & in_channel,
                             out_channel_type & out_channel) noexcept
-      : in_value_(std::monostate{}),
+      : in_value_(nullptr),
         in_channel_(&in_channel),
         out_channel_(&out_channel) {}
 
@@ -106,28 +108,30 @@ class timer_scheduler final : public swiss::non_copyable,
 
  private:
   std::flat_map<time_point_type, execution_token> queue_;
-  std::variant<std::monostate, in_value_type> in_value_;
+  in_value_type in_value_;
   in_channel_type * in_channel_;
   out_channel_type * out_channel_;
 
  private:
   constexpr auto try_consume_in_value() -> bool {
-    if (in_value_.index() != 0 ||
-        (in_value_.index() == 0 && in_channel_->try_pop(in_value_))) {
-      queue_.emplace(std::get<1>(in_value_).time_point(),
-                     std::move(std::get<1>(in_value_).execution_token()));
-      in_value_ = std::monostate{};
+    if (in_value_ || (!in_value_ && in_channel_->try_pop(in_value_))) {
+      assert(in_value_ &&
+             "timer_scheduler::try_consume_in_value(): nullptr in queue");
+      queue_.emplace(in_value_->time_point(),
+                     std::move(in_value_->execution_token()));
+      in_value_ = nullptr;
       return true;
     }
     return false;
   }
 
   constexpr auto consume_in_value(std::stop_token const & stop_token) -> bool {
-    if (in_value_.index() != 0 ||
-        (in_value_.index() == 0 && in_channel_->pop(stop_token, in_value_))) {
-      queue_.emplace(std::get<1>(in_value_).time_point(),
-                     std::move(std::get<1>(in_value_).execution_token()));
-      in_value_ = std::monostate{};
+    if (in_value_ || (!in_value_ && in_channel_->pop(stop_token, in_value_))) {
+      assert(in_value_ &&
+             "timer_scheduler::consume_in_value(): nullptr in queue");
+      queue_.emplace(in_value_->time_point(),
+                     std::move(in_value_->execution_token()));
+      in_value_ = nullptr;
       return true;
     }
     return false;

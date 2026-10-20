@@ -107,7 +107,7 @@ class promise_frame final
           : awaiter_(std::move(awaiter)) {}
 
      public:
-      constexpr auto await_ready() const noexcept -> bool {
+      constexpr auto await_ready() noexcept -> bool {
         return awaiter_.await_ready();
       }
 
