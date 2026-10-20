@@ -10,9 +10,9 @@ namespace tests::unit::awaiters {
 
 TEST(timer_awaiter, skip_suspend) {
   auto task = []() -> argo::task<void> {
-    co_await argo::awaiters::timer<swiss::tls_mocked_clock<>>(
+    co_await argo::awaiters::sleep_for<swiss::tls_mocked_clock<>>(
         std::chrono::milliseconds(0));
-    co_await argo::awaiters::timer<swiss::tls_mocked_clock<>>(
+    co_await argo::awaiters::sleep_until<swiss::tls_mocked_clock<>>(
         swiss::tls_mocked_clock<>::now());
   }();
 
@@ -29,7 +29,7 @@ TEST(timer_awaiter, suspend) {
   argo::executors::inline_executor executor(in_channel, out_channel);
 
   auto task = []() -> argo::task<void> {
-    co_await argo::awaiters::timer<swiss::tls_mocked_clock<>>(
+    co_await argo::awaiters::sleep_for<swiss::tls_mocked_clock<>>(
         std::chrono::milliseconds(1));
   }();
 

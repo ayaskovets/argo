@@ -20,7 +20,7 @@ TEST(timer_scheduler, smoke) {
       scheduler(out_channel, in_channel);
 
   auto task = []() -> argo::task<void> {
-    co_await argo::awaiters::timer<swiss::tls_mocked_clock<>>(
+    co_await argo::awaiters::sleep_for<swiss::tls_mocked_clock<>>(
         std::chrono::milliseconds(1));
   }();
 

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <swiss/concepts.hpp>
+
 #include "../execution_context.hpp"
 #include "../execution_token.hpp"
 
@@ -78,5 +80,25 @@ class timer final {
  private:
   time_point_type schedule_at_;
 };
+
+}  // namespace argo::awaiters
+
+/**
+ * @section Utility constructors
+ */
+namespace argo::awaiters {
+
+template <typename Clock = std::chrono::steady_clock>
+static constexpr auto sleep_until(
+    typename Clock::time_point time_point) noexcept -> timer<Clock> {
+  return timer<Clock>(time_point);
+}
+
+template <typename Clock = std::chrono::steady_clock>
+static constexpr auto sleep_for(
+    swiss::not_same_as<typename Clock::time_point> auto duration) noexcept
+    -> timer<Clock> {
+  return timer<Clock>(duration);
+}
 
 }  // namespace argo::awaiters
