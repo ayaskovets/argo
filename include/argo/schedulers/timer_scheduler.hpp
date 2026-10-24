@@ -81,33 +81,6 @@ class timer_scheduler final : public swiss::non_copyable,
     }
   }
 
-  /**
-   * @brief Block until at least one task gets scheduled or stop is requested
-   * @note In case of an exception operation is not rolled back and already
-   * scheduled tasks are going to be executed
-   */
-  constexpr void run_once(std::stop_token const & stop_token) {
-    while (try_consume_in_value()) {
-    }
-    if (queue_.empty()) {
-      consume_in_value(stop_token);
-    }
-
-    auto const now = clock_type::now();
-    auto iter      = queue_.begin();
-
-    swiss::scope_exit const scope_exit(
-        [&]() noexcept -> void { queue_.erase(queue_.begin(), iter); });
-
-    for (; iter < queue_.end(); ++iter) {
-      auto [time_point, task] = *iter;
-      if (time_point > now ||
-          !out_channel_->push(stop_token, std::move(task))) {
-        break;
-      }
-    }
-  }
-
  private:
   std::flat_map<time_point_type, execution_token> queue_;
   in_value_type in_value_;
@@ -119,18 +92,6 @@ class timer_scheduler final : public swiss::non_copyable,
     if (in_value_ || (!in_value_ && in_channel_->try_pop(in_value_))) {
       assert(in_value_ &&
              "timer_scheduler::try_consume_in_value(): nullptr in queue");
-      queue_.emplace(in_value_->time_point(),
-                     std::move(in_value_->execution_token()));
-      in_value_ = nullptr;
-      return true;
-    }
-    return false;
-  }
-
-  constexpr auto consume_in_value(std::stop_token const & stop_token) -> bool {
-    if (in_value_ || (!in_value_ && in_channel_->pop(stop_token, in_value_))) {
-      assert(in_value_ &&
-             "timer_scheduler::consume_in_value(): nullptr in queue");
       queue_.emplace(in_value_->time_point(),
                      std::move(in_value_->execution_token()));
       in_value_ = nullptr;
