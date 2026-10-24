@@ -85,10 +85,12 @@ class timer_scheduler final : public swiss::non_copyable,
    * @brief Block until at least one task gets scheduled or stop is requested
    * @note In case of an exception operation is not rolled back and already
    * scheduled tasks are going to be executed
-   * @return False if no tasks were scheduled
    */
   constexpr void run_once(std::stop_token const & stop_token) {
-    while (consume_in_value(stop_token)) {
+    while (try_consume_in_value()) {
+    }
+    if (queue_.empty()) {
+      consume_in_value(stop_token);
     }
 
     auto const now = clock_type::now();
