@@ -28,6 +28,7 @@ set(SOURCES
     awaiter_test.cpp
     awaiters/async_awaiter_test.cpp
     awaiters/detach_awaiter_test.cpp
+    awaiters/network_awaiter_test.cpp
     awaiters/timer_awaiter_test.cpp
     awaiters/yield_awaiter_test.cpp
     channel_test.cpp
@@ -38,7 +39,7 @@ set(SOURCES
     executors/thread_pool_executor_test.cpp
     promise_ptr_test.cpp
     scheduler_test.cpp
-    # schedulers/network_scheduler_test.cpp
+    schedulers/network_scheduler_test.cpp
     schedulers/timer_scheduler_test.cpp
     task_future_test.cpp
     task_test.cpp)

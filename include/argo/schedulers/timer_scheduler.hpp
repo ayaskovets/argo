@@ -13,8 +13,8 @@ namespace argo::schedulers::concepts {
 
 template <typename T, typename Clock>
 concept timer_scheduler_params = requires(T params) {
-  { params.execution_token() } -> std::same_as<execution_token &>;
-  { params.time_point() } -> std::same_as<typename Clock::time_point &>;
+  { params.execution_token() } -> std::same_as<execution_token &&>;
+  { params.time_point() } -> std::same_as<typename Clock::time_point>;
 };
 
 }  // namespace argo::schedulers::concepts
@@ -92,8 +92,7 @@ class timer_scheduler final : public swiss::non_copyable,
     if (in_value_ || (!in_value_ && in_channel_->try_pop(in_value_))) {
       assert(in_value_ &&
              "timer_scheduler::try_consume_in_value(): nullptr in queue");
-      queue_.emplace(in_value_->time_point(),
-                     std::move(in_value_->execution_token()));
+      queue_.emplace(in_value_->time_point(), in_value_->execution_token());
       in_value_ = nullptr;
       return true;
     }
