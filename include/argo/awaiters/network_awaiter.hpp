@@ -8,6 +8,7 @@
 
 #include "../execution_context.hpp"
 #include "../execution_token.hpp"
+#include "../schedulers/network_in_value.hpp"
 
 namespace argo::awaiters {
 
@@ -17,39 +18,6 @@ namespace argo::awaiters {
  */
 template <typename Socket, typename Operation>
 class network final {
- public:
-  // NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init)
-  class params_type final {
-   public:
-    constexpr auto execution_token() noexcept -> execution_token && {
-      return std::move(execution_token_);
-    }
-
-    constexpr auto socket() const noexcept -> skynet::base_socket const & {
-      return *socket_;
-    }
-
-    constexpr auto filter() const noexcept -> skynet::reactor::event_filter {
-      return filter_;
-    }
-
-    constexpr auto revents() noexcept -> skynet::reactor::event_filter & {
-      return revents_;
-    }
-
-   private:
-    class execution_token execution_token_;
-    skynet::base_socket * socket_;
-    skynet::reactor::event_filter filter_;
-    skynet::reactor::event_filter revents_;
-
-   private:
-    /**
-     * @note Not to return reference to pointer from socket()
-     */
-    friend class network;
-  };
-
  public:
   constexpr network(Socket & socket, skynet::reactor::event_filter filter,
                     Operation operation) noexcept
@@ -62,26 +30,23 @@ class network final {
       constexpr network_awaiter(Socket & socket,
                                 skynet::reactor::event_filter filter,
                                 Operation operation) noexcept
-          : operation_(std::move(operation)) {
-        params_.socket_  = &socket;
-        params_.filter_  = filter;
-        params_.revents_ = {};
-      }
+          : in_value_({}, socket, filter), operation_(std::move(operation)) {}
 
      public:
       constexpr auto await_ready() -> bool {
-        return (result_ = operation_(params_.revents())).has_value();
+        return (result_ = operation_(in_value_.get_revents())).has_value();
       }
 
       constexpr void await_suspend(execution_token token) {
-        params_.execution_token_ = std::move(token);
-        execution_context::this_executor().schedule(&params_);
+        in_value_ = {std::move(token), in_value_.get_socket(),
+                     in_value_.get_filter()};
+        execution_context::this_executor().schedule(&in_value_);
       }
 
       constexpr auto await_resume() -> auto {
         auto result = result_.has_value()
                           ? std::move(*result_)
-                          : std::move(operation_)(params_.revents());
+                          : std::move(operation_)(in_value_.get_revents());
         if (!result.has_value()) {
           throw std::runtime_error("network::await_resume(): not ready");
         }
@@ -89,7 +54,7 @@ class network final {
       }
 
      private:
-      params_type params_;
+      schedulers::network_in_value in_value_;
       Operation operation_;
       std::invoke_result_t<Operation, skynet::reactor::event_filter> result_;
     };

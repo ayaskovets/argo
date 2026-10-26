@@ -8,16 +8,7 @@
 
 #include "../channel.hpp"
 #include "../execution_token.hpp"
-
-namespace argo::schedulers::concepts {
-
-template <typename T, typename Clock>
-concept timer_scheduler_params = requires(T params) {
-  { params.execution_token() } -> std::same_as<execution_token &&>;
-  { params.time_point() } -> std::same_as<typename Clock::time_point>;
-};
-
-}  // namespace argo::schedulers::concepts
+#include "timer_in_value.hpp"
 
 namespace argo::schedulers {
 
@@ -25,38 +16,33 @@ namespace argo::schedulers {
  * @brief Task scheduler for scheduling tasks at a specified time point in
  * the future
  */
-template <typename Clock, argo::concepts::channel InChannel,
+template <typename Clock,
+          argo::concepts::channel<timer_in_value<Clock> *> InChannel,
           argo::concepts::channel OutChannel>
 class timer_scheduler final : public swiss::non_copyable,
                               public swiss::non_movable {
  public:
   using in_channel_type  = InChannel;
   using out_channel_type = OutChannel;
-  using clock_type       = Clock;
-  using time_point_type  = clock_type::time_point;
 
  private:
   using in_value_type  = in_channel_type::value_type;
   using out_value_type = out_channel_type::value_type;
 
- private:
-  static_assert(std::is_pointer_v<in_value_type>);
-  static_assert(concepts::timer_scheduler_params<
-                std::remove_pointer_t<in_value_type>, Clock>);
-
  public:
   constexpr timer_scheduler(in_channel_type & in_channel,
                             out_channel_type & out_channel) noexcept
-      : in_value_(nullptr),
+      : queue_(),
+        in_value_(nullptr),
         in_channel_(&in_channel),
         out_channel_(&out_channel) {}
 
  public:
   constexpr auto in_channel() const noexcept -> in_channel_type & {
-    return in_channel_;
+    return *in_channel_;
   }
   constexpr auto out_channel() const noexcept -> out_channel_type & {
-    return out_channel_;
+    return *out_channel_;
   }
 
  public:
@@ -67,7 +53,7 @@ class timer_scheduler final : public swiss::non_copyable,
     while (try_consume_in_value()) {
     }
 
-    auto const now = clock_type::now();
+    auto const now = Clock::now();
     auto iter      = queue_.begin();
 
     swiss::scope_exit const scope_exit(
@@ -82,17 +68,18 @@ class timer_scheduler final : public swiss::non_copyable,
   }
 
  private:
-  std::flat_map<time_point_type, execution_token> queue_;
+  std::flat_map<typename Clock::time_point, execution_token> queue_;
   in_value_type in_value_;
   in_channel_type * in_channel_;
   out_channel_type * out_channel_;
 
  private:
   constexpr auto try_consume_in_value() -> bool {
-    if (in_value_ || (!in_value_ && in_channel_->try_pop(in_value_))) {
-      assert(in_value_ &&
+    if (in_value_ != nullptr || in_channel_->try_pop(in_value_)) {
+      assert(in_value_ != nullptr &&
              "timer_scheduler::try_consume_in_value(): nullptr in queue");
-      queue_.emplace(in_value_->time_point(), in_value_->execution_token());
+      queue_.emplace(in_value_->get_time_point(),
+                     in_value_->get_execution_token());
       in_value_ = nullptr;
       return true;
     }

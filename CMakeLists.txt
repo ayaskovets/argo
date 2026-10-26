@@ -41,7 +41,9 @@ set(HEADERS
     include/argo/promise_frame.hpp
     include/argo/promise_ptr.hpp
     include/argo/scheduler.hpp
+    include/argo/schedulers/network_in_value.hpp
     include/argo/schedulers/network_scheduler.hpp
+    include/argo/schedulers/timer_in_value.hpp
     include/argo/schedulers/timer_scheduler.hpp
     include/argo/task_future.hpp
     include/argo/task_waitlist.hpp

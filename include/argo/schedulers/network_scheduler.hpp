@@ -7,19 +7,7 @@
 #include <swiss/mixins.hpp>
 
 #include "../channel.hpp"
-#include "../execution_token.hpp"
-
-namespace argo::schedulers::concepts {
-
-template <typename T>
-concept network_scheduler_params = requires(T params) {
-  { params.execution_token() } -> std::same_as<execution_token &&>;
-  { params.socket() } -> std::same_as<skynet::base_socket const &>;
-  { params.filter() } -> std::same_as<skynet::reactor::event_filter>;
-  { params.revents() } -> std::same_as<skynet::reactor::event_filter &>;
-};
-
-}  // namespace argo::schedulers::concepts
+#include "network_in_value.hpp"
 
 namespace argo::schedulers {
 
@@ -27,7 +15,8 @@ namespace argo::schedulers {
  * @brief Task scheduler implementing scheduling on a specified set of events on
  * a file descriptor
  */
-template <argo::concepts::channel InChannel, argo::concepts::channel OutChannel,
+template <argo::concepts::channel<network_in_value *> InChannel,
+          argo::concepts::channel OutChannel,
           // NOLINTNEXTLINE(readability-magic-numbers)
           std::size_t ReactorCapacity = 128>
 class network_scheduler : public swiss::non_copyable,
@@ -39,11 +28,6 @@ class network_scheduler : public swiss::non_copyable,
  private:
   using in_value_type  = in_channel_type::value_type;
   using out_value_type = out_channel_type::value_type;
-
- private:
-  static_assert(std::is_pointer_v<in_value_type>);
-  static_assert(
-      concepts::network_scheduler_params<std::remove_pointer_t<in_value_type>>);
 
  public:
   constexpr network_scheduler(InChannel & in_channel, OutChannel & out_channel)
@@ -70,9 +54,9 @@ class network_scheduler : public swiss::non_copyable,
 
     for (auto event : reactor_.poll(std::chrono::milliseconds(0))) {
       in_value_ = static_cast<in_value_type>(event.data);
-      reactor_.erase(in_value_->socket());
-      in_value_->revents() = event.filter;
-      if (!out_channel_->try_push(in_value_->execution_token())) {
+      reactor_.erase(in_value_->get_socket());
+      in_value_->set_revents(event.filter);
+      if (!out_channel_->try_push(in_value_->get_execution_token())) {
         break;
       }
       in_value_ = nullptr;
@@ -81,17 +65,18 @@ class network_scheduler : public swiss::non_copyable,
 
  private:
   skynet::reactor reactor_;
+  // NOLINTNEXTLINE(cppcoreguidelines-use-default-member-init)
   in_value_type in_value_;
   InChannel * in_channel_;
   OutChannel * out_channel_;
 
  private:
   constexpr auto try_consume_in_value() -> bool {
-    if (in_value_ || (!in_value_ && in_channel_->try_pop(in_value_))) {
-      assert(in_value_ &&
+    if (in_value_ != nullptr || in_channel_->try_pop(in_value_)) {
+      assert(in_value_ != nullptr &&
              "network_scheduler::try_consume_in_value(): nullptr in queue");
-      reactor_.insert_or_assign(in_value_->socket(), in_value_->filter(),
-                                in_value_);
+      reactor_.insert_or_assign(in_value_->get_socket(),
+                                in_value_->get_filter(), in_value_);
       in_value_ = nullptr;
       return true;
     }

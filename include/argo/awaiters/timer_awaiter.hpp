@@ -4,6 +4,7 @@
 
 #include "../execution_context.hpp"
 #include "../execution_token.hpp"
+#include "../schedulers/timer_in_value.hpp"
 
 namespace argo::awaiters {
 
@@ -12,31 +13,9 @@ namespace argo::awaiters {
  */
 template <typename Clock = std::chrono::steady_clock>
 class timer final {
- public:
-  using clock_type      = Clock;
-  using time_point_type = clock_type::time_point;
-  class params_type final {
-   public:
-    constexpr auto execution_token() noexcept -> execution_token && {
-      return std::move(execution_token_);
-    }
-
-    constexpr auto time_point() const noexcept -> time_point_type {
-      return time_point_;
-    }
-
-   private:
-    class execution_token execution_token_;
-    time_point_type time_point_;
-
-   private:
-    /**
-     * @note Not to return reference to pointer from socket()
-     */
-    friend class timer;
-  };
-
  private:
+  using time_point_type = Clock::time_point;
+
   /**
    * @brief A value indicating that the time point is in the past which means
    * that scheduler can be bypassed
@@ -45,38 +24,37 @@ class timer final {
 
  public:
   explicit constexpr timer(time_point_type time_point) noexcept
-      : schedule_at_(time_point > clock_type::now() ? time_point
-                                                    : kScheduleImmediately) {}
+      : schedule_at_(time_point > Clock::now() ? time_point
+                                               : kScheduleImmediately) {}
 
   template <typename Duration>
   explicit constexpr timer(Duration duration) noexcept
-      : schedule_at_(duration > Duration(0) ? clock_type::now() + duration
+      : schedule_at_(duration > Duration(0) ? Clock::now() + duration
                                             : kScheduleImmediately) {}
 
  private:
   class timer_awaiter final {
    public:
-    explicit constexpr timer_awaiter(time_point_type schedule_at) noexcept {
-      params_.time_point_ = schedule_at;
-    }
+    explicit constexpr timer_awaiter(time_point_type schedule_at) noexcept
+        : in_value_({}, schedule_at) {}
 
    public:
     constexpr auto await_ready() noexcept -> bool {
-      return params_.time_point() == kScheduleImmediately;
+      return in_value_.get_time_point() == kScheduleImmediately;
     }
 
     /**
      * @brief Reschedule current task at the specified time point
      */
     constexpr void await_suspend(execution_token token) {
-      params_.execution_token_ = std::move(token);
-      execution_context::this_executor().schedule(&params_);
+      in_value_ = {std::move(token), in_value_.get_time_point()};
+      execution_context::this_executor().schedule(&in_value_);
     }
 
     constexpr void await_resume() const noexcept {}
 
    private:
-    params_type params_;
+    schedulers::timer_in_value<Clock> in_value_;
   };
 
  public:
