@@ -29,19 +29,19 @@ class network final {
       return *socket_;
     }
 
-    constexpr auto filter() const noexcept -> skynet::poller::event_filter {
+    constexpr auto filter() const noexcept -> skynet::reactor::event_filter {
       return filter_;
     }
 
-    constexpr auto revents() noexcept -> skynet::poller::event_filter & {
+    constexpr auto revents() noexcept -> skynet::reactor::event_filter & {
       return revents_;
     }
 
    private:
     class execution_token execution_token_;
     skynet::base_socket * socket_;
-    skynet::poller::event_filter filter_;
-    skynet::poller::event_filter revents_;
+    skynet::reactor::event_filter filter_;
+    skynet::reactor::event_filter revents_;
 
    private:
     /**
@@ -51,7 +51,7 @@ class network final {
   };
 
  public:
-  constexpr network(Socket & socket, skynet::poller::event_filter filter,
+  constexpr network(Socket & socket, skynet::reactor::event_filter filter,
                     Operation operation) noexcept
       : socket_(&socket), filter_(filter), operation_(std::move(operation)) {}
 
@@ -60,7 +60,7 @@ class network final {
     class network_awaiter final {
      public:
       constexpr network_awaiter(Socket & socket,
-                                skynet::poller::event_filter filter,
+                                skynet::reactor::event_filter filter,
                                 Operation operation) noexcept
           : operation_(std::move(operation)) {
         params_.socket_  = &socket;
@@ -91,7 +91,7 @@ class network final {
      private:
       params_type params_;
       Operation operation_;
-      std::invoke_result_t<Operation, skynet::poller::event_filter> result_;
+      std::invoke_result_t<Operation, skynet::reactor::event_filter> result_;
     };
 
     return network_awaiter(*socket_, filter_, std::move(operation_));
@@ -99,7 +99,7 @@ class network final {
 
  private:
   Socket * socket_;
-  skynet::poller::event_filter filter_;
+  skynet::reactor::event_filter filter_;
   Operation operation_;
 };
 
@@ -114,7 +114,7 @@ template <typename Socket>
 // NOLINTNEXTLINE(bugprone-easily-swappable-parameters)
 static constexpr auto accept(Socket & socket, Socket & peer) noexcept -> auto {
   auto operation = [&socket, &peer,
-                    retry = false](skynet::poller::event_filter) mutable
+                    retry = false](skynet::reactor::event_filter) mutable
       -> std::optional<skynet::accept_status> {
     auto const status = socket.accept(peer);
     if (status == skynet::accept_status::kEmptyQueue &&
@@ -124,7 +124,7 @@ static constexpr auto accept(Socket & socket, Socket & peer) noexcept -> auto {
     return status;
   };
 
-  return network(socket, skynet::poller::event_filter::kPollIn,
+  return network(socket, skynet::reactor::event_filter::kPollIn,
                  std::move(operation));
 }
 
@@ -132,10 +132,10 @@ template <typename Socket>
 static constexpr auto connect(Socket & socket,
                               skynet::base_sockaddr const & address) -> auto {
   auto operation = [&socket, address = &address, started = false](
-                       skynet::poller::event_filter revents) mutable
+                       skynet::reactor::event_filter revents) mutable
       -> std::optional<skynet::connect_status> {
     if (std::exchange(started, true)) {
-      return (revents & skynet::poller::kPollErr) != 0
+      return (revents & skynet::reactor::kPollErr) != 0
                  ? skynet::connect_status::kRefused
                  : skynet::connect_status::kSuccess;
     }
@@ -146,7 +146,7 @@ static constexpr auto connect(Socket & socket,
     return status;
   };
 
-  return network(socket, skynet::poller::event_filter::kPollOut,
+  return network(socket, skynet::reactor::event_filter::kPollOut,
                  std::move(operation));
 }
 
@@ -155,7 +155,7 @@ static constexpr auto send(Socket & socket,
                            std::span<std::byte const> bytes) noexcept -> auto {
   auto operation =
       [&socket, bytes, retry = false](
-          skynet::poller::event_filter) mutable -> std::optional<std::size_t> {
+          skynet::reactor::event_filter) mutable -> std::optional<std::size_t> {
     auto const size = socket.send(bytes);
     if (size == skynet::base_socket::kWouldBlock &&
         !std::exchange(retry, true)) {
@@ -164,7 +164,7 @@ static constexpr auto send(Socket & socket,
     return size;
   };
 
-  return network(socket, skynet::poller::event_filter::kPollOut,
+  return network(socket, skynet::reactor::event_filter::kPollOut,
                  std::move(operation));
 }
 
@@ -174,7 +174,7 @@ static constexpr auto sendto(Socket & socket, std::span<std::byte const> bytes,
     -> auto {
   auto operation =
       [&socket, bytes, address = &address, retry = false](
-          skynet::poller::event_filter) mutable -> std::optional<std::size_t> {
+          skynet::reactor::event_filter) mutable -> std::optional<std::size_t> {
     auto const size = socket.sendto(bytes, *address);
     if (size == skynet::base_socket::kWouldBlock &&
         !std::exchange(retry, true)) {
@@ -183,7 +183,7 @@ static constexpr auto sendto(Socket & socket, std::span<std::byte const> bytes,
     return size;
   };
 
-  return network(socket, skynet::poller::event_filter::kPollOut,
+  return network(socket, skynet::reactor::event_filter::kPollOut,
                  std::move(operation));
 }
 
@@ -192,7 +192,7 @@ static constexpr auto recv(Socket & socket, std::span<std::byte> bytes) noexcept
     -> auto {
   auto operation =
       [&socket, bytes, retry = false](
-          skynet::poller::event_filter) mutable -> std::optional<std::size_t> {
+          skynet::reactor::event_filter) mutable -> std::optional<std::size_t> {
     auto const size = socket.recv(bytes);
     if (size == skynet::base_socket::kWouldBlock &&
         !std::exchange(retry, true)) {
@@ -201,7 +201,7 @@ static constexpr auto recv(Socket & socket, std::span<std::byte> bytes) noexcept
     return size;
   };
 
-  return network(socket, skynet::poller::event_filter::kPollIn,
+  return network(socket, skynet::reactor::event_filter::kPollIn,
                  std::move(operation));
 }
 
@@ -211,7 +211,7 @@ static constexpr auto recvfrom(Socket & socket, std::span<std::byte> bytes,
     -> auto {
   auto operation =
       [&socket, bytes, address = &address, retry = false](
-          skynet::poller::event_filter) mutable -> std::optional<std::size_t> {
+          skynet::reactor::event_filter) mutable -> std::optional<std::size_t> {
     auto const size = socket.recvfrom(bytes, *address);
     if (size == skynet::base_socket::kWouldBlock &&
         !std::exchange(retry, true)) {
@@ -220,7 +220,7 @@ static constexpr auto recvfrom(Socket & socket, std::span<std::byte> bytes,
     return size;
   };
 
-  return network(socket, skynet::poller::event_filter::kPollIn,
+  return network(socket, skynet::reactor::event_filter::kPollIn,
                  std::move(operation));
 }
 

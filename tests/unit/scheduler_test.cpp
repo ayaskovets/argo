@@ -13,8 +13,8 @@ namespace tests::unit {
 TEST(scheduler, network_scheduler) {
   using scheduler_type = argo::schedulers::network_scheduler<
       flow::spsc_queue<argo::awaiters::network<
-          skynet::base_socket,
-          decltype([](skynet::poller::event_filter) -> void {})>::params_type *>,
+          skynet::base_socket, decltype([](skynet::reactor::event_filter)
+                                            -> void {})>::params_type *>,
       flow::spsc_queue<argo::execution_token>>;
 
   static_assert(argo::concepts::scheduler<scheduler_type>);
