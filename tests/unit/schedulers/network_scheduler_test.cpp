@@ -1,140 +1,247 @@
-#include <argo/awaiters/io_awaiter.hpp>
-#include <argo/executor.hpp>
+#include <argo/awaiters/network_awaiter.hpp>
 #include <argo/executors/inline_executor.hpp>
-#include <argo/executors/thread_pool_executor.hpp>
-#include <argo/net/inet/sockaddr.hpp>
-#include <argo/net/inet/tcp/socket.hpp>
-#include <argo/schedulers/io_scheduler.hpp>
-#include <argo/schedulers/timer_scheduler.hpp>
+#include <argo/schedulers/network_scheduler.hpp>
 #include <argo/task.hpp>
 
-#include <flow/lockfree_mpmc_queue.hpp>
+#include <flow/spsc_queue.hpp>
 #include <gtest/gtest.h>
+#include <skynet/inet/sockaddr.hpp>
+#include <skynet/inet/tcp/socket.hpp>
+#include <skynet/inet/udp/socket.hpp>
+#include <skynet/options/options.hpp>
 
-using namespace std::chrono_literals;
+namespace tests::unit::schedulers {
 
-namespace tests::async {
+TEST(network_scheduler, smoke) {
+  skynet::inet::udp::socket socket;
+  skynet::inet::sockaddr const address(skynet::inet::ip::kLoopback(),
+                                       skynet::inet::port(0));
 
-using in_channel_value_type =
-    async::schedulers::detail::io_scheduler_input<std::coroutine_handle<>>;
-using out_channel_value_type = std::coroutine_handle<>;
+  flow::spsc_queue<argo::execution_token> in_channel(1);
+  flow::spsc_queue<argo::schedulers::network_in_value *> out_channel(1);
+  argo::executors::inline_executor executor(in_channel, out_channel);
+  argo::schedulers::network_scheduler scheduler(out_channel, in_channel);
 
-using io_channel_type = flow::lockfree_mpmc_queue<in_channel_value_t const *>;
-using handle_channel_type = flow::lockfree_mpmc_queue<out_channel_value_t>;
+  ASSERT_EQ(socket.bind(address), skynet::bind_status::kSuccess);
 
-using scheduler_type =
-    async::schedulers::io_scheduler<io_channel_t, handle_channel_t>;
-using executor_type =
-    async::executors::inline_executor<handle_channel_t, io_channel_t>;
+  auto task = []() -> argo::task<void> { co_return; }();
+  argo::schedulers::network_in_value in_value(
+      task.get_execution_token(), socket, skynet::reactor::kPollOut);
 
-async::task<int> server(argo::net::inet::tcp::socket & srv) {
-  std::cerr << std::chrono::system_clock::now() << " - server() ENTER"
-            << std::endl;
+  scheduler.run_once();
+  EXPECT_TRUE(in_channel.empty());
 
-  std::vector<argo::net::inet::tcp::socket> peers(10,
-                                                  argo::io::uninitialized_t{});
-  for (std::size_t i = 0; i < 4; ++i) {
-    std::cerr << std::chrono::system_clock::now() << " - server() ITER"
-              << std::endl;
+  out_channel.push(&in_value);
+  scheduler.run_once();
+  EXPECT_FALSE(task.done());
+  EXPECT_EQ(in_channel.size(), 1);
+  EXPECT_TRUE(out_channel.empty());
+  EXPECT_NE(in_value.get_revents() & skynet::reactor::kPollOut, 0);
 
-    co_await async::awaiters::accept(srv, peers[i]);
+  executor.run_once();
+  EXPECT_TRUE(task.done());
+  EXPECT_NO_THROW(task.get());
 
-    std::cerr << std::chrono::system_clock::now() << " - server() ACCEPTED"
-              << std::endl;
-
-    std::vector<std::byte> bytes;
-    bytes.resize(4);
-
-    co_await async::awaiters::send(peers[i], std::span(bytes));
-
-    std::cerr << std::chrono::system_clock::now() << " - server() SENT"
-              << std::endl;
-  }
-
-  co_return 0;
+  scheduler.run_once();
+  EXPECT_TRUE(in_channel.empty());
 }
 
-async::task<int> client(argo::net::inet::tcp::socket * cnt_ptr,
-                        argo::net::inet::sockaddr const & server_sockaddr) {
-  std::cerr << std::chrono::system_clock::now() << " - client() ENTER"
-            << std::endl;
+TEST(network_scheduler, reschedule) {
+  skynet::inet::udp::socket sender;
+  skynet::inet::udp::socket receiver;
+  skynet::inet::sockaddr address(skynet::inet::ip::kLoopback(),
+                                 skynet::inet::port(0));
+  skynet::inet::sockaddr peer_address(address);
+  skynet::reactor reactor(1);
+  std::array const bytes{std::byte{1}, std::byte{2}};
+  std::array<std::byte, 2> received{};
 
-  for (std::size_t i = 0; i < 4; ++i) {
-    argo::net::inet::tcp::socket cnt;
-    cnt.set_flags(io::fd::flag::kNonblock);
-    cnt.set_reuseaddr(true);
-    cnt.set_reuseport(true);
+  flow::spsc_queue<argo::execution_token> in_channel(1);
+  flow::spsc_queue<argo::schedulers::network_in_value *> out_channel(1);
+  argo::executors::inline_executor executor(in_channel, out_channel);
+  argo::schedulers::network_scheduler scheduler(out_channel, in_channel);
 
-    if (!cnt_ptr) {
-      cnt_ptr = &cnt;
-    }
+  ASSERT_EQ(sender.bind(address), skynet::bind_status::kSuccess);
+  ASSERT_EQ(receiver.bind(address), skynet::bind_status::kSuccess);
+  receiver.getsockname(address);
+  receiver.set_option(skynet::options::nonblock(true));
+  reactor.insert_or_assign(receiver, skynet::reactor::kPollIn, nullptr);
 
-    std::cerr << std::chrono::system_clock::now() << " - client() ITER"
-              << std::endl;
+  auto task = [](skynet::inet::udp::socket * socket, std::span<std::byte> bytes,
+                 skynet::inet::sockaddr * address) -> argo::task<void> {
+    EXPECT_EQ(co_await argo::awaiters::recv(*socket, bytes.first(1)), 1);
+    EXPECT_EQ(
+        co_await argo::awaiters::recvfrom(*socket, bytes.last(1), *address), 1);
+  }(&receiver, received, &peer_address);
 
-    co_await async::awaiters::connect(*cnt_ptr, server_sockaddr);
+  in_channel.push(task.get_execution_token());
+  executor.run_once();
 
-    std::cerr << std::chrono::system_clock::now() << " - client() CONNECTED"
-              << std::endl;
+  for (std::size_t index = 0; index < bytes.size(); ++index) {
+    EXPECT_FALSE(task.done());
+    EXPECT_EQ(out_channel.size(), 1);
 
-    std::vector<std::byte> bytes{};
-    bytes.resize(4);
-
-    co_await async::awaiters::receive(*cnt_ptr, std::span(bytes));
-
-    cnt_ptr = nullptr;
-
-    std::cerr << std::chrono::system_clock::now() << " - client() RCVD"
-              << std::endl;
-  }
-  co_return 0;
-}
-
-TEST(async_task, io_smoke) {
-  std::cerr << std::chrono::system_clock::now() << " - begin test" << std::endl;
-
-  io_channel_type io_channel(128);
-  handle_channel_type handle_channel(128);
-  scheduler_type scheduler(io_channel, handle_channel);
-  executor_type executor(handle_channel, io_channel);
-
-  static_assert(async::concepts::executor<executor_type>);
-
-  auto const server_sockaddr = argo::net::inet::sockaddr(
-      argo::net::inet::ip("127.0.0.1"), argo::net::inet::port(8081));
-
-  argo::net::inet::tcp::socket srv;
-  srv.set_flags(io::fd::flag::kNonblock);
-  srv.set_reuseaddr(true);
-  srv.set_reuseport(true);
-  srv.bind(server_sockaddr);
-  srv.listen(1);
-
-  argo::net::inet::tcp::socket cnt;
-  cnt.set_flags(io::fd::flag::kNonblock);
-  cnt.set_reuseaddr(true);
-  cnt.set_reuseport(true);
-
-  auto server_task = server(srv);
-  auto client_task = client(&cnt, server_sockaddr);
-
-  in_channel_value_t const server_value(srv, argo::io::poller::event::kPollIn,
-                                        server_task.handle());
-  io_channel.push(&server_value);
-
-  in_channel_value_t const client_value(cnt, argo::io::poller::event::kPollIn,
-                                        client_task.handle());
-  io_channel.push(&client_value);
-
-  EXPECT_EQ(argo::net::connect_status::kPending, cnt.connect(server_sockaddr));
-
-  auto const done_at = std::chrono::steady_clock::now() + 1000ms;
-  while (std::chrono::steady_clock::now() < done_at) {
     scheduler.run_once();
+    EXPECT_TRUE(in_channel.empty());
+    ASSERT_EQ(sender.sendto(std::span(bytes).subspan(index, 1), address), 1);
+    ASSERT_FALSE(reactor.poll(std::chrono::seconds(1)).empty());
+
+    scheduler.run_once();
+    EXPECT_EQ(in_channel.size(), 1);
+
     executor.run_once();
   }
 
-  std::cerr << std::chrono::system_clock::now() << " - end test" << std::endl;
+  EXPECT_TRUE(task.done());
+  EXPECT_NO_THROW(task.get());
+  EXPECT_EQ(received, bytes);
+  sender.getsockname(address);
+  EXPECT_EQ(peer_address, address);
 }
 
-}  // namespace tests::async
+TEST(network_scheduler, full_out_channel) {
+  skynet::inet::tcp::socket acceptor;
+  skynet::inet::tcp::socket client;
+  skynet::inet::sockaddr address(skynet::inet::ip::kLoopback(),
+                                 skynet::inet::port(0));
+  skynet::reactor reactor(1);
+
+  flow::spsc_queue<argo::execution_token> in_channel(1);
+  flow::spsc_queue<argo::schedulers::network_in_value *> out_channel(1);
+  argo::executors::inline_executor executor(in_channel, out_channel);
+  argo::schedulers::network_scheduler scheduler(out_channel, in_channel);
+
+  ASSERT_EQ(acceptor.bind(address), skynet::bind_status::kSuccess);
+  ASSERT_EQ(client.bind(address), skynet::bind_status::kSuccess);
+  acceptor.getsockname(address);
+  acceptor.listen(1);
+  acceptor.close();
+  client.set_option(skynet::options::nonblock(true));
+  reactor.insert_or_assign(client, skynet::reactor::kPollOut, nullptr);
+
+  auto task = [](skynet::inet::tcp::socket * socket,
+                 skynet::inet::sockaddr const * address)
+      -> argo::task<skynet::connect_status> {
+    co_return co_await argo::awaiters::connect(*socket, *address);
+  }(&client, &address);
+  auto blocker = []() -> argo::task<void> { co_return; }();
+
+  in_channel.push(task.get_execution_token());
+  executor.run_once();
+  ASSERT_FALSE(reactor.poll(std::chrono::seconds(1)).empty());
+
+  in_channel.push(blocker.get_execution_token());
+  scheduler.run_once();
+  EXPECT_FALSE(task.done());
+  EXPECT_EQ(in_channel.size(), 1);
+  EXPECT_TRUE(out_channel.empty());
+
+  scheduler.run_once();
+  EXPECT_EQ(in_channel.size(), 1);
+
+  executor.run_once();
+  EXPECT_TRUE(blocker.done());
+
+  scheduler.run_once();
+  EXPECT_EQ(in_channel.size(), 1);
+
+  executor.run_once();
+  EXPECT_TRUE(task.done());
+  EXPECT_EQ(task.get(), skynet::connect_status::kRefused);
+
+  scheduler.run_once();
+  EXPECT_TRUE(in_channel.empty());
+}
+
+TEST(network_scheduler, registration_exception) {
+  skynet::inet::udp::socket socket;
+  skynet::inet::sockaddr const address(skynet::inet::ip::kLoopback(),
+                                       skynet::inet::port(0));
+
+  flow::spsc_queue<argo::execution_token> in_channel(1);
+  flow::spsc_queue<argo::schedulers::network_in_value *> out_channel(1);
+  argo::executors::inline_executor executor(in_channel, out_channel);
+  argo::schedulers::network_scheduler scheduler(out_channel, in_channel);
+
+  socket.close();
+
+  auto task = []() -> argo::task<void> { co_return; }();
+  argo::schedulers::network_in_value in_value(
+      task.get_execution_token(), socket, skynet::reactor::kPollOut);
+
+  out_channel.push(&in_value);
+  EXPECT_THROW(scheduler.run_once(), std::runtime_error);
+  EXPECT_FALSE(task.done());
+  EXPECT_TRUE(in_channel.empty());
+  EXPECT_TRUE(out_channel.empty());
+
+  socket = skynet::inet::udp::socket();
+  ASSERT_EQ(socket.bind(address), skynet::bind_status::kSuccess);
+
+  scheduler.run_once();
+  EXPECT_EQ(in_channel.size(), 1);
+
+  executor.run_once();
+  EXPECT_TRUE(task.done());
+  EXPECT_NO_THROW(task.get());
+}
+
+TEST(network_scheduler, dispatch_exception) {
+  class channel final : public flow::spsc_queue<argo::execution_token> {
+   public:
+    using flow::spsc_queue<argo::execution_token>::spsc_queue;
+
+    auto try_push(argo::execution_token && value) -> bool {
+      if (std::exchange(fail_, false)) {
+        throw std::runtime_error("try_push(): failed");
+      }
+      auto token = std::move(value);
+      token.resume();
+      return true;
+    }
+
+   private:
+    bool fail_ = true;
+  };
+
+  skynet::inet::udp::socket socket;
+  skynet::inet::sockaddr const address(skynet::inet::ip::kLoopback(),
+                                       skynet::inet::port(0));
+  bool completed = false;
+
+  channel in_channel(1);
+  flow::spsc_queue<argo::schedulers::network_in_value *> out_channel(1);
+  argo::executors::inline_executor executor(in_channel, out_channel);
+  argo::schedulers::network_scheduler scheduler(out_channel, in_channel);
+
+  ASSERT_EQ(socket.bind(address), skynet::bind_status::kSuccess);
+
+  {
+    auto task = [](skynet::inet::udp::socket * socket,
+                   bool * completed) -> argo::task<void> {
+      co_await argo::awaiters::network(
+          *socket, skynet::reactor::kPollOut,
+          [ready = false](auto) mutable -> std::optional<bool> {
+            return std::exchange(ready, true) ? std::optional(true)
+                                              : std::nullopt;
+          });
+      *completed = true;
+    }(&socket, &completed);
+
+    in_channel.push(task.get_execution_token());
+    executor.run_once();
+    EXPECT_FALSE(task.done());
+  }
+
+  EXPECT_THROW(scheduler.run_once(), std::runtime_error);
+  EXPECT_FALSE(completed);
+  EXPECT_TRUE(in_channel.empty());
+
+  scheduler.run_once();
+  EXPECT_TRUE(completed);
+
+  scheduler.run_once();
+  EXPECT_TRUE(in_channel.empty());
+}
+
+}  // namespace tests::unit::schedulers
