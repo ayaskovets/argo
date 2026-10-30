@@ -37,6 +37,7 @@ set(SOURCES
     executor_test.cpp
     executors/inline_executor_test.cpp
     executors/thread_pool_executor_test.cpp
+    promise_ctrl_test.cpp
     promise_ptr_test.cpp
     scheduler_test.cpp
     schedulers/network_scheduler_test.cpp

@@ -229,7 +229,7 @@ class promise_frame final
    * that grants exclusive access to resumption until it gets destructed
    */
   constexpr auto get_execution_token() -> execution_token {
-    return ctrl_.get_execution_token();
+    return ctrl_.lock_resume();
   }
 
   /**

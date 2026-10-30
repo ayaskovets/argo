@@ -1,6 +1,7 @@
 #pragma once
 
 #include <atomic>
+#include <cassert>
 #include <coroutine>
 
 #include <swiss/mixins.hpp>
@@ -24,6 +25,9 @@ class promise_ctrl final : public swiss::non_copyable,
   constexpr explicit promise_ctrl(std::coroutine_handle<> handle) noexcept
       : handle_(handle), continuation_(std::noop_coroutine()) {}
 
+  /**
+   * @section Lifetime-related methods
+   */
  public:
   constexpr void add_ref() noexcept {
     // TODO:
@@ -40,6 +44,14 @@ class promise_ctrl final : public swiss::non_copyable,
     }
   }
 
+  constexpr auto use_count() const noexcept -> std::int16_t {
+    return use_count_.load();
+  }
+
+  /**
+   * @section State-machine-related methods
+   */
+ public:
   constexpr auto done() const noexcept -> bool {
     // TODO:
     // SUSPENDED | RUNNING -> false
@@ -47,33 +59,37 @@ class promise_ctrl final : public swiss::non_copyable,
     return handle_.done();
   }
 
-  constexpr void resume() const {
+  constexpr void resume() {
     // TODO:
     // SUSPENDED -> {RUNNING}, resume
     // RUNNING | DONE -> throw
     handle_.resume();
   }
 
-  constexpr auto use_count() const noexcept -> int { return use_count_.load(); }
-
-  constexpr auto add_to_waitlist(task_waitlist::node & node) noexcept -> bool {
-    return waitlist_.try_push(node);
+  constexpr auto lock_resume() -> execution_token {
+    add_ref();
+    return execution_token(*this);
   }
 
+  constexpr void unlock_resume() noexcept { remove_ref(); }
+
   constexpr void await_suspend() {
-    /* TODO:
-          RUNNING -> {SUSPENDED if TRUE/VALID/VOID}, await_suspend
-        */
+    // TODO:
+    //    RUNNING -> {SUSPENDED if TRUE/VALID/VOID}, await_suspend
   }
 
   constexpr void await_resume() {
-    /* TODO:
-      RUNNING -> {SUSPENDED if TRUE/VALID/VOID}, await_suspend
-    */
+    // TODO:
+    // RUNNING -> {SUSPENDED if TRUE/VALID/VOID}, await_suspend
   }
 
+  /**
+   * @section Coroutine implementation-related methods
+   */
+ public:
   constexpr auto final_await_suspend() -> std::coroutine_handle<> {
     // TODO: impl, rewrite description
+    // seal
     // SHARED(0) -> {DONE}, suspend_never, destroy, resume waitlist,
     // continuation SHARED(_) -> {DONE}, suspend_always, resume waitlist,
     // continuation
@@ -82,8 +98,6 @@ class promise_ctrl final : public swiss::non_copyable,
     }
     return continuation_;
   }
-
-  constexpr auto unlock_resume() { remove_ref(); }
 
   constexpr auto sync_await_suspend(execution_token token)
       -> std::coroutine_handle<> {
@@ -96,21 +110,18 @@ class promise_ctrl final : public swiss::non_copyable,
     return handle_;
   }
 
-  constexpr auto get_execution_token() -> execution_token {
-    add_ref();
-    return execution_token(*this);
-  }
-
-  constexpr auto waitlist() const noexcept -> auto & { return waitlist_; }
-
   template <typename PromiseFrame>
   constexpr auto promise() const noexcept -> PromiseFrame & {
     return std::coroutine_handle<PromiseFrame>::from_address(handle_.address())
         .promise();
   }
 
+  constexpr auto add_to_waitlist(task_waitlist::node & node) noexcept -> bool {
+    return waitlist_.try_push(node);
+  }
+
  private:
-  std::atomic<int> use_count_;
+  std::atomic<std::int16_t> use_count_;
   std::coroutine_handle<> handle_;
   std::coroutine_handle<> continuation_;
   task_waitlist waitlist_;
