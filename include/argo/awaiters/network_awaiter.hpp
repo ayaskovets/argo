@@ -76,8 +76,7 @@ class network final {
 namespace argo::awaiters {
 
 template <typename Socket>
-// NOLINTNEXTLINE(bugprone-easily-swappable-parameters)
-static constexpr auto accept(Socket & socket, Socket & peer) noexcept -> auto {
+constexpr auto accept(Socket & socket, Socket & peer) noexcept -> auto {
   auto operation = [&socket, &peer,
                     retry = false](skynet::reactor::event_filter) mutable
       -> std::optional<skynet::accept_status> {
@@ -94,8 +93,8 @@ static constexpr auto accept(Socket & socket, Socket & peer) noexcept -> auto {
 }
 
 template <typename Socket>
-static constexpr auto connect(Socket & socket,
-                              skynet::base_sockaddr const & address) -> auto {
+constexpr auto connect(Socket & socket, skynet::base_sockaddr const & address)
+    -> auto {
   auto operation = [&socket, address = &address, started = false](
                        skynet::reactor::event_filter revents) mutable
       -> std::optional<skynet::connect_status> {
@@ -116,8 +115,8 @@ static constexpr auto connect(Socket & socket,
 }
 
 template <typename Socket>
-static constexpr auto send(Socket & socket,
-                           std::span<std::byte const> bytes) noexcept -> auto {
+constexpr auto send(Socket & socket, std::span<std::byte const> bytes) noexcept
+    -> auto {
   auto operation =
       [&socket, bytes, retry = false](
           skynet::reactor::event_filter) mutable -> std::optional<std::size_t> {
@@ -134,9 +133,8 @@ static constexpr auto send(Socket & socket,
 }
 
 template <typename Socket>
-static constexpr auto sendto(Socket & socket, std::span<std::byte const> bytes,
-                             skynet::base_sockaddr const & address) noexcept
-    -> auto {
+constexpr auto sendto(Socket & socket, std::span<std::byte const> bytes,
+                      skynet::base_sockaddr const & address) noexcept -> auto {
   auto operation =
       [&socket, bytes, address = &address, retry = false](
           skynet::reactor::event_filter) mutable -> std::optional<std::size_t> {
@@ -153,7 +151,7 @@ static constexpr auto sendto(Socket & socket, std::span<std::byte const> bytes,
 }
 
 template <typename Socket>
-static constexpr auto recv(Socket & socket, std::span<std::byte> bytes) noexcept
+constexpr auto recv(Socket & socket, std::span<std::byte> bytes) noexcept
     -> auto {
   auto operation =
       [&socket, bytes, retry = false](
@@ -171,9 +169,8 @@ static constexpr auto recv(Socket & socket, std::span<std::byte> bytes) noexcept
 }
 
 template <typename Socket>
-static constexpr auto recvfrom(Socket & socket, std::span<std::byte> bytes,
-                               skynet::base_sockaddr & address) noexcept
-    -> auto {
+constexpr auto recvfrom(Socket & socket, std::span<std::byte> bytes,
+                        skynet::base_sockaddr & address) noexcept -> auto {
   auto operation =
       [&socket, bytes, address = &address, retry = false](
           skynet::reactor::event_filter) mutable -> std::optional<std::size_t> {
