@@ -59,7 +59,7 @@ class inline_executor final : public swiss::non_copyable,
    */
   constexpr auto run_once(std::stop_token const & stop_token) -> bool {
     in_value_type in_value{};
-    if (!in_channel_->pop(in_value, stop_token)) {
+    if (!in_channel_->pop(stop_token, in_value)) {
       return false;
     }
 

@@ -77,6 +77,7 @@ class execution_context final : public swiss::non_copyable,
  public:
   /**
    * @brief Synchronously resume task by the current executor
+   * @note Not expected to be used with nested calls
    */
   constexpr void resume(execution_token token) const {
     this_executor_ = this;
@@ -145,7 +146,7 @@ class execution_context final : public swiss::non_copyable,
     requires(concepts::multichannel<typename Executor::out_channel_type>)
   constexpr void park(void * params, std::type_info const & type_info) const {
     bool const match =
-        [&]<typename... OutValueType>(std::variant<OutValueType...>) -> bool {
+        [&]<typename... OutValueType>(std::variant<OutValueType...> *) -> bool {
       return ([&]() -> bool {
         if (type_info != typeid(OutValueType *)) {
           return false;
@@ -158,8 +159,8 @@ class execution_context final : public swiss::non_copyable,
                                           std::move(typed_params));
 
         return true;
-      } || ...);
-    }(typename Executor::out_channel_type::value_types{});
+      }() || ...);
+    }(static_cast<typename Executor::out_channel_type::value_types *>(nullptr));
 
     if (!match) [[unlikely]] {
       throw std::runtime_error(

@@ -126,8 +126,9 @@ concept noexcept_channel =
 /**
  * @brief Lvalue reference to channel
  */
-template <typename T, typename Value = std::remove_reference_t<T>::value_type>
+template <typename T, typename... Values>
 concept channel_lvalue_reference =
-    std::is_lvalue_reference_v<T> && channel<std::remove_reference_t<T>, Value>;
+    std::is_lvalue_reference_v<T> &&
+    channel<std::remove_reference_t<T>, Values...>;
 
 }  // namespace argo::concepts

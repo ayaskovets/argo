@@ -28,7 +28,7 @@ template <typename T>
 class promise_retval {
  public:
   template <typename U>
-  constexpr void return_value(U && value) noexcept {
+  constexpr void return_value(U && value) {
     value_.emplace(std::forward<U>(value));
   }
 
@@ -105,13 +105,13 @@ class promise_frame final
     requires(concepts::awaiter<Awaiter> ||
              swiss::instantiation_of<Awaiter, task> ||
              swiss::instantiation_of<Awaiter, task_future>)
-  constexpr auto await_transform(Awaiter && awaiter) noexcept -> auto {
+  constexpr auto await_transform(Awaiter && awaiter) -> auto {
     class proxy_awaiter final {
      public:
       explicit constexpr proxy_awaiter(
-          swiss::co_await_result_t<Awaiter> awaiter,
-          promise_frame & frame) noexcept
-          : awaiter_(std::move(awaiter)), suspended_frame_(&frame) {}
+          swiss::co_await_result_t<Awaiter> awaiter, promise_frame & frame)
+          : awaiter_(std::forward<swiss::co_await_result_t<Awaiter>>(awaiter)),
+            suspended_frame_(&frame) {}
 
      public:
       constexpr auto await_ready() -> bool {
@@ -214,7 +214,13 @@ class promise_frame final
         return frame_->ctrl_.sync_await_suspend(std::move(token));
       }
 
-      constexpr auto await_resume() -> decltype(auto) { return frame_->get(); }
+      constexpr auto await_resume() -> auto {
+        if constexpr (std::same_as<typename ReturnObject::value_type, void>) {
+          return frame_->get();
+        } else {
+          return std::move_if_noexcept(frame_->get());
+        }
+      }
 
      private:
       promise_frame * frame_;

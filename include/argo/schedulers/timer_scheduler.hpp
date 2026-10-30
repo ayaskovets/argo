@@ -68,7 +68,7 @@ class timer_scheduler final : public swiss::non_copyable,
   }
 
  private:
-  std::flat_map<typename Clock::time_point, execution_token> queue_;
+  std::flat_multimap<typename Clock::time_point, execution_token> queue_;
   in_value_type in_value_;
   in_channel_type * in_channel_;
   out_channel_type * out_channel_;

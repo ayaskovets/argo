@@ -32,13 +32,8 @@ class promise_ptr final {
   // NOLINTNEXTLINE(bugprone-unhandled-self-assignment)
   constexpr auto operator=(promise_ptr const & that) noexcept -> promise_ptr & {
     if (ctrl_ != that.ctrl_) {
-      if (ctrl_) {
-        ctrl_->remove_ref();
-      }
-      if (that.ctrl_) {
-        that.ctrl_->add_ref();
-      }
-      ctrl_ = that.ctrl_;
+      promise_ptr copy(that);
+      std::swap(ctrl_, copy.ctrl_);
     }
     return *this;
   }
