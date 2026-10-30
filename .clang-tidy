@@ -15,6 +15,7 @@ Checks: "*,
         -misc-non-private-member-variables-in-classes,
         -modernize-use-default-member-init,
         -cert-oop54-cpp,
-        -hicpp-member-init"
+        -hicpp-member-init,
+        -cppcoreguidelines-use-default-member-init"
 FormatStyle: none
 WarningsAsErrors: "*"

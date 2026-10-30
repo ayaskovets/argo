@@ -268,12 +268,16 @@ TEST(network_scheduler, dispatch_exception) {
   {
     auto task = [](skynet::inet::udp::socket * socket,
                    bool * completed) -> argo::task<void> {
-      co_await argo::awaiters::network(
-          *socket, skynet::reactor::kPollOut,
-          [ready = false](auto) mutable -> std::optional<bool> {
-            return std::exchange(ready, true) ? std::optional(true)
-                                              : std::nullopt;
-          });
+      class operation final {
+       public:
+        constexpr auto await_ready() const noexcept -> bool { return false; }
+
+        constexpr void await_resume(
+            skynet::reactor::event_filter) const noexcept {}
+      };
+
+      co_await argo::awaiters::network(*socket, skynet::reactor::kPollOut,
+                                       operation());
       *completed = true;
     }(&socket, &completed);
 
