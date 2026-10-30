@@ -6,6 +6,9 @@
 
 namespace argo {
 
+/**
+ * @brief Lock-free append-only stack
+ */
 using task_waitlist = swiss::sealable_stack<
     std::pair<execution_token, class execution_context const *>>;
 

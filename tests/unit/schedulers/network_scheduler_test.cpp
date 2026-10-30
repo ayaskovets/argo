@@ -195,8 +195,7 @@ TEST(network_scheduler, dispatch_exception) {
       if (std::exchange(fail_, false)) {
         throw std::runtime_error("try_push(): failed");
       }
-      auto token = std::move(value);
-      token.resume();
+      argo::execution_context::this_executor().resume(std::move(value));
       return true;
     }
 

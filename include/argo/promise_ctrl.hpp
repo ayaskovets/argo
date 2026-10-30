@@ -60,6 +60,18 @@ class promise_ctrl final : public swiss::non_copyable,
     return waitlist_.try_push(node);
   }
 
+  constexpr void await_suspend() {
+    /* TODO:
+          RUNNING -> {SUSPENDED if TRUE/VALID/VOID}, await_suspend
+        */
+  }
+
+  constexpr void await_resume() {
+    /* TODO:
+      RUNNING -> {SUSPENDED if TRUE/VALID/VOID}, await_suspend
+    */
+  }
+
   constexpr auto final_await_suspend() -> std::coroutine_handle<> {
     // TODO: impl, rewrite description
     // SHARED(0) -> {DONE}, suspend_never, destroy, resume waitlist,

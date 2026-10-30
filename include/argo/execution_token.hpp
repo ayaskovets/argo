@@ -47,7 +47,7 @@ class execution_token final : public swiss::non_copyable {
     }
   }
 
- public:
+ private:
   constexpr void resume() const {
     if (ctrl_ == nullptr) {
       throw std::runtime_error("execution_token::resume(): no state");
@@ -63,6 +63,11 @@ class execution_token final : public swiss::non_copyable {
    * @brief For control to access itself in awaiter_suspend implementations
    */
   friend class promise_ctrl;
+
+  /**
+   * @brief For context to call resume
+   */
+  friend class execution_context;
 };
 
 }  // namespace argo

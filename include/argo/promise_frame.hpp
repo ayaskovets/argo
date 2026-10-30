@@ -13,6 +13,13 @@
 #include "promise_ptr.hpp"
 
 namespace argo {
+template <typename T>
+class task;
+template <typename T>
+class task_future;
+}  // namespace argo
+
+namespace argo {
 
 /**
  * @brief Mandatory return value interface for a non-void-returning coroutine
@@ -94,25 +101,36 @@ class promise_frame final
    * @note Supports awaiters that do not care about the suspended task where
    * await_suspend takes no arguments
    */
-  template <concepts::awaiter Awaiter>
-  constexpr auto await_transform(Awaiter && awaiter) const noexcept -> auto {
-    /* TODO:
-      RUNNING -> {SUSPENDED if TRUE/VALID/VOID}, await_suspend
-    */
-
+  template <typename Awaiter>
+    requires(concepts::awaiter<Awaiter> ||
+             swiss::instantiation_of<Awaiter, task> ||
+             swiss::instantiation_of<Awaiter, task_future>)
+  constexpr auto await_transform(Awaiter && awaiter) noexcept -> auto {
     class proxy_awaiter final {
      public:
       explicit constexpr proxy_awaiter(
-          swiss::co_await_result_t<Awaiter> awaiter) noexcept
-          : awaiter_(std::move(awaiter)) {}
+          swiss::co_await_result_t<Awaiter> awaiter,
+          promise_frame & frame) noexcept
+          : awaiter_(std::move(awaiter)), suspended_frame_(&frame) {}
 
      public:
       constexpr auto await_ready() -> bool {
-        return awaiter_.await_ready();
+        /**
+         * @note Null frame pointer means that the coroutine was not suspended
+         * by this awaiter
+         */
+        if (awaiter_.await_ready()) {
+          suspended_frame_ = nullptr;
+          return true;
+        }
+
+        return false;
       }
 
       constexpr auto await_suspend(std::coroutine_handle<promise_frame> handle)
-          -> decltype(auto) {
+          -> auto {
+        suspended_frame_->ctrl_.await_suspend();
+
         if constexpr (requires { awaiter_.await_suspend(); }) {
           return awaiter_.await_suspend();
         } else {
@@ -121,15 +139,24 @@ class promise_frame final
       }
 
       constexpr auto await_resume() -> decltype(auto) {
+        /**
+         * @note Null frame pointer means that the coroutine was not suspended
+         * by this awaiter
+         */
+        if (suspended_frame_) {
+          suspended_frame_->ctrl_.await_resume();
+        }
+
         return awaiter_.await_resume();
       }
 
      private:
       swiss::co_await_result_t<Awaiter> awaiter_;
+      promise_frame * suspended_frame_;
     };
 
     return proxy_awaiter(
-        swiss::co_await_result_v(std::forward<Awaiter>(awaiter)));
+        swiss::co_await_result_v(std::forward<Awaiter>(awaiter)), *this);
   }
 
  public:
@@ -153,7 +180,8 @@ class promise_frame final
      public:
       constexpr auto await_ready() const noexcept -> bool { return false; }
 
-      constexpr auto await_suspend(std::coroutine_handle<>) -> decltype(auto) {
+      constexpr auto await_suspend(std::coroutine_handle<>)
+          -> std::coroutine_handle<> {
         return frame_->ctrl_.final_await_suspend();
       }
 
@@ -182,7 +210,7 @@ class promise_frame final
       }
 
       constexpr auto await_suspend(execution_token token) const noexcept
-          -> decltype(auto) {
+          -> std::coroutine_handle<> {
         return frame_->ctrl_.sync_await_suspend(std::move(token));
       }
 
