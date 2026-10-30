@@ -19,8 +19,13 @@ namespace argo::awaiters {
 template <typename Socket, typename Operation>
 class network final {
  public:
+  using operation_type = Operation;
+  using operation_result_type =
+      std::invoke_result_t<operation_type, skynet::reactor::event_filter>;
+
+ public:
   constexpr network(Socket & socket, skynet::reactor::event_filter filter,
-                    Operation operation) noexcept
+                    operation_type operation) noexcept
       : socket_(&socket), filter_(filter), operation_(std::move(operation)) {}
 
  public:
@@ -29,7 +34,7 @@ class network final {
      public:
       constexpr network_awaiter(Socket & socket,
                                 skynet::reactor::event_filter filter,
-                                Operation operation) noexcept
+                                operation_type operation) noexcept
           : in_value_({}, socket, filter), operation_(std::move(operation)) {}
 
      public:
@@ -43,20 +48,20 @@ class network final {
         execution_context::this_executor().schedule(&in_value_);
       }
 
-      constexpr auto await_resume() -> auto {
-        auto result = result_.has_value()
-                          ? std::move(*result_)
-                          : std::move(operation_)(in_value_.get_revents());
-        if (!result.has_value()) {
-          throw std::runtime_error("network::await_resume(): not ready");
+      constexpr auto await_resume() -> decltype(auto) {
+        if (!result_.has_value()) {
+          result_ = operation_(in_value_.get_revents());
+          if (!result_.has_value()) {
+            throw std::runtime_error("network::await_resume(): not ready");
+          }
         }
-        return std::move(*result);
+        return *result_;
       }
 
      private:
       schedulers::network_in_value in_value_;
-      Operation operation_;
-      std::invoke_result_t<Operation, skynet::reactor::event_filter> result_;
+      operation_type operation_;
+      operation_result_type result_;
     };
 
     return network_awaiter(*socket_, filter_, std::move(operation_));
@@ -95,10 +100,10 @@ constexpr auto accept(Socket & socket, Socket & peer) noexcept -> auto {
 template <typename Socket>
 constexpr auto connect(Socket & socket, skynet::base_sockaddr const & address)
     -> auto {
-  auto operation = [&socket, address = &address, started = false](
+  auto operation = [&socket, address = &address, retry = false](
                        skynet::reactor::event_filter revents) mutable
       -> std::optional<skynet::connect_status> {
-    if (std::exchange(started, true)) {
+    if (std::exchange(retry, true)) {
       return (revents & skynet::reactor::kPollErr) != 0
                  ? skynet::connect_status::kRefused
                  : skynet::connect_status::kSuccess;

@@ -38,6 +38,7 @@ class promise_ptr final {
       if (that.ctrl_) {
         that.ctrl_->add_ref();
       }
+      ctrl_ = that.ctrl_;
     }
     return *this;
   }

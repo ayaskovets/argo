@@ -49,23 +49,33 @@ class network_scheduler : public swiss::non_copyable,
    * @brief Try to schedule as many as possible tasks ready to run
    */
   constexpr void run_once() {
-    while (try_consume_in_value()) {
+    if (events_.empty()) {
+      while (try_consume_in_value()) {
+      }
+      events_ = reactor_.poll(std::chrono::milliseconds(0));
     }
 
-    for (auto event : reactor_.poll(std::chrono::milliseconds(0))) {
-      in_value_ = static_cast<in_value_type>(event.data);
-      reactor_.erase(in_value_->get_socket());
-      in_value_->set_revents(event.filter);
+    while (!events_.empty()) {
+      if (in_value_ == nullptr) {
+        auto const [filter, data] = *events_.begin();
+        auto * in_value           = static_cast<in_value_type>(data);
+        reactor_.erase(in_value->get_socket());
+        in_value->set_revents(filter);
+        in_value_ = in_value;
+      }
+
       if (!out_channel_->try_push(in_value_->get_execution_token())) {
         break;
       }
+
       in_value_ = nullptr;
+      events_.advance(1);
     }
   }
 
  private:
   skynet::reactor reactor_;
-  // NOLINTNEXTLINE(cppcoreguidelines-use-default-member-init)
+  skynet::reactor::event_range_type events_;
   in_value_type in_value_;
   InChannel * in_channel_;
   OutChannel * out_channel_;

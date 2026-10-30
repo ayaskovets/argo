@@ -12,7 +12,6 @@ TEST(promise_ptr, smoke) {
     EXPECT_EQ(ctrl.use_count(), 1);
 
     {
-      // NOLINTNEXTLINE(performance-unnecessary-copy-initialization)
       argo::promise_ptr const ptr2(ctrl);
       EXPECT_EQ(ctrl.use_count(), 2);
     }
@@ -34,6 +33,45 @@ TEST(promise_ptr, copy) {
     EXPECT_EQ(ctrl.use_count(), 2);
   }
   EXPECT_EQ(ctrl.use_count(), 0);
+}
+
+TEST(promise_ptr, copy_assignment) {
+  argo::promise_ctrl ctrl1(nullptr);
+  argo::promise_ctrl ctrl2(nullptr);
+
+  {
+    argo::promise_ptr const ptr1(ctrl1);
+    argo::promise_ptr const ptr2(ctrl2);
+    argo::promise_ptr const empty;
+
+    {
+      argo::promise_ptr copy(ptr1);
+      EXPECT_EQ(ctrl1.use_count(), 2);
+      EXPECT_EQ(ctrl2.use_count(), 1);
+
+      copy = ptr2;
+      EXPECT_EQ(ctrl1.use_count(), 1);
+      EXPECT_EQ(ctrl2.use_count(), 2);
+
+      copy = ptr2;
+      EXPECT_EQ(ctrl1.use_count(), 1);
+      EXPECT_EQ(ctrl2.use_count(), 2);
+
+      copy = empty;
+      EXPECT_FALSE(copy);
+      EXPECT_EQ(ctrl2.use_count(), 1);
+
+      copy = ptr2;
+      EXPECT_TRUE(copy);
+      EXPECT_EQ(ctrl2.use_count(), 2);
+    }
+
+    EXPECT_EQ(ctrl1.use_count(), 1);
+    EXPECT_EQ(ctrl2.use_count(), 1);
+  }
+
+  EXPECT_EQ(ctrl1.use_count(), 0);
+  EXPECT_EQ(ctrl2.use_count(), 0);
 }
 
 TEST(promise_ptr, move) {

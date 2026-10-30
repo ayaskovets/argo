@@ -153,6 +153,56 @@ TEST(network_scheduler, full_out_channel) {
   EXPECT_TRUE(in_channel.empty());
 }
 
+TEST(network_scheduler, full_out_channel_multiple_events) {
+  skynet::inet::udp::socket socket1;
+  skynet::inet::udp::socket socket2;
+  skynet::inet::sockaddr const address(skynet::inet::ip::kLoopback(),
+                                       skynet::inet::port(0));
+
+  flow::spsc_queue<argo::execution_token> in_channel(1);
+  flow::spsc_queue<argo::schedulers::network_in_value *> out_channel(2);
+  argo::executors::inline_executor executor(in_channel, out_channel);
+  argo::schedulers::network_scheduler scheduler(out_channel, in_channel);
+
+  ASSERT_EQ(socket1.bind(address), skynet::bind_status::kSuccess);
+  ASSERT_EQ(socket2.bind(address), skynet::bind_status::kSuccess);
+
+  auto task1   = []() -> argo::task<void> { co_return; }();
+  auto task2   = []() -> argo::task<void> { co_return; }();
+  auto blocker = []() -> argo::task<void> { co_return; }();
+  argo::schedulers::network_in_value value1(task1.get_execution_token(),
+                                            socket1, skynet::reactor::kPollOut);
+  argo::schedulers::network_in_value value2(task2.get_execution_token(),
+                                            socket2, skynet::reactor::kPollOut);
+
+  out_channel.push(&value1);
+  out_channel.push(&value2);
+  in_channel.push(blocker.get_execution_token());
+  scheduler.run_once();
+  EXPECT_FALSE(task1.done());
+  EXPECT_FALSE(task2.done());
+  EXPECT_EQ(in_channel.size(), 1);
+  EXPECT_TRUE(out_channel.empty());
+
+  executor.run_once();
+  EXPECT_TRUE(blocker.done());
+
+  scheduler.run_once();
+  ASSERT_EQ(in_channel.size(), 1);
+  executor.run_once();
+
+  scheduler.run_once();
+  ASSERT_EQ(in_channel.size(), 1);
+  executor.run_once();
+
+  EXPECT_TRUE(task1.done());
+  EXPECT_TRUE(task2.done());
+
+  scheduler.run_once();
+  EXPECT_TRUE(in_channel.empty());
+  EXPECT_TRUE(out_channel.empty());
+}
+
 TEST(network_scheduler, registration_exception) {
   skynet::inet::udp::socket socket;
   skynet::inet::sockaddr const address(skynet::inet::ip::kLoopback(),

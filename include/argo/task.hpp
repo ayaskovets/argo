@@ -15,7 +15,6 @@ namespace argo {
  * Interfaces with the coroutine state through the promise object
  */
 template <typename T>
-// NOLINTNEXTLINE(cppcoreguidelines-special-member-functions)
 class task final : public swiss::non_copyable {
  public:
   using value_type   = T;
