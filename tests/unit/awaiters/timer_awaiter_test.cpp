@@ -27,6 +27,7 @@ TEST(timer_awaiter, suspend) {
       argo::schedulers::timer_in_value<swiss::tls_mocked_clock<>> *>
       out_channel(1);
   argo::executors::inline_executor executor(in_channel, out_channel);
+  argo::schedulers::timer_in_value<swiss::tls_mocked_clock<>> * in_value{};
 
   auto task = []() -> argo::task<void> {
     co_await argo::awaiters::sleep_for<swiss::tls_mocked_clock<>>(
@@ -40,9 +41,9 @@ TEST(timer_awaiter, suspend) {
   executor.run_once();
   EXPECT_FALSE(task.done());
   EXPECT_EQ(out_channel.size(), 1);
-  EXPECT_TRUE(out_channel.try_pop(std::ignore));
+  ASSERT_TRUE(out_channel.try_pop(in_value));
 
-  in_channel.push(task.get_execution_token());
+  in_channel.push(in_value->get_execution_token());
   EXPECT_FALSE(task.done());
   EXPECT_EQ(in_channel.size(), 1);
 

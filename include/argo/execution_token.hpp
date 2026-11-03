@@ -1,6 +1,6 @@
 #pragma once
 
-#include <stdexcept>
+#include <cassert>
 #include <utility>
 
 #include <swiss/mixins.hpp>
@@ -14,15 +14,15 @@ class promise_ctrl;
  * promise control and execution token
  */
 namespace argo::detail {
-void promise_ctrl_resume(promise_ctrl &);
+void promise_ctrl_resume(promise_ctrl &) noexcept;
 void promise_ctrl_unlock_resume(promise_ctrl &) noexcept;
 }  // namespace argo::detail
 
 namespace argo {
 
 /**
- * @brief Exclusive token for executing a coroutine. Only single object of this
- * type for a certain coroutine frame can be created
+ * @brief Exclusive one-shot token for executing a coroutine. Only single object
+ * of this type for a certain coroutine frame can be created
  */
 // NOLINTNEXTLINE(cppcoreguidelines-special-member-functions)
 class execution_token final : public swiss::non_copyable {
@@ -48,11 +48,9 @@ class execution_token final : public swiss::non_copyable {
   }
 
  private:
-  constexpr void resume() const {
-    if (ctrl_ == nullptr) {
-      throw std::runtime_error("execution_token::resume(): no state");
-    }
-    detail::promise_ctrl_resume(*ctrl_);
+  constexpr void resume() noexcept {
+    assert(ctrl_ && "execution_token::resume(): no state");
+    detail::promise_ctrl_resume(*std::exchange(ctrl_, nullptr));
   }
 
  private:

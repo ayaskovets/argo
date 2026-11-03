@@ -128,7 +128,7 @@ class promise_frame final
       }
 
       constexpr auto await_suspend(std::coroutine_handle<promise_frame> handle)
-          -> auto {
+          -> auto try {
         suspended_frame_->ctrl_.await_suspend();
 
         if constexpr (requires { awaiter_.await_suspend(); }) {
@@ -136,6 +136,9 @@ class promise_frame final
         } else {
           return awaiter_.await_suspend(handle.promise().get_execution_token());
         }
+      } catch (...) {
+        suspended_frame_->ctrl_.await_resume();
+        throw;
       }
 
       constexpr auto await_resume() -> decltype(auto) {
@@ -180,7 +183,7 @@ class promise_frame final
      public:
       constexpr auto await_ready() const noexcept -> bool { return false; }
 
-      constexpr auto await_suspend(std::coroutine_handle<>)
+      constexpr auto await_suspend(std::coroutine_handle<>) noexcept
           -> std::coroutine_handle<> {
         return frame_->ctrl_.final_await_suspend();
       }
@@ -209,7 +212,7 @@ class promise_frame final
         return frame_->ctrl_.done();
       }
 
-      constexpr auto await_suspend(execution_token token) const noexcept
+      constexpr auto await_suspend(execution_token token) const
           -> std::coroutine_handle<> {
         return frame_->ctrl_.sync_await_suspend(std::move(token));
       }
@@ -232,7 +235,7 @@ class promise_frame final
  public:
   /**
    * @brief Lock other calls to resume and this function. Create an object
-   * that grants exclusive access to resumption until it gets destructed
+   * that grants exclusive access to resumption until it gets destructed or used
    */
   constexpr auto get_execution_token() -> execution_token {
     return ctrl_.lock_resume();
@@ -242,14 +245,15 @@ class promise_frame final
    * @brief Add node to waitlist. Suspended nodes on waitlist are resumed in
    * final_suspend
    */
-  constexpr auto add_to_waitlist(task_waitlist::node & node) noexcept -> bool {
-    return ctrl_.add_to_waitlist(node);
+  constexpr auto try_add_to_waitlist(task_waitlist::node & node) noexcept
+      -> bool {
+    return ctrl_.try_add_to_waitlist(node);
   }
 
  public:
   /**
    * @brief Resume a non-resumed coroutine that is not shared with a execution
-   * channel, otherwise throw an exception
+   * channel
    * @warning Synchronous interface. Not intended for general use within the
    * engine
    */

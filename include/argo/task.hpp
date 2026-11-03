@@ -1,7 +1,5 @@
 #pragma once
 
-#include <stdexcept>
-
 #include <swiss/mixins.hpp>
 
 #include "execution_token.hpp"
@@ -30,10 +28,8 @@ class task final : public swiss::non_copyable {
    * invokes the co_await'ed task immediately in the same thread and returns the
    * result
    */
-  constexpr auto operator co_await() && -> decltype(auto) {
-    if (ptr_ == nullptr) [[unlikely]] {
-      throw std::runtime_error("task::operator co_await(): no state");
-    }
+  constexpr auto operator co_await() && noexcept -> decltype(auto) {
+    assert(ptr_ && "task::operator co_await(): no state");
     return std::move(*ptr_).operator co_await();
   }
 
@@ -63,7 +59,7 @@ class task final : public swiss::non_copyable {
  public:
   /**
    * @brief Resume a non-resumed coroutine that does not have a live
-   * execution token, otherwise throw an exception
+   * execution token
    * @warning Synchronous interface. Not intended for general use within the
    * engine
    */

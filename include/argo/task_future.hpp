@@ -15,6 +15,9 @@ namespace argo {
 /**
  * @brief Shared thread-safe task that can be awaited by multiple coroutines.
  * Can be constructed only from an existing task object
+ * @warning For a scenario when multiple tasks await one the input channel of
+ * the used exeuctor must be noexcept to allow for exception-free implementaiton
+ * of final_suspend
  */
 template <typename T>
 class task_future final {
@@ -41,7 +44,7 @@ class task_future final {
       constexpr auto await_suspend(execution_token token) noexcept -> bool {
         node_ = task_waitlist::node(std::move(token),
                                     &execution_context::this_executor());
-        return future_->ptr_->add_to_waitlist(node_);
+        return future_->ptr_->try_add_to_waitlist(node_);
       }
 
       constexpr auto await_resume() const -> decltype(auto) {
