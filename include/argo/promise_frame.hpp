@@ -10,6 +10,7 @@
 #include "awaiter.hpp"
 #include "execution_token.hpp"
 #include "promise_ctrl.hpp"
+#include "promise_exceptions.hpp"
 #include "promise_ptr.hpp"
 
 namespace argo {
@@ -128,7 +129,7 @@ class promise_frame final
       }
 
       constexpr auto await_suspend(std::coroutine_handle<>) -> auto {
-        return suspended_frame_->ctrl_.suspend(awaiter_);
+        return suspended_frame_->ctrl_.await_suspend(awaiter_);
       }
 
       constexpr auto await_resume() -> decltype(auto) {
@@ -156,8 +157,24 @@ class promise_frame final
   /**
    * @brief Lazy execution by default
    */
-  constexpr auto initial_suspend() const noexcept -> std::suspend_always {
-    return {};
+  constexpr auto initial_suspend() noexcept -> auto {
+    class initial_awaiter final {
+     public:
+      explicit constexpr initial_awaiter(promise_frame & frame) noexcept
+          : frame_(&frame) {}
+
+     public:
+      constexpr auto await_ready() const noexcept -> bool { return false; }
+
+      constexpr void await_suspend(std::coroutine_handle<>) const noexcept {}
+
+      constexpr void await_resume() const { frame_->ctrl_.await_resume(); }
+
+     private:
+      promise_frame * frame_;
+    };
+
+    return initial_awaiter(*this);
   }
 
   /**
@@ -195,28 +212,28 @@ class promise_frame final
     class sync_awaiter final {
      public:
       explicit constexpr sync_awaiter(promise_frame & frame) noexcept
-          : frame_(&frame) {}
+          : ptr_(frame.ctrl_) {}
 
      public:
       constexpr auto await_ready() const noexcept -> bool {
-        return frame_->ctrl_.done();
+        return ptr_->ctrl_.done();
       }
 
       constexpr auto await_suspend(execution_token token) const
           -> std::coroutine_handle<> {
-        return frame_->ctrl_.sync_await_suspend(std::move(token));
+        return ptr_->ctrl_.sync_await_suspend(std::move(token));
       }
 
       constexpr auto await_resume() -> auto {
         if constexpr (std::same_as<typename ReturnObject::value_type, void>) {
-          return frame_->get();
+          return ptr_->get();
         } else {
-          return std::move_if_noexcept(frame_->get());
+          return std::move_if_noexcept(ptr_->get());
         }
       }
 
      private:
-      promise_frame * frame_;
+      promise_ptr<promise_frame> ptr_;
     };
 
     return sync_awaiter(*this);
@@ -242,6 +259,12 @@ class promise_frame final
 
  public:
   /**
+   * @brief Request task cancellation
+   */
+  constexpr void request_cancel() noexcept { ctrl_.request_cancel(); }
+
+ public:
+  /**
    * @brief Resume a non-resumed coroutine that is not shared with a execution
    * channel
    * @warning Synchronous interface. Not intended for general use within the
@@ -264,6 +287,9 @@ class promise_frame final
    * engine
    */
   constexpr auto get() -> decltype(auto) {
+    if (ctrl_.cancel_requested()) {
+      throw promise_cancelled();
+    }
     if (!ctrl_.done()) {
       throw std::runtime_error("promise_frame::get(): not done");
     }

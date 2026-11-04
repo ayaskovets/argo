@@ -38,6 +38,7 @@ set(HEADERS
     include/argo/executors/inline_executor.hpp
     include/argo/executors/thread_pool_executor.hpp
     include/argo/promise_ctrl.hpp
+    include/argo/promise_exceptions.hpp
     include/argo/promise_frame.hpp
     include/argo/promise_ptr.hpp
     include/argo/scheduler.hpp

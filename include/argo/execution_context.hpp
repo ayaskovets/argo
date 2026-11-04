@@ -81,7 +81,7 @@ class execution_context final : public swiss::non_copyable,
    */
   constexpr void resume(execution_token token) const noexcept {
     this_executor_ = this;
-    token.resume();
+    std::move(token).resume();
   }
 
   /**

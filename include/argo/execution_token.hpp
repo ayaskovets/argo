@@ -14,8 +14,8 @@ class promise_ctrl;
  * promise control and execution token
  */
 namespace argo::detail {
-void promise_ctrl_resume(promise_ctrl &) noexcept;
 void promise_ctrl_unlock_resume(promise_ctrl &) noexcept;
+void promise_ctrl_release_resume(promise_ctrl &) noexcept;
 }  // namespace argo::detail
 
 namespace argo {
@@ -43,14 +43,14 @@ class execution_token final : public swiss::non_copyable {
 
   constexpr ~execution_token() noexcept {
     if (ctrl_ != nullptr) {
-      detail::promise_ctrl_unlock_resume(*ctrl_);
+      detail::promise_ctrl_release_resume(*ctrl_);
     }
   }
 
  private:
-  constexpr void resume() noexcept {
+  constexpr void resume() && noexcept {
     assert(ctrl_ && "execution_token::resume(): no state");
-    detail::promise_ctrl_resume(*std::exchange(ctrl_, nullptr));
+    detail::promise_ctrl_unlock_resume(*std::exchange(ctrl_, nullptr));
   }
 
  private:

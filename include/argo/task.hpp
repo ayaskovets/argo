@@ -58,6 +58,12 @@ class task final : public swiss::non_copyable {
 
  public:
   /**
+   * @brief Request task cancellation
+   */
+  constexpr void request_cancel() noexcept { ptr_->request_cancel(); }
+
+ public:
+  /**
    * @brief Resume a non-resumed coroutine that does not have a live
    * execution token
    * @warning Synchronous interface. Not intended for general use within the

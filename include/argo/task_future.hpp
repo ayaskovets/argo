@@ -30,6 +30,12 @@ class task_future final {
       : ptr_(std::move(ptr)) {}
 
  public:
+  /**
+   * @brief Request task cancellation
+   */
+  constexpr void request_cancel() const noexcept { ptr_->request_cancel(); }
+
+ public:
   constexpr auto operator co_await() noexcept -> auto {
     class future_awaiter final {
      public:
