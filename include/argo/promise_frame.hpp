@@ -127,18 +127,8 @@ class promise_frame final
         return false;
       }
 
-      constexpr auto await_suspend(std::coroutine_handle<promise_frame> handle)
-          -> auto try {
-        suspended_frame_->ctrl_.await_suspend();
-
-        if constexpr (requires { awaiter_.await_suspend(); }) {
-          return awaiter_.await_suspend();
-        } else {
-          return awaiter_.await_suspend(handle.promise().get_execution_token());
-        }
-      } catch (...) {
-        suspended_frame_->ctrl_.await_resume();
-        throw;
+      constexpr auto await_suspend(std::coroutine_handle<>) -> auto {
+        return suspended_frame_->ctrl_.suspend(awaiter_);
       }
 
       constexpr auto await_resume() -> decltype(auto) {
