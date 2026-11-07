@@ -16,6 +16,7 @@ Checks: "*,
         -modernize-use-default-member-init,
         -cert-oop54-cpp,
         -hicpp-member-init,
-        -cppcoreguidelines-use-default-member-init"
+        -cppcoreguidelines-use-default-member-init,
+        -hicpp-signed-bitwise"
 FormatStyle: none
 WarningsAsErrors: "*"

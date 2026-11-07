@@ -41,15 +41,33 @@ class execution_token final : public swiss::non_copyable {
     return *this;
   }
 
-  constexpr ~execution_token() noexcept {
+  constexpr ~execution_token() noexcept { std::move(*this).release(); }
+
+ public:
+  /**
+   * @brief Release the token without resuming the coroutine
+   * @note Rvalue-qualified to explicitly note that this method should be the
+   * last call on an object
+   */
+  constexpr void release() && noexcept {
     if (ctrl_ != nullptr) {
-      detail::promise_ctrl_release_resume(*ctrl_);
+      /**
+       * @note Reference remains valid until task is suspended
+       */
+      detail::promise_ctrl_release_resume(*std::exchange(ctrl_, nullptr));
     }
   }
 
  private:
+  /**
+   * @brief Resume the coroutine
+   */
   constexpr void resume() && noexcept {
     assert(ctrl_ && "execution_token::resume(): no state");
+
+    /**
+     * @note Reference remains valid until task is suspended
+     */
     detail::promise_ctrl_unlock_resume(*std::exchange(ctrl_, nullptr));
   }
 

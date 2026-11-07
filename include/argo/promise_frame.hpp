@@ -208,11 +208,11 @@ class promise_frame final
    * @brief Synchronously resume this coroutine via symmetric transfer from the
    * suspended task and return control to the parent in final_suspend()
    */
-  constexpr auto operator co_await() && noexcept -> auto {
+  constexpr auto sync_suspend(promise_ptr<promise_frame> ptr) noexcept -> auto {
     class sync_awaiter final {
      public:
-      explicit constexpr sync_awaiter(promise_frame & frame) noexcept
-          : ptr_(frame.ctrl_) {}
+      explicit constexpr sync_awaiter(promise_ptr<promise_frame> ptr) noexcept
+          : ptr_(std::move(ptr)) {}
 
      public:
       constexpr auto await_ready() const noexcept -> bool {
@@ -224,19 +224,13 @@ class promise_frame final
         return ptr_->ctrl_.sync_await_suspend(std::move(token));
       }
 
-      constexpr auto await_resume() -> auto {
-        if constexpr (std::same_as<typename ReturnObject::value_type, void>) {
-          return ptr_->get();
-        } else {
-          return std::move_if_noexcept(ptr_->get());
-        }
-      }
+      constexpr auto await_resume() -> decltype(auto) { return ptr_->get(); }
 
      private:
       promise_ptr<promise_frame> ptr_;
     };
 
-    return sync_awaiter(*this);
+    return sync_awaiter(std::move(ptr));
   }
 
  public:

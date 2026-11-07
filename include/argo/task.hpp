@@ -30,7 +30,7 @@ class task final : public swiss::non_copyable {
    */
   constexpr auto operator co_await() && noexcept -> decltype(auto) {
     assert(ptr_ && "task::operator co_await(): no state");
-    return std::move(*ptr_).operator co_await();
+    return ptr_->sync_suspend(std::move(ptr_));
   }
 
  public:

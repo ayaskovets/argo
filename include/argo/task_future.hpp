@@ -50,7 +50,12 @@ class task_future final {
       constexpr auto await_suspend(execution_token token) noexcept -> bool {
         node_ = task_waitlist::node(std::move(token),
                                     &execution_context::this_executor());
-        return future_->ptr_->try_add_to_waitlist(node_);
+        if (!future_->ptr_->try_add_to_waitlist(node_)) {
+          std::move(node_.value().first).release();
+          return false;
+        }
+
+        return true;
       }
 
       constexpr auto await_resume() const -> decltype(auto) {

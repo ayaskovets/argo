@@ -3,6 +3,7 @@
 #include <skynet/base_sockaddr.hpp>
 #include <skynet/base_socket.hpp>
 #include <skynet/multiplexing.hpp>
+#include <swiss/scope_fail.hpp>
 
 #include "../execution_context.hpp"
 #include "../execution_token.hpp"
@@ -36,6 +37,11 @@ class network final {
       constexpr void await_suspend(execution_token token) {
         in_value_ = {std::move(token), in_value_.get_socket(),
                      in_value_.get_filter()};
+
+        swiss::scope_fail const scope_fail([&]() noexcept -> void {
+          in_value_.get_execution_token().release();
+        });
+
         execution_context::this_executor().schedule(&in_value_);
       }
 

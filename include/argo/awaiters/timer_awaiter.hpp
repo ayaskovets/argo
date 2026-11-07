@@ -1,6 +1,7 @@
 #pragma once
 
 #include <swiss/concepts.hpp>
+#include <swiss/scope_fail.hpp>
 
 #include "../execution_context.hpp"
 #include "../execution_token.hpp"
@@ -48,6 +49,11 @@ class timer final {
      */
     constexpr void await_suspend(execution_token token) {
       in_value_ = {std::move(token), in_value_.get_time_point()};
+
+      swiss::scope_fail const scope_fail([&]() noexcept -> void {
+        in_value_.get_execution_token().release();
+      });
+
       execution_context::this_executor().schedule(&in_value_);
     }
 

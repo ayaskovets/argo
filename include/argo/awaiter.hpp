@@ -16,6 +16,9 @@ namespace argo::concepts {
  * await_suspend with no arguments
  * @note Symmetric transfer and resume from await_suspend() is prohibited for
  * user-defined awaiters
+ * @note If await_suspend throws, it must release the token and cancel any
+ * registration before propagating the exception as it would violate execution
+ * token exclusive ownership of the resume operation otherwise
  */
 template <typename T>
 concept awaiter =
