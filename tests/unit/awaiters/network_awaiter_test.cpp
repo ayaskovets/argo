@@ -1,4 +1,5 @@
 #include <argo/awaiters/network_awaiter.hpp>
+#include <argo/awaiters/yield_awaiter.hpp>
 #include <argo/executors/inline_executor.hpp>
 #include <argo/task.hpp>
 
@@ -301,6 +302,41 @@ TEST(network_awaiter, exception) {
   task.resume();
   EXPECT_TRUE(task.done());
   EXPECT_THROW(task.get(), std::runtime_error);
+}
+
+TEST(network_awaiter, incompatible_out_channel_type) {
+  skynet::inet::udp::socket socket;
+  flow::spsc_queue<argo::execution_token> in_channel(1);
+  flow::spsc_queue<std::nullptr_t> out_channel(1);
+  argo::executors::inline_executor executor(in_channel, out_channel);
+
+  class operation final {
+   public:
+    constexpr auto await_ready() const noexcept -> bool { return false; }
+    constexpr void await_resume(skynet::reactor::event_filter) const noexcept {}
+  };
+
+  bool caught = false;
+  auto task   = [](skynet::inet::udp::socket * socket,
+                 bool * caught) -> argo::task<void> {
+    try {
+      co_await argo::awaiters::network(*socket, skynet::reactor::kPollIn,
+                                         operation());
+    } catch (std::runtime_error const &) {
+      *caught = true;
+    }
+
+    co_await argo::awaiters::yield();
+  }(&socket, &caught);
+
+  in_channel.push(task.get_execution_token());
+  executor.run_once();
+  EXPECT_TRUE(caught);
+  EXPECT_FALSE(task.done());
+
+  executor.run_once();
+  EXPECT_TRUE(task.done());
+  EXPECT_NO_THROW(task.get());
 }
 
 }  // namespace tests::unit::awaiters

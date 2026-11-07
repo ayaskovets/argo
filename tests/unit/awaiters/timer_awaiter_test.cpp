@@ -1,4 +1,5 @@
 #include <argo/awaiters/timer_awaiter.hpp>
+#include <argo/awaiters/yield_awaiter.hpp>
 #include <argo/executors/inline_executor.hpp>
 #include <argo/task.hpp>
 
@@ -50,6 +51,33 @@ TEST(timer_awaiter, suspend) {
   executor.run_once();
   EXPECT_TRUE(task.done());
   EXPECT_NO_THROW(std::move(task).get());
+}
+
+TEST(timer_awaiter, incompatible_out_channel_type) {
+  flow::spsc_queue<argo::execution_token> in_channel(1);
+  flow::spsc_queue<std::nullptr_t> out_channel(1);
+  argo::executors::inline_executor executor(in_channel, out_channel);
+
+  bool caught = false;
+  auto task   = [](bool * caught) -> argo::task<void> {
+    try {
+      co_await argo::awaiters::sleep_for<swiss::tls_mocked_clock<>>(
+          std::chrono::milliseconds(1));
+    } catch (std::runtime_error const &) {
+      *caught = true;
+    }
+
+    co_await argo::awaiters::yield();
+  }(&caught);
+
+  in_channel.push(task.get_execution_token());
+  executor.run_once();
+  EXPECT_TRUE(caught);
+  EXPECT_FALSE(task.done());
+
+  executor.run_once();
+  EXPECT_TRUE(task.done());
+  EXPECT_NO_THROW(task.get());
 }
 
 }  // namespace tests::unit::awaiters
