@@ -38,7 +38,7 @@ TEST(network_scheduler, smoke) {
   EXPECT_TRUE(out_channel.empty());
   EXPECT_NE(in_value.get_revents() & skynet::reactor::kPollOut, 0);
 
-  executor.run_once();
+  EXPECT_TRUE(executor.run_once());
   EXPECT_TRUE(task.done());
   EXPECT_NO_THROW(task.get());
 
@@ -75,7 +75,7 @@ TEST(network_scheduler, reschedule) {
   }(&receiver, received, &peer_address);
 
   in_channel.push(task.get_execution_token());
-  executor.run_once();
+  EXPECT_TRUE(executor.run_once());
 
   for (std::size_t index = 0; index < bytes.size(); ++index) {
     EXPECT_FALSE(task.done());
@@ -89,7 +89,7 @@ TEST(network_scheduler, reschedule) {
     scheduler.run_once();
     EXPECT_EQ(in_channel.size(), 1);
 
-    executor.run_once();
+    EXPECT_TRUE(executor.run_once());
   }
 
   EXPECT_TRUE(task.done());
@@ -127,7 +127,7 @@ TEST(network_scheduler, full_out_channel) {
   auto blocker = []() -> argo::task<void> { co_return; }();
 
   in_channel.push(task.get_execution_token());
-  executor.run_once();
+  EXPECT_TRUE(executor.run_once());
   ASSERT_FALSE(reactor.poll(std::chrono::seconds(1)).empty());
 
   in_channel.push(blocker.get_execution_token());
@@ -139,13 +139,13 @@ TEST(network_scheduler, full_out_channel) {
   scheduler.run_once();
   EXPECT_EQ(in_channel.size(), 1);
 
-  executor.run_once();
+  EXPECT_TRUE(executor.run_once());
   EXPECT_TRUE(blocker.done());
 
   scheduler.run_once();
   EXPECT_EQ(in_channel.size(), 1);
 
-  executor.run_once();
+  EXPECT_TRUE(executor.run_once());
   EXPECT_TRUE(task.done());
   EXPECT_EQ(task.get(), skynet::connect_status::kRefused);
 
@@ -184,16 +184,16 @@ TEST(network_scheduler, full_out_channel_multiple_events) {
   EXPECT_EQ(in_channel.size(), 1);
   EXPECT_TRUE(out_channel.empty());
 
-  executor.run_once();
+  EXPECT_TRUE(executor.run_once());
   EXPECT_TRUE(blocker.done());
 
   scheduler.run_once();
   ASSERT_EQ(in_channel.size(), 1);
-  executor.run_once();
+  EXPECT_TRUE(executor.run_once());
 
   scheduler.run_once();
   ASSERT_EQ(in_channel.size(), 1);
-  executor.run_once();
+  EXPECT_TRUE(executor.run_once());
 
   EXPECT_TRUE(task1.done());
   EXPECT_TRUE(task2.done());
@@ -231,7 +231,7 @@ TEST(network_scheduler, registration_exception) {
   scheduler.run_once();
   EXPECT_EQ(in_channel.size(), 1);
 
-  executor.run_once();
+  EXPECT_TRUE(executor.run_once());
   EXPECT_TRUE(task.done());
   EXPECT_NO_THROW(task.get());
 }
@@ -282,7 +282,7 @@ TEST(network_scheduler, dispatch_exception) {
     }(&socket, &completed);
 
     in_channel.push(task.get_execution_token());
-    executor.run_once();
+    EXPECT_TRUE(executor.run_once());
     EXPECT_FALSE(task.done());
   }
 

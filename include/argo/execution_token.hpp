@@ -21,8 +21,9 @@ void promise_ctrl_release_resume(promise_ctrl &) noexcept;
 namespace argo {
 
 /**
- * @brief Exclusive one-shot token for executing a coroutine. Only single object
- * of this type for a certain coroutine frame can be created
+ * @brief Exclusive one-shot token for executing a coroutine. Only single
+ * non-moved-from object of this type for a certain coroutine frame can be alive
+ * at the same time
  */
 // NOLINTNEXTLINE(cppcoreguidelines-special-member-functions)
 class execution_token final : public swiss::non_copyable {

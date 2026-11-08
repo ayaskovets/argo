@@ -20,10 +20,10 @@ TEST(inline_executor, smoke) {
   in_channel.push(task.get_execution_token());
   EXPECT_EQ(times_called, 0);
 
-  executor.run_once();
+  EXPECT_TRUE(executor.run_once());
   EXPECT_EQ(times_called, 1);
 
-  executor.run_once();
+  EXPECT_FALSE(executor.run_once());
   EXPECT_EQ(times_called, 1);
 }
 

@@ -21,15 +21,15 @@ TEST(async_awaiter, smoke) {
   EXPECT_FALSE(parent.done());
   EXPECT_EQ(in_channel.size(), 1);
 
-  executor.run_once();
+  EXPECT_TRUE(executor.run_once());
   EXPECT_FALSE(parent.done());
   EXPECT_EQ(in_channel.size(), 1);
 
-  executor.run_once();
+  EXPECT_TRUE(executor.run_once());
   EXPECT_FALSE(parent.done());
   EXPECT_EQ(in_channel.size(), 1);
 
-  executor.run_once();
+  EXPECT_TRUE(executor.run_once());
   EXPECT_TRUE(parent.done());
   EXPECT_TRUE(in_channel.empty());
 }

@@ -1,7 +1,5 @@
 #include <argo/channels/multiplexed_channel.hpp>
 
-#include <stop_token>
-
 #include <flow/spsc_queue.hpp>
 #include <gtest/gtest.h>
 

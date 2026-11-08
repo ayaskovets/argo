@@ -28,7 +28,7 @@ TEST(timer_scheduler, smoke) {
   EXPECT_FALSE(task.done());
   EXPECT_TRUE(out_channel.empty());
 
-  executor.run_once();
+  EXPECT_TRUE(executor.run_once());
   EXPECT_FALSE(task.done());
   EXPECT_TRUE(in_channel.empty());
 
@@ -42,7 +42,7 @@ TEST(timer_scheduler, smoke) {
   EXPECT_EQ(in_channel.size(), 1);
   EXPECT_TRUE(out_channel.empty());
 
-  executor.run_once();
+  EXPECT_TRUE(executor.run_once());
   EXPECT_TRUE(task.done());
   EXPECT_TRUE(in_channel.empty());
   EXPECT_TRUE(out_channel.empty());

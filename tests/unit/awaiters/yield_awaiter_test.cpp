@@ -22,19 +22,19 @@ TEST(yield_awaiter, smoke) {
   EXPECT_EQ(in_channel.size(), 1);
   EXPECT_FALSE(task.done());
 
-  executor.run_once();
+  EXPECT_TRUE(executor.run_once());
   EXPECT_EQ(in_channel.size(), 1);
   EXPECT_FALSE(task.done());
 
-  executor.run_once();
+  EXPECT_TRUE(executor.run_once());
   EXPECT_EQ(in_channel.size(), 1);
   EXPECT_FALSE(task.done());
 
-  executor.run_once();
+  EXPECT_TRUE(executor.run_once());
   EXPECT_EQ(in_channel.size(), 1);
   EXPECT_FALSE(task.done());
 
-  executor.run_once();
+  EXPECT_TRUE(executor.run_once());
   EXPECT_TRUE(in_channel.empty());
   EXPECT_TRUE(task.done());
 }

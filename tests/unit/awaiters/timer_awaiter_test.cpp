@@ -39,7 +39,7 @@ TEST(timer_awaiter, suspend) {
   EXPECT_EQ(in_channel.size(), 1);
   EXPECT_FALSE(task.done());
 
-  executor.run_once();
+  EXPECT_TRUE(executor.run_once());
   EXPECT_FALSE(task.done());
   EXPECT_EQ(out_channel.size(), 1);
   ASSERT_TRUE(out_channel.try_pop(in_value));
@@ -48,7 +48,7 @@ TEST(timer_awaiter, suspend) {
   EXPECT_FALSE(task.done());
   EXPECT_EQ(in_channel.size(), 1);
 
-  executor.run_once();
+  EXPECT_TRUE(executor.run_once());
   EXPECT_TRUE(task.done());
   EXPECT_NO_THROW(std::move(task).get());
 }
@@ -71,11 +71,11 @@ TEST(timer_awaiter, incompatible_out_channel_type) {
   }(&caught);
 
   in_channel.push(task.get_execution_token());
-  executor.run_once();
+  EXPECT_TRUE(executor.run_once());
   EXPECT_TRUE(caught);
   EXPECT_FALSE(task.done());
 
-  executor.run_once();
+  EXPECT_TRUE(executor.run_once());
   EXPECT_TRUE(task.done());
   EXPECT_NO_THROW(task.get());
 }

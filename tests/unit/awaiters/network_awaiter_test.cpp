@@ -38,7 +38,7 @@ TEST(network_awaiter, accept) {
   }(&acceptor, &peer);
 
   in_channel.push(task.get_execution_token());
-  executor.run_once();
+  EXPECT_TRUE(executor.run_once());
   EXPECT_FALSE(task.done());
   EXPECT_EQ(out_channel.size(), 1);
   ASSERT_EQ(client.connect(address), skynet::connect_status::kSuccess);
@@ -46,7 +46,7 @@ TEST(network_awaiter, accept) {
   ASSERT_TRUE(out_channel.try_pop(in_value));
 
   in_channel.push(in_value->get_execution_token());
-  executor.run_once();
+  EXPECT_TRUE(executor.run_once());
   ASSERT_TRUE(task.done());
   EXPECT_EQ(task.get(), skynet::accept_status::kSuccess);
 
@@ -58,12 +58,12 @@ TEST(network_awaiter, accept) {
   }(&acceptor, &peer);
 
   in_channel.push(task.get_execution_token());
-  executor.run_once();
+  EXPECT_TRUE(executor.run_once());
   EXPECT_FALSE(task.done());
   ASSERT_TRUE(out_channel.try_pop(in_value));
 
   in_channel.push(in_value->get_execution_token());
-  executor.run_once();
+  EXPECT_TRUE(executor.run_once());
   ASSERT_TRUE(task.done());
   EXPECT_EQ(task.get(), skynet::accept_status::kEmptyQueue);
 }
@@ -164,7 +164,7 @@ TEST(network_awaiter, sendto_recvfrom) {
   }(&sender, bytes, &address);
 
   in_channel.push(recv.get_execution_token());
-  executor.run_once();
+  EXPECT_TRUE(executor.run_once());
   EXPECT_FALSE(recv.done());
   EXPECT_EQ(out_channel.size(), 1);
   send.resume();
@@ -174,7 +174,7 @@ TEST(network_awaiter, sendto_recvfrom) {
   ASSERT_TRUE(out_channel.try_pop(in_value));
 
   in_channel.push(in_value->get_execution_token());
-  executor.run_once();
+  EXPECT_TRUE(executor.run_once());
   ASSERT_TRUE(recv.done());
   EXPECT_EQ(recv.get(), bytes.size());
   EXPECT_EQ(received, bytes);
@@ -199,7 +199,7 @@ TEST(network_awaiter, would_block) {
   }(&socket, bytes);
 
   in_channel.push(task.get_execution_token());
-  executor.run_once();
+  EXPECT_TRUE(executor.run_once());
   EXPECT_FALSE(task.done());
   EXPECT_TRUE(in_channel.empty());
   ASSERT_TRUE(out_channel.try_pop(in_value));
@@ -207,7 +207,7 @@ TEST(network_awaiter, would_block) {
   EXPECT_EQ(in_value->get_filter(), skynet::reactor::kPollIn);
 
   in_channel.push(in_value->get_execution_token());
-  executor.run_once();
+  EXPECT_TRUE(executor.run_once());
   EXPECT_TRUE(task.done());
   EXPECT_EQ(task.get(), skynet::base_socket::kWouldBlock);
   EXPECT_TRUE(out_channel.empty());
@@ -274,7 +274,7 @@ TEST(network_awaiter, eof) {
   }(&receiver, bytes);
 
   in_channel.push(task.get_execution_token());
-  executor.run_once();
+  EXPECT_TRUE(executor.run_once());
   EXPECT_FALSE(task.done());
   EXPECT_EQ(out_channel.size(), 1);
   sender.close();
@@ -282,7 +282,7 @@ TEST(network_awaiter, eof) {
   ASSERT_TRUE(out_channel.try_pop(in_value));
 
   in_channel.push(in_value->get_execution_token());
-  executor.run_once();
+  EXPECT_TRUE(executor.run_once());
   ASSERT_TRUE(task.done());
   EXPECT_EQ(task.get(), 0);
 }
@@ -330,11 +330,11 @@ TEST(network_awaiter, incompatible_out_channel_type) {
   }(&socket, &caught);
 
   in_channel.push(task.get_execution_token());
-  executor.run_once();
+  EXPECT_TRUE(executor.run_once());
   EXPECT_TRUE(caught);
   EXPECT_FALSE(task.done());
 
-  executor.run_once();
+  EXPECT_TRUE(executor.run_once());
   EXPECT_TRUE(task.done());
   EXPECT_NO_THROW(task.get());
 }
